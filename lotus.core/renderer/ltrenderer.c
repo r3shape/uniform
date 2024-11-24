@@ -5,13 +5,13 @@
 #include "../platform/ltplatform.h"
 
 typedef struct tagRendererInternal{
-    i32 mode;                               // OpenGL draw mode
-    i32 passes;                             // total successful render passes
-    i32 vpSize[2];                          // viewport size
-    f32 clearColor[4];                      // color value populating the color buffer
-    LTtexture2D* texture2D;           // pointer to the texture handle currently bound for rendering
-    LTvertexData* vertexData;         // pointer to the vertex data currently being rendered
-    LTshaderProgram* shaderProgram;   // pointer to the shader program currently being used
+    i32 mode;                                 // OpenGL draw mode
+    i32 passes;                               // total successful render passes
+    i32 vpSize[2];                            // viewport size
+    f32 clearColor[4];                        // color value populating the color buffer
+    LTtexture2D* texture2D;                   // pointer to the texture handle currently bound for rendering
+    LTvertexData* vertexData;                 // pointer to the vertex data currently being rendered
+    LTshaderProgram* shaderProgram;           // pointer to the shader program currently being used
 } LTrendererInternal;
 
 b8 ltRendererInit(LTrenderState *state, u32 vpWidth, u32 vpHeight) {
@@ -44,7 +44,7 @@ b8 ltRendererInit(LTrenderState *state, u32 vpWidth, u32 vpHeight) {
     ltglEnable(GL_DEPTH_TEST);
     ltglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // ltlipse doesnt use gl stencils, so disable the tests
+    // Lotus doesnt use gl stencils, so disable the tests
     ltglDisable(GL_STENCIL_TEST);
 
     ltRendererSetClearColor(state, 0.03, 0.24, 0.5, 1.0);
