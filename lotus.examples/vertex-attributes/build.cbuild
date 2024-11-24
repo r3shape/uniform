@@ -1,0 +1,12 @@
+[CBUILD]
+
+project_name = vertex-attribs
+
+source_dir = .
+
+libraries = Lotus
+include_dirs = ../../include
+library_dirs = ../../builds/core
+
+output_type = exe
+output_dir = build

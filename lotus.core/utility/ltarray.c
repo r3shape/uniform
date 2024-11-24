@@ -2,13 +2,13 @@
 
 /* LT VALUE */
 
-void ecDestroyValue(LTvalue* v) {
+void ltDestroyValue(LTvalue* v) {
     v->type = LOTUS_NONE;
     free(v->value);
     free(v);
 }
 
-LTvalue* ecMakeValue(LTvalueType type, void* value) {
+LTvalue* ltMakeValue(LTvalueType type, void* value) {
     LTvalue* v = (LTvalue*)malloc(sizeof(LTvalue));
     if (!v) {
         // _ecLogError("failed to allocate dynamic value");
@@ -19,7 +19,7 @@ LTvalue* ecMakeValue(LTvalueType type, void* value) {
     return v;
 }
 
-LTvalue* ecMakeInt(int value) {
+LTvalue* ltMakeInt(int value) {
     LTvalue* v = (LTvalue*)malloc(sizeof(LTvalue));
     if (!v) {
         // _ecLogError("failed to allocate dynamic value");
@@ -38,7 +38,7 @@ LTvalue* ecMakeInt(int value) {
     return v;
 }
 
-LTvalue* ecMakeFloat(float value) {
+LTvalue* ltMakeFloat(float value) {
     LTvalue* v = (LTvalue*)malloc(sizeof(LTvalue));
     if (!v) {
         // _ecLogError("failed to allocate dynamic value");
@@ -57,7 +57,7 @@ LTvalue* ecMakeFloat(float value) {
     return v;
 }
 
-LTvalue* ecMakeString(const char* value) {
+LTvalue* ltMakeString(const char* value) {
     LTvalue* v = (LTvalue*)malloc(sizeof(LTvalue));
     if (!v) {
         // _ecLogError("failed to allocate dynamic value");
@@ -69,20 +69,20 @@ LTvalue* ecMakeString(const char* value) {
     return v;
 }
 
-int ecGetInt(LTvalue* v) {
+int ltGetInt(LTvalue* v) {
     return *(int*)v->value;
 }
 
-char* ecGetString(LTvalue* v) {
+char* ltGetString(LTvalue* v) {
     return (char*)v->value;
 }
 
-float ecGetFloat(LTvalue* v) {
+float ltGetFloat(LTvalue* v) {
     return *(float*)v->value;
 }
 
 /* LT ARRAY */
-LTarray* ecMakeArray(int max, int resize) {
+LTarray* ltMakeArray(int max, int resize) {
     LTarray* arr = (LTarray*)malloc(sizeof(LTarray));
     if (!arr) {
         // _ecLogError("failed to allocate dynamic array");
@@ -101,10 +101,10 @@ LTarray* ecMakeArray(int max, int resize) {
     }; return arr;
 }
 
-void ecDestroyArray(LTarray* inArr) {
-    // free associeced deca
+void ltDestroyArray(LTarray* inArr) {
+    // free associeced data
     for(int i = 0; i < inArr->count; i++) {
-        ecDestroyValue(inArr->arr[i]);
+        ltDestroyValue(inArr->arr[i]);
     }; free(inArr->arr);
     inArr->resize = 0;
     inArr->count = 0;
@@ -112,7 +112,7 @@ void ecDestroyArray(LTarray* inArr) {
     free(inArr);
 }
 
-LTerrorType ecResizeArray(LTarray* inArr) {
+LTerrorType ltResizeArray(LTarray* inArr) {
     LTerrorType err = LOTUS_ERR_NONE;
     
     LTvalue** temp = (LTvalue**)realloc(inArr->arr, inArr->max+inArr->resize * sizeof(LTvalue*));
@@ -126,12 +126,12 @@ LTerrorType ecResizeArray(LTarray* inArr) {
     return err;
 }
 
-LTerrorType ecInsertArray(LTarray* inArr, int index, LTvalue* value) {
+LTerrorType ltInsertArray(LTarray* inArr, int index, LTvalue* value) {
     LTerrorType err = LOTUS_ERR_NONE;
     if (!inArr || index < 0) { return err; }
 
     if (index >= inArr->max || inArr->count == inArr->max) {
-        err = ecResizeArray(inArr);
+        err = ltResizeArray(inArr);
     }
 
     if (!err) {
@@ -140,10 +140,10 @@ LTerrorType ecInsertArray(LTarray* inArr, int index, LTvalue* value) {
     }; return err;
 }
 
-LTerrorType ecInsertArrayV(LTarray* inArr, int count, LTvalue** values) {
+LTerrorType ltInsertArrayV(LTarray* inArr, int count, LTvalue** values) {
     LTerrorType err = LOTUS_ERR_NONE;
     if (inArr->count + count >= inArr->max || inArr->count == inArr->max) {
-        err = ecResizeArray(inArr);
+        err = ltResizeArray(inArr);
     }
     if (!err) {
         for (int i = 0; i < count; i++) {
@@ -153,7 +153,7 @@ LTerrorType ecInsertArrayV(LTarray* inArr, int count, LTvalue** values) {
     }; return err;
 }
 
-LTvalue* ecPopArray(LTarray* inArr, int index) {
+LTvalue* ltPopArray(LTarray* inArr, int index) {
     LTerrorType err = LOTUS_ERR_NONE;
     
     if (!inArr || index >= inArr->max) {
@@ -170,7 +170,7 @@ LTvalue* ecPopArray(LTarray* inArr, int index) {
     return value;
 }
 
-LTvalue* ecQueryArray(LTarray* inArr, int index) {
+LTvalue* ltQueryArray(LTarray* inArr, int index) {
     LTerrorType err = LOTUS_ERR_NONE;
     
     if (!inArr || index >= inArr->max) {
@@ -180,15 +180,15 @@ LTvalue* ecQueryArray(LTarray* inArr, int index) {
     return inArr->arr[index];
 }
 
-int ecQueryArrayInt(LTarray* inArr, int index) {
-    return ecGetInt(ecQueryArray(inArr, index));
+int ltQueryArrayInt(LTarray* inArr, int index) {
+    return ltGetInt(ltQueryArray(inArr, index));
 }
 
-float ecQueryArrayFloat(LTarray* inArr, int index) {
-    return ecGetFloat(ecQueryArray(inArr, index));
+float ltQueryArrayFloat(LTarray* inArr, int index) {
+    return ltGetFloat(ltQueryArray(inArr, index));
 }
 
-char* ecQueryArrayString(LTarray* inArr, int index) {
-    return ecGetString(ecQueryArray(inArr, index));
+char* ltQueryArrayString(LTarray* inArr, int index) {
+    return ltGetString(ltQueryArray(inArr, index));
 }
 
