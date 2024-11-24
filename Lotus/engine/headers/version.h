@@ -1,6 +1,0 @@
-#pragma once
-
-#define LOTUS_VERSION_MAJOR 1
-#define LOTUS_VERSION_MINOR 0
-#define LOTUS_VERSION_YEAR 2024
-#define LOTUS_VERSION_PATCH 0

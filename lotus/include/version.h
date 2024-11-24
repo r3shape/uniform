@@ -1,0 +1,3 @@
+int LOTUS_YEAR = 2024;
+int LOTUS_MINOR = 0;
+int LOTUS_PATCH = 1;
