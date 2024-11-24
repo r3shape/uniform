@@ -39,8 +39,8 @@ b8 ltRendererInit(LTrenderState *state, u32 vpWidth, u32 vpHeight) {
     internalState->shaderProgram = NULL;
 
     ltglEnable(GL_BLEND);
-    // ltglEnable(GL_CULL_FACE);
-    // ltglCullFace(GL_BACK);
+    ltglEnable(GL_CULL_FACE);
+    ltglCullFace(GL_BACK);
     ltglEnable(GL_DEPTH_TEST);
     ltglBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
