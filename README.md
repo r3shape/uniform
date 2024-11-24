@@ -1,15 +1,15 @@
 ![banner3x](https://github.com/user-attachments/assets/414cf8b5-ae3f-4469-bbf1-59ecae33bd28)
 
-[![GitHub Releases Downloads](https://img.shields.io/github/downloads/F4R4W4Y/Lotus/total)](https://github.com/F4R4W4Y/Lotus/releases)
-[![GitHub Stars](https://img.shields.io/github/stars/F4R4W4Y/Lotus?style=flat&label=stars)](https://github.com/F4R4W4Y/Lotus/stargazers)
-[![GitHub commits since tagged version](https://img.shields.io/github/commits-since/F4R4W4Y/Lotus/Lotus.1.0.2024)](https://github.com/F4R4W4Y/Lotus/commits/master)
+[![GitHub Releases Downloads](https://img.shields.io/github/downloads/d34d0s/Lotus/total)](https://github.com/d34d0s/Lotus/releases)
+[![GitHub Stars](https://img.shields.io/github/stars/d34d0s/Lotus?style=flat&label=stars)](https://github.com/d34d0s/Lotus/stargazers)
+[![GitHub commits since tagged version](https://img.shields.io/github/commits-since/d34d0s/Lotus/Lotus.1.0.2024)](https://github.com/d34d0s/Lotus/commits/master)
 [![License](https://img.shields.io/badge/license-apache%2Flibpng-green.svg)](LICENSE)
 
 #### Relevant Links
 
-[  [Official Wiki](https://github.com/F4R4W4Y/Lotus/wiki) | [API Documentation](https://github.com/F4R4W4Y/Lotus/wiki/Lotus-API-Docs) | [Lotus Examples](https://github.com/F4R4W4Y/Lotus/tree/refactor_01/examples) ]
+[  [Official Wiki](https://github.com/d34d0s/Lotus/wiki) | [API Documentation](https://github.com/d34d0s/Lotus/wiki/Lotus-API-Docs) | [Lotus Examples](https://github.com/d34d0s/Lotus/tree/refactor_01/examples) ]
   
-[ [Official Discord](https://discord.gg/e43PDC45wu) | [Official Reddit](https://www.reddit.com/r/Lotus/) | [Lotus Discussions](https://github.com/F4R4W4Y/Lotus/discussions) | [Lotus FAQ](https://github.com/F4R4W4Y/Lotus/wiki/Lotus-FAQ) ]
+[ [Official Discord](https://discord.gg/e43PDC45wu) | [Official Reddit](https://www.reddit.com/r/Lotus/) | [Lotus Discussions](https://github.com/d34d0s/Lotus/discussions) | [Lotus FAQ](https://github.com/d34d0s/Lotus/wiki/Lotus-FAQ) ]
 
 </br>
 
@@ -50,8 +50,8 @@
 
 <h2> 🪷 Lotus' Contributors 🪷 </h2>
 
-<a href="https://github.com/F4R4W4Y/Lotus/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=F4R4W4Y/Lotus&max=500&columns=20&anon=1" />
+<a href="https://github.com/d34d0s/Lotus/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=d34d0s/Lotus&max=500&columns=20&anon=1" />
 </a>
 
 </br>
