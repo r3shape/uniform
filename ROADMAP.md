@@ -1,47 +1,27 @@
-# 🌸 **Anntwinetta Engine Roadmap** 🌸
+# 🌸 **LTC 2024.1.0 Roadmap** 🌸
 
-### **Atwin Core**
-- **Atwin SDK (Refactor)**
-    - [✔️] Engine SDK Update
-    - [✔️] Engine Source Compilation
-    - [✔️] User Project Compilation
-    - [✔️] Engine Release Installation/Update
-    - [✔️] Engine Repository Installation/Update
-    - [✔️] External Mod Compilation
-    - [ ] External Mod Registry
-
-- **Core Processes**
-    - [✔️] Event Processing
-    - [✔️] Input Processing
-    - [✔️] Render Data Processing
-    - [✔️] Camera Data Processing
-    - [ ] User Event Dispatch/Processing
-    - [ ] Shader Data Generation/Processing
-
-- **Core Resources**
-    - [✔️] Windowing
-    - [✔️] Engine Clock
-    - [✔️] Mesh Data
-    - [✔️] Shader Data
-    - [✔️] Model Data
-    - [ ] Texture Data
-    - [✔️] Material Data
-
-- **Core Utilities**
-    - [ ] OpenGL Logger
-    - [ ] Linked Array
-    - [✔️] Dynamic Array
-    - [✔️] String Key Hashmap
-    - [✔️] Static Array Initializers
-    - [1/2] File R/W Operations
-
-- **Core Modules**
-    - [ ] LilyMod (external mod registry + API)
+### **Lotus-Core**
+  - [✔️] Windowing
+  - [✔️] Engine Logger
+  - [ ] OpenGL Logger
+  - [ ] Event Processing
+  - [ ] Input Processing
+  - [✔️] Vertex Data
+  - [✔️] Shader Data
+  - [✔️] Texture Data
+  - [✔️] Render Data Processing
+  - [ ] Camera Data Processing
+  - [ ] Shader Data Generation/Processing
+  - [ ] Linked Array
+  - [✔️] Dynamic Array
+  - [✔️] String Key Hashmap
+  - [✔️] Static Array Initializers
+  - [1/2] File I/O Operations
 ---
 
 ### **Documentation**
 - **Official README**
-  - [ ] Comprehensive guide to using the Anntwinetta Engine
+  - [ ] Comprehensive guide to using the Lotus Engine
 
 - **API Documentation**
   - [ ] Detailed Wiki page for developers and users

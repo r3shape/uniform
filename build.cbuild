@@ -1,0 +1,12 @@
+[CBUILD]
+
+project_name = Lotus
+
+source_dir = lotus.core
+include_dirs = lotus.core, include
+
+defines = LOTUS_EXPORT
+libraries = opengl32, gdi32
+
+output_type = dll
+output_dir = builds/core

@@ -1,6 +1,0 @@
-#pragma once
-
-#define ATWIN_VERSION_MAJOR 1
-#define ATWIN_VERSION_MINOR 0
-#define ATWIN_VERSION_YEAR 2024
-#define ATWIN_VERSION_PATCH 0

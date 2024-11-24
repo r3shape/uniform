@@ -1,15 +1,7 @@
-core/bin/
-core/lib/
-
 build/
-web_build/
+builds/
 
-venv/
-dist/
-*.egg-info/
-__pycache__/
+tests/
+examples/
 
-*.bat
-edd.md
-_local/
 .vscode/
