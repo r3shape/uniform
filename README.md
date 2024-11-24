@@ -58,5 +58,5 @@
 
 <h2> 🪷 License 🪷 </h2>
 
-Anntwinetta is licensed under the Apache 2.0 license.
+Lotus is licensed under the Apache 2.0 license.
 
