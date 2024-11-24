@@ -5,8 +5,8 @@ project_name = triangle
 source_dir = .
 
 libraries = Lotus
-include_dirs = ../../include
-library_dirs = ../../builds/core
+include_dirs = ../../../include
+library_dirs = ../../../build/lotus.core
 
 output_type = exe
 output_dir = build
