@@ -11,7 +11,7 @@ LTvertexData ltglVertexData(u32 nAttributes, u32 nVertices, u32 nIndices, f32* v
     ltglGenVertexArrays(1, &data.vertexArray);
     ltglGenBuffers(1, &data.vertexBuffer);
     
-    // Eclipse vertex attributes
+    // Lotus vertex attributes
     // uLocation(3) + uColor(3) + uTCoord(2) + uNormal(2)
     u32 stride = (nAttributes == 1) ? 3  :   \
                  (nAttributes == 2) ? 6  :   \
