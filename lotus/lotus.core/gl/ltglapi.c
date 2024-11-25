@@ -46,6 +46,12 @@ LTvertexData ltglVertexData(u32 nAttributes, u32 nVertices, u32 nIndices, f32* v
         ltglEnableVertexAttribArray(2);
     }
     
+    // "uNormal" attribute
+    if (nAttributes >= 4) {
+        ltglVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, stride * sizeof(f32), (void*)(8*sizeof(f32)));
+        ltglEnableVertexAttribArray(3);
+    }
+    
     ltglBindBuffer(LTGL_ARRAY_BUFFER, 0);
     ltglBindVertexArray(0);
     return data;
