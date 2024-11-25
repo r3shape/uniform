@@ -95,5 +95,3 @@ If you prefer manual setup, follow these steps:
 Lotus is licensed under the Apache 2.0 license.  
 
 <br>
-
-Does this updated README fit your needs? Let me know if you'd like to refine it further!
