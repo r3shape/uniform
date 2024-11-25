@@ -1,5 +1,8 @@
 #include "lthashmap.h"
 
+#include "../memory/ltmemory.h"
+#include "../platform/ltlogger.h"
+
 int ltStringHash(const char* buffer) {
     int res = 0;
     size_t size = strlen(buffer);
@@ -9,9 +12,10 @@ int ltStringHash(const char* buffer) {
 }
 
 LThashmap* ltMakeHashmap(int max) {
-    LThashmap* m = (LThashmap*)malloc(sizeof(LThashmap));
+    LThashmap* m = (LThashmap*)ltMemAlloc(sizeof(LThashmap), LOTUS_MEMTAG_HASHMAP);
     if (!m) {
-        // _ecLogError("failed to allocate hashmap");
+        ltSetLogLevel(LOTUS_LOG_ERROR);
+        ltLogError("failed to allocate hashmap");
         return NULL;
     }
 
@@ -20,8 +24,9 @@ LThashmap* ltMakeHashmap(int max) {
 
     m->map = (LTkeyValue**)calloc(max, sizeof(LTkeyValue*));
     if (!m->map) {
-        free(m);
-        // _ecLogError("failed to allocate hashmap array");
+        ltMemFree(m, sizeof(LThashmap), LOTUS_MEMTAG_HASHMAP);
+        ltSetLogLevel(LOTUS_LOG_ERROR);
+        ltLogError("failed to allocate hashmap array");
         return NULL;
     }
 
@@ -29,13 +34,14 @@ LThashmap* ltMakeHashmap(int max) {
 }
 
 void ltDestroyHashmap(LThashmap* m) {
-    m->max = 0;
-    m->count = 0;
     for (int i = 0; i < m->max; i++) {
         if (m->map[i]) {
-            free(m->map[i]);
+            ltMemFree(m->map[i]->v, sizeof(m->map[i]->v), LOTUS_MEMTAG_HASHMAP);
+            ltMemFree(m->map[i], sizeof(m->map[i]), LOTUS_MEMTAG_HASHMAP);
         }
-    } free(m->map); free(m);
+    }
+    ltMemFree(m->map, m->count * sizeof(LTkeyValue), LOTUS_MEMTAG_HASHMAP);
+    ltMemFree(m, sizeof(LThashmap), LOTUS_MEMTAG_HASHMAP);
 }
 
 
@@ -102,7 +108,8 @@ void* ltGetHashmap(LThashmap* m, const char* key) {
         }
         
         if (!match) {
-            // _ecLogError("probing error | key [%s] is not set", key);
+            ltSetLogLevel(LOTUS_LOG_ERROR);
+            ltLogError("probing error | key [%s] is not set", key);
             return NULL;
         }
         
@@ -132,12 +139,13 @@ LTerrorType ltSetHashmap(LThashmap* m, const char* key, void* value) {
         if (!set) set = ltProbeHashmapR(m, &kHash, NULL);
 
         if (!set) {
-            // _ecLogError("probing error | key[%s]", key);
+            ltSetLogLevel(LOTUS_LOG_ERROR);
+            ltLogError("probing error | key[%s]", key);
             return LOTUS_ERR_MALLOC;
         }
     }
 
-    m->map[kHash] = (LTkeyValue*)malloc(sizeof(LTkeyValue));
+    m->map[kHash] = (LTkeyValue*)ltMemAlloc(sizeof(LTkeyValue), LOTUS_MEMTAG_HASHMAP);
     m->map[kHash]->k = strdup(key);
     m->map[kHash]->v = value;
     m->count++;
@@ -162,15 +170,16 @@ LTerrorType ltRemHashmap(LThashmap* m, const char* key) {
         }
         
         if (!match) {
-            // _ecLogError("probing error | key [%s] is not set", key);
+            ltSetLogLevel(LOTUS_LOG_ERROR);
+            ltLogError("probing error | key [%s] is not set", key);
             return LOTUS_ERR_MALLOC;
         }
         
         kvp = m->map[kHash];
     };
-
-    free(m->map[kHash]->v);
-    free(m->map[kHash]);
+    
+    ltMemFree(m->map[kHash]->v, sizeof(m->map[kHash]->v), LOTUS_MEMTAG_HASHMAP);
+    ltMemFree(m->map[kHash], sizeof(m->map[kHash]), LOTUS_MEMTAG_HASHMAP);
     m->map[kHash] = NULL;
     return LOTUS_ERR_NONE;
 }

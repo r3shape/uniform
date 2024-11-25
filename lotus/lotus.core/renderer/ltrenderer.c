@@ -1,8 +1,8 @@
 #include "ltrenderer.h"
 
 #include "../gl/ltgl.h"
+#include "../memory/ltmemory.h"
 #include "../platform/ltlogger.h"
-#include "../platform/ltplatform.h"
 
 typedef struct tagRendererInternal{
     i32 mode;                                 // OpenGL draw mode
@@ -15,16 +15,17 @@ typedef struct tagRendererInternal{
 } LTrendererInternal;
 
 b8 ltRendererInit(LTrenderState *state, u32 vpWidth, u32 vpHeight) {
-    state->internal = (LTrendererInternal*)malloc(sizeof(LTrendererInternal));
+    state->internal = (LTrendererInternal*)ltMemAlloc(sizeof(LTrendererInternal), LOTUS_MEMTAG_RENDERER);
     if (!state->internal) {
-        ltSetLogLevel(LOTUS_LOG_ERROR);
-        ltLogError("Failed to allocate internal render state structure", 0);
+        ltSetLogLevel(LOTUS_LOG_FATAL);
+        ltLogFatal("Failed to allocate internal render state structure", 0);
         return LOTUS_FALSE;
     }
     
     if (!ltglLoadFunctions()) {
-        ltSetLogLevel(LOTUS_LOG_ERROR);
-        ltLogError("Failed to load modern OpenGL functions", 0);
+        ltSetLogLevel(LOTUS_LOG_FATAL);
+        ltLogFatal("Failed to load modern OpenGL functions", 0);
+        ltMemFree(state->internal, sizeof(LTrendererInternal), LOTUS_MEMTAG_RENDERER);
         return LOTUS_FALSE;
     }
     
@@ -60,7 +61,7 @@ b8 ltRendererInit(LTrenderState *state, u32 vpWidth, u32 vpHeight) {
 }
 
 void ltRendererExit(LTrenderState *state) {
-    free(state->internal);
+    ltMemFree(state->internal, sizeof(LTrendererInternal), LOTUS_MEMTAG_RENDERER);
 }
 
 void ltRendererSetViewport(LTrenderState *state, i32 x, i32 y, i32 width, i32 height) {

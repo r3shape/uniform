@@ -1,17 +1,21 @@
 #include "ltarray.h"
 
+#include "../memory/ltmemory.h"
+#include "../platform/ltlogger.h"
+
 /* LT VALUE */
 
 void ltDestroyValue(LTvalue* v) {
     v->type = LOTUS_NONE;
-    free(v->value);
-    free(v);
+    ltMemFree(v->value, sizeof(v->value), LOTUS_MEMTAG_VALUE);
+    ltMemFree(v, sizeof(LTvalue), LOTUS_MEMTAG_VALUE);
 }
 
 LTvalue* ltMakeValue(LTvalueType type, void* value) {
-    LTvalue* v = (LTvalue*)malloc(sizeof(LTvalue));
+    LTvalue* v = (LTvalue*)ltMemAlloc(sizeof(LTvalue), LOTUS_MEMTAG_VALUE);
     if (!v) {
-        // _ecLogError("failed to allocate dynamic value");
+        ltSetLogLevel(LOTUS_LOG_ERROR);
+        ltLogError("failed to allocate dynamic value");
         return NULL;
     }
     v->type = type;
@@ -20,17 +24,19 @@ LTvalue* ltMakeValue(LTvalueType type, void* value) {
 }
 
 LTvalue* ltMakeInt(int value) {
-    LTvalue* v = (LTvalue*)malloc(sizeof(LTvalue));
+    LTvalue* v = (LTvalue*)ltMemAlloc(sizeof(LTvalue), LOTUS_MEMTAG_VALUE);
     if (!v) {
-        // _ecLogError("failed to allocate dynamic value");
+        ltSetLogLevel(LOTUS_LOG_ERROR);
+        ltLogError("failed to allocate dynamic value");
         return NULL;
     }
 
     v->type = LOTUS_INT;
     
-    v->value = (int*)malloc(sizeof(int));
+    v->value = (int*)ltMemAlloc(sizeof(int), LOTUS_MEMTAG_VALUE);
     if (!v->value) {
-        // _ecLogError("failed to allocate integer");
+        ltSetLogLevel(LOTUS_LOG_ERROR);
+        ltLogError("failed to allocate integer");
         v->value = NULL;
         return v;
     }; *(int*)v->value = value;
@@ -39,17 +45,19 @@ LTvalue* ltMakeInt(int value) {
 }
 
 LTvalue* ltMakeFloat(float value) {
-    LTvalue* v = (LTvalue*)malloc(sizeof(LTvalue));
+    LTvalue* v = (LTvalue*)ltMemAlloc(sizeof(LTvalue), LOTUS_MEMTAG_VALUE);
     if (!v) {
-        // _ecLogError("failed to allocate dynamic value");
+        ltSetLogLevel(LOTUS_LOG_ERROR);
+        ltLogError("failed to allocate dynamic value");
         return NULL;
     }
 
     v->type = LOTUS_FLOAT;
     
-    v->value = (float*)malloc(sizeof(float));
+    v->value = (float*)ltMemAlloc(sizeof(float), LOTUS_MEMTAG_VALUE);
     if (!v->value) {
-        // _ecLogError("failed to allocate float");
+        ltSetLogLevel(LOTUS_LOG_ERROR);
+        ltLogError("failed to allocate float");
         v->value = NULL;
         return v;
     }; *(float*)v->value = value;
@@ -58,9 +66,10 @@ LTvalue* ltMakeFloat(float value) {
 }
 
 LTvalue* ltMakeString(const char* value) {
-    LTvalue* v = (LTvalue*)malloc(sizeof(LTvalue));
+    LTvalue* v = (LTvalue*)ltMemAlloc(sizeof(LTvalue), LOTUS_MEMTAG_VALUE);
     if (!v) {
-        // _ecLogError("failed to allocate dynamic value");
+        ltSetLogLevel(LOTUS_LOG_ERROR);
+        ltLogError("failed to allocate dynamic value");
         return NULL;
     }
 
@@ -83,9 +92,10 @@ float ltGetFloat(LTvalue* v) {
 
 /* LT ARRAY */
 LTarray* ltMakeArray(int max, int resize) {
-    LTarray* arr = (LTarray*)malloc(sizeof(LTarray));
+    LTarray* arr = (LTarray*)ltMemAlloc(sizeof(LTarray), LOTUS_MEMTAG_ARRAY);
     if (!arr) {
-        // _ecLogError("failed to allocate dynamic array");
+        ltSetLogLevel(LOTUS_LOG_ERROR);
+        ltLogError("failed to allocate dynamic array");
         return NULL;
     }
 
@@ -93,10 +103,11 @@ LTarray* ltMakeArray(int max, int resize) {
     arr->max = max;
     arr->resize = resize;
 
-    arr->arr = (LTvalue**)malloc(max*sizeof(void*));
+    arr->arr = (LTvalue**)ltMemAlloc(max*sizeof(void*), LOTUS_MEMTAG_ARRAY);
     if (!arr->arr) {
-        free(arr);
-        // _ecLogError("failed to allocate dynamic array");
+        ltMemFree(arr, sizeof(LTarray), LOTUS_MEMTAG_ARRAY);
+        ltSetLogLevel(LOTUS_LOG_ERROR);
+        ltLogError("failed to allocate dynamic array");
         return NULL;
     }; return arr;
 }
@@ -105,11 +116,8 @@ void ltDestroyArray(LTarray* inArr) {
     // free associeced data
     for(int i = 0; i < inArr->count; i++) {
         ltDestroyValue(inArr->arr[i]);
-    }; free(inArr->arr);
-    inArr->resize = 0;
-    inArr->count = 0;
-    inArr->max = 0;
-    free(inArr);
+    }; ltMemFree(inArr->arr, inArr->max * sizeof(LTvalue*), LOTUS_MEMTAG_ARRAY);
+    ltMemFree(inArr, inArr->max * sizeof(LTvalue*), LOTUS_MEMTAG_ARRAY);
 }
 
 LTerrorType ltResizeArray(LTarray* inArr) {

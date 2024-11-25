@@ -37,9 +37,9 @@ typedef unsigned int LTuint, LTenum;
 typedef int LTsizei, LTint, LTbitfield;
 
 #if defined(__clang__) || defined(__gcc__)
-    #define ecStaticAssert _Static_assert
+    #define ltStaticAssert static_assert
 #else
-    #define ecStaticAssert static_assert
+    #define ltStaticAssert _Static_assert
 #endif
 
 typedef enum LTvalueType {
@@ -60,21 +60,21 @@ typedef enum LTerrorType {
     LOTUS_ERR_TYPES,
 } LTerrorType;
 
-// ecStaticAssert(sizeof(u8) == 1, "expected u8 to be 1 byte");
-// ecStaticAssert(sizeof(u16) == 2, "expected u16 to be 2 bytes");
-// ecStaticAssert(sizeof(u32) == 4, "expected u32 to be 4 bytes");
-// ecStaticAssert(sizeof(u64) == 8, "expected u64 to be 8 bytes");
+ltStaticAssert(sizeof(u8) == 1, "expected u8 to be 1 byte");
+ltStaticAssert(sizeof(u16) == 2, "expected u16 to be 2 bytes");
+ltStaticAssert(sizeof(u32) == 4, "expected u32 to be 4 bytes");
+ltStaticAssert(sizeof(u64) == 8, "expected u64 to be 8 bytes");
 
-// ecStaticAssert(sizeof(i8) == 1, "expected i8 to be 1 byte");
-// ecStaticAssert(sizeof(i16) == 2, "expected i16 to be 2 bytes");
-// ecStaticAssert(sizeof(i32) == 4, "expected i32 to be 4 bytes");
-// ecStaticAssert(sizeof(i64) == 8, "expected i64 to be 8 bytes");
+ltStaticAssert(sizeof(i8) == 1, "expected i8 to be 1 byte");
+ltStaticAssert(sizeof(i16) == 2, "expected i16 to be 2 bytes");
+ltStaticAssert(sizeof(i32) == 4, "expected i32 to be 4 bytes");
+ltStaticAssert(sizeof(i64) == 8, "expected i64 to be 8 bytes");
 
-// ecStaticAssert(sizeof(f32) == 4, "expected f32 to be 4 bytes");
-// ecStaticAssert(sizeof(f64) == 8, "expected f64 to be 8 bytes");
+ltStaticAssert(sizeof(f32) == 4, "expected f32 to be 4 bytes");
+ltStaticAssert(sizeof(f64) == 8, "expected f64 to be 8 bytes");
 
-// ecStaticAssert(sizeof(b8) == 1, "expected b8 to be 1 byte");
-// ecStaticAssert(sizeof(b32) == 4, "expected b32 to be 4 bytes");
+ltStaticAssert(sizeof(b8) == 1, "expected b8 to be 1 byte");
+ltStaticAssert(sizeof(b32) == 4, "expected b32 to be 4 bytes");
 
 #define LOTUS_TRUE     1
 #define LOTUS_FALSE    0

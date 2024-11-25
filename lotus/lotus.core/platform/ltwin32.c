@@ -155,23 +155,23 @@ b8 ltPlatformPump(LTplatformState* state) {
     return LOTUS_TRUE;
 }
 
-void* ltMemAlloc(u64 size, b8 aligned) {
+void* _ltMemAlloc(u64 size, b8 aligned) {
     return malloc(size);
 }
 
-void* ltMemZero(void* block, u64 size) {
+void* _ltMemZero(void* block, u64 size) {
     return memset(block, 0, size);
 }
 
-void ltMemFree(void* block, b8 aligned) {
+void _ltMemFree(void* block, b8 aligned) {
     free(block);
 }
 
-void* ltMemSet(void* block, i32 value, u64 size) {
+void* _ltMemSet(void* block, i32 value, u64 size) {
     return memset(block, value, size);
 }
 
-void* ltMemCopy(void* dest, const void* source, u64 size) {
+void* _ltMemCopy(void* dest, const void* source, u64 size) {
     return memcpy(dest, source, size);
 }
 

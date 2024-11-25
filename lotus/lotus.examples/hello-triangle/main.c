@@ -1,4 +1,4 @@
-#include <lotus.h>
+#include "../../include/lotus.h"
 
 void main() {
     i32 init = lotusInit();
