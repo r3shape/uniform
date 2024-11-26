@@ -8,6 +8,8 @@
 #include "../lotus.core/utility/ltarray.h"
 #include "../lotus.core/utility/lthashmap.h"
 #include "../lotus.core/graphics/gl/ltglapi.h"
+#include "../lotus.core/platform/event/ltevent.h"
+#include "../lotus.core/platform/input/ltinput.h"
 
 typedef struct tagLotus {
     b8 init;
@@ -24,6 +26,7 @@ LOTUS_API_ENTRY void ltSwapBuffers(void);
 LOTUS_API_ENTRY void lotusExit(void);
 
 LOTUS_API_ENTRY void ltClearColor(void);
+LOTUS_API_ENTRY void ltSetViewport(u32 x, u32 y, u32 w, u32 h);
 LOTUS_API_ENTRY void ltSetClearColor(f32 r, f32 g, f32 b, f32 a);
 
 LOTUS_API_ENTRY void ltSetShader(LTshaderProgram* shader);

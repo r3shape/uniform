@@ -9,6 +9,9 @@
 
 #include <gl/GL.h>
 
+#include "event/ltevent.h"
+#include "input/ltinput.h"
+
 static f64 clockFrequency;
 static LARGE_INTEGER startTime;
 
@@ -213,40 +216,42 @@ LRESULT CALLBACK ltWindowProcess(HWND hwnd, u32 msg, WPARAM w, LPARAM l) {
     switch(msg) {
         case WM_ERASEBKGND: return 1;
         case WM_CLOSE:
-            // TODO: emit quit event
+            ltPushEvent((LTeventData){.data.u8[0]=1}, LOTUS_EVENT_APP_QUIT, 0);
             return 0;
         case WM_DESTROY:
+            ltPushEvent((LTeventData){.data.u8[0]=1}, LOTUS_EVENT_APP_QUIT, 0);
             PostQuitMessage(0);
             return 0;
         case WM_SIZE: {
             RECT r;
             GetClientRect(hwnd, &r);
-            u32 w = r.right - r.left;
-            u32 h = r.bottom - r.top;
-
-            // TODO emit resize event
+            u16 w = r.right - r.left;
+            u16 h = r.bottom - r.top;
+            // TODO: handle resize event with resize callback
+            ltPushEvent((LTeventData){.data.u16[0]=w, .data.u16[1]=h}, LOTUS_EVENT_RESIZE, 0);
         } break;
         case WM_KEYUP:          // fall trough WM_SYSKEYUP
         case WM_KEYDOWN:        // fall trough WM_SYSKEYUP
         case WM_SYSKEYDOWN:     // fall trough WM_SYSKEYUP
         case WM_SYSKEYUP: {
             // key pressed/released
-            // b8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
-            // TODO: input processing
-            
+            LTkeyboardKey key = (u16)w;
+            b8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
+            ltInputProcessKey(key, pressed);
         } break;
         case WM_MOUSEMOVE: {
             // mouse movement
-            // i32 x, y = GET_X_LPARAM(l); GET_Y_LPARAM(l);
-            // TODO: input processing
+            i32 x = GET_X_LPARAM(l); 
+            i32 y = GET_Y_LPARAM(l);
+            ltInputProcessMouseMove(x, y);
         } break;
         case WM_MOUSEWHEEL: {
-            // i32 z = GET_WHEEL_DELTA_WPARAM(w);
-            // if (z != 0) {
-            //     // clamp input to (-1, 1)
-            //     z = (z < 0) ? -1 : 1;
-            //     // TODO: input processing
-            // }
+            i32 z = GET_WHEEL_DELTA_WPARAM(w);
+            if (z != 0) {
+                // clamp input to OS-independent values (-1, 1)
+                z = (z < 0) ? -1 : 1;
+                ltInputProcessMouseWheel(z);
+            }
         } break;
         case WM_LBUTTONDOWN:    // fall trough WM_RBUTTONUP
         case WM_MBUTTONDOWN:    // fall trough WM_RBUTTONUP
@@ -254,8 +259,25 @@ LRESULT CALLBACK ltWindowProcess(HWND hwnd, u32 msg, WPARAM w, LPARAM l) {
         case WM_LBUTTONUP:      // fall trough WM_RBUTTONUP
         case WM_MBUTTONUP:      // fall trough WM_RBUTTONUP
         case WM_RBUTTONUP: {
-            // b8 pressed = msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN;
-            // TODO: input processing
+            LTmouseButton button = LOTUS_MBUTTON_MAX_BUTTONS;
+            b8 pressed = msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN;
+            switch (msg) {
+                case WM_LBUTTONDOWN:
+                case WM_LBUTTONUP:
+                    button = LOTUS_MBUTTON_LEFT;
+                    break;
+                
+                case WM_MBUTTONDOWN:
+                case WM_MBUTTONUP:
+                    button = LOTUS_MBUTTON_MIDDLE;
+                    break;
+                
+                case WM_RBUTTONDOWN:
+                case WM_RBUTTONUP:
+                    button = LOTUS_MBUTTON_RIGHT;
+                    break;
+            }
+            if (button != LOTUS_MBUTTON_MAX_BUTTONS) ltInputProcessButton(button, pressed);
         } break;
     }
     
@@ -267,4 +289,4 @@ void ltPlatformSwapBuffers(LTplatformState* state) {
     SwapBuffers(GetDC(internalState->hwnd));
 }
 
-#endif // LT_PLATFORM_WINDOWS
+#endif // LOTUS_PLATFORM_WINDOWS

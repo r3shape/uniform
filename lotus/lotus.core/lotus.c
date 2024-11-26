@@ -6,6 +6,7 @@
 #include "platform/ltlogger.h"
 #include "platform/ltplatform.h"
 #include "platform/event/ltevent.h"
+#include "platform/input/ltinput.h"
 #include "graphics/renderer/ltrenderer.h"
 
 static LTrenderState _renderState;
@@ -18,7 +19,9 @@ b8 lotusInit(void) {
     ltSetLogLevel(LOTUS_LOG_INFO);
     ltLogInfo("Lotus v%s\n", Engine.version);
 
-    if (!ltEventInit()                                                                      ||
+    if (
+        !ltEventInit()                                                                      ||
+        !ltInputInit()                                                                      ||
         !ltPlatformInit(&_platformState, "Lotus Engine Test", 100, 100, 1280, 720)          ||
         !ltRendererInit(&_renderState, 1280, 720)                                        // ||
         ) {
@@ -47,6 +50,11 @@ b8 ltPumpEvents(void) {
 void ltSetClearColor(f32 r, f32 g, f32 b, f32 a) {
     LTrenderState* renderState = (LTrenderState*)Engine.renderState;
     ltRendererSetClearColor(renderState, r, g, b, a);
+}
+
+void ltSetViewport(u32 x, u32 y, u32 w, u32 h) {
+    LTrenderState* renderState = (LTrenderState*)Engine.renderState;
+    ltRendererSetViewport(renderState, x, y, w, h);
 }
 
 void ltClearColor(void) {
@@ -89,6 +97,7 @@ void ltSwapBuffers(void) {
 void lotusExit(void) {
     LTrenderState* renderState = (LTrenderState*)Engine.renderState;
     LTplatformState* platformState = (LTplatformState*)Engine.platformState;
+    ltInputExit();
     ltEventExit();
     ltRendererExit(renderState);
     ltPlatformExit(platformState);
