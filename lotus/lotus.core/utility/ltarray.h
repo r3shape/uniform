@@ -1,27 +1,34 @@
-#pragma once
+#ifndef LTARRAY_H
+#define LTARRAY_H
 
-#include "../lotustypes.h"
 #include "../defines.h"
 
-// dynamic value
-int ltGetInt(LTvalue* v);
-float ltGetFloat(LTvalue* v);
-char* ltGetString(LTvalue* v);
+/* D-Array Memory Layout
+*   max         (u64)
+*   length      (u64)
+*   stride      (u64)
+*   elements    (void*)
+*/
 
-void ltDestroyValue(LTvalue* v);
-LTvalue* ltMakeInt(int value);
-LTvalue* ltMakeFloat(float value);
-LTvalue* ltMakeString(const char* value);
-LTvalue* ltMakeValue(LTvalueType type, void* value);
+#define LOTUS_ARRAY_MAX_DEFAULT 1
+#define LOTUS_ARRAY_RESIZE_DEFAULT 2
 
-// dynamic array
-void ltDestroyArray(LTarray* inArr);
-LTarray* ltMakeArray(int max, int resize);
-LTerrorType ltResizeArray(LTarray* inArr);
-LTvalue* ltPopArray(LTarray* inArr, int index);
-int ltQueryArrayInt(LTarray* inArr, int index);
-LTvalue* ltQueryArray(LTarray* inArr, int index);
-float ltQueryArrayFloat(LTarray* inArr, int index);
-char* ltQueryArrayString(LTarray* inArr, int index);
-LTerrorType ltInsertArray(LTarray* inArr, int index, LTvalue* value);
-LTerrorType ltInsertArrayV(LTarray* inArr, int count, LTvalue** values);
+typedef enum LTarrayFields {
+    LOTUS_ARRFIELD_MAX,
+    LOTUS_ARRFIELD_LENGTH,
+    LOTUS_ARRFIELD_STRIDE,
+    LOTUS_ARRAY_FIELDS
+} LTarrayFields;
+
+LOTUS_API_ENTRY void ltDestroyDArray(void* arr);
+LOTUS_API_ENTRY void* ltMakeDArray(u64 max, u64 stride);
+
+LOTUS_API_ENTRY u64 ltGetDArrayField(u64 field, void* arr);
+LOTUS_API_ENTRY void ltSetDArrayField(u64 field, u64 value, void* arr);
+
+LOTUS_API_ENTRY void* ltResizeDArray(u64 max, void* arr);
+LOTUS_API_ENTRY int ltPopDArray(void* element, void* arr);
+LOTUS_API_ENTRY int ltPushDArray(void* element, void* arr);
+LOTUS_API_ENTRY int ltPopAtDArray(u64 index, void* element, void* arr);
+
+#endif

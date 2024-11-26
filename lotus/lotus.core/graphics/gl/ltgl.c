@@ -1,5 +1,5 @@
 #include "ltgl.h"
-#include "../platform/ltlogger.h"
+#include "../../platform/ltlogger.h"
 
 // BUFFER FUNCTIONS
 

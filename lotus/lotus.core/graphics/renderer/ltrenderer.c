@@ -1,8 +1,8 @@
 #include "ltrenderer.h"
 
 #include "../gl/ltgl.h"
-#include "../memory/ltmemory.h"
-#include "../platform/ltlogger.h"
+#include "../../memory/ltmemory.h"
+#include "../../platform/ltlogger.h"
 
 typedef struct tagRendererInternal{
     i32 mode;                                 // OpenGL draw mode

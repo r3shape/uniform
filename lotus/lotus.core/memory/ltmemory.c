@@ -51,10 +51,6 @@ void* ltMemCopy(void* dest, const void* source, u64 size) { return _ltMemCopy(de
 
 void ltGetMemoryTagStr(char* buffer, LTmemoryTag tag) {
     switch (tag) {
-        case LOTUS_MEMTAG_VALUE: {
-            sprintf(buffer, "DYNAMIC VALUE");
-            break;
-        }
         case LOTUS_MEMTAG_ARRAY: {
             sprintf(buffer, "DYNAMIC ARRAY");
             break;
@@ -73,6 +69,10 @@ void ltGetMemoryTagStr(char* buffer, LTmemoryTag tag) {
         }
         case LOTUS_MEMTAG_BST: {
             sprintf(buffer, "BST");
+            break;
+        }
+        case LOTUS_MEMTAG_EVENT: {
+            sprintf(buffer, "EVENT");
             break;
         }
         case LOTUS_MEMTAG_SCENE: {

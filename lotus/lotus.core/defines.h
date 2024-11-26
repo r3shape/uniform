@@ -99,9 +99,9 @@ ltStaticAssert(sizeof(b32) == 4, "expected b32 to be 4 bytes");
     #endif
 #else
     #ifdef _MSC_VER
-        #define LOTUS_API __declspec(dllimport)
+        #define LOTUS_API_ENTRY __declspec(dllimport)
     #else 
-        #define LOTUS_API
+        #define LOTUS_API_ENTRY
     #endif
 #endif
 

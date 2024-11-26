@@ -1,10 +1,10 @@
 #include "ltgl.h"
 #include "ltglapi.h"
-#include "../utility/lthashmap.h"
-#include "../platform/ltlogger.h"
+#include "../../utility/lthashmap.h"
+#include "../../platform/ltlogger.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "../../vendor/stb/stb_image.h"
+#include "../../../vendor/stb/stb_image.h"
 
 LTvertexData ltglVertexData(u32 nAttributes, u32 nVertices, u32 nIndices, f32* vertices, u32* indices) {
     LTvertexData data = {.nVertices=nVertices, .nIndices=nIndices};

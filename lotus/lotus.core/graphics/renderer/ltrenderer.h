@@ -1,7 +1,7 @@
 #ifndef LTRENDERER_H
 #define LTRENDERER_H
 
-#include "../defines.h"
+#include "../../defines.h"
 #include "../gl/ltglapi.h"
 
 typedef struct tagRenderState {

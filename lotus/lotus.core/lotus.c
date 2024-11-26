@@ -5,7 +5,8 @@
 #include "memory/ltmemory.h"
 #include "platform/ltlogger.h"
 #include "platform/ltplatform.h"
-#include "renderer/ltrenderer.h"
+#include "platform/event/ltevent.h"
+#include "graphics/renderer/ltrenderer.h"
 
 static LTrenderState _renderState;
 static LTplatformState _platformState;
@@ -16,8 +17,8 @@ b8 lotusInit(void) {
     sprintf(Engine.version, "%d.%d.%d", LOTUS_YEAR, LOTUS_MINOR, LOTUS_PATCH);
     ltSetLogLevel(LOTUS_LOG_INFO);
     ltLogInfo("Lotus v%s\n", Engine.version);
-    
-    if (
+
+    if (!ltEventInit()                                                                      ||
         !ltPlatformInit(&_platformState, "Lotus Engine Test", 100, 100, 1280, 720)          ||
         !ltRendererInit(&_renderState, 1280, 720)                                        // ||
         ) {
@@ -88,6 +89,7 @@ void ltSwapBuffers(void) {
 void lotusExit(void) {
     LTrenderState* renderState = (LTrenderState*)Engine.renderState;
     LTplatformState* platformState = (LTplatformState*)Engine.platformState;
+    ltEventExit();
     ltRendererExit(renderState);
     ltPlatformExit(platformState);
     ltMemoryExit();

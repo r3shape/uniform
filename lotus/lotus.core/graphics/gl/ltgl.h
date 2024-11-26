@@ -7,7 +7,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "../lotustypes.h"
+#include "../../lotustypes.h"
 
 // GL equivalent defines
 #define LTGL_STATIC_DRAW                0x88E4
