@@ -6,6 +6,7 @@
 #include "../lotus.core/lotustypes.h"
 #include "../lotus.core/utility/ltmath.h"
 #include "../lotus.core/utility/ltarray.h"
+#include "../lotus.core/utility/ltfileio.h"
 #include "../lotus.core/utility/lthashmap.h"
 #include "../lotus.core/graphics/gl/ltglapi.h"
 #include "../lotus.core/platform/event/ltevent.h"
