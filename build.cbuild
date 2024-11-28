@@ -2,8 +2,8 @@
 
 project_name = Lotus
 
-source_dirs = lotus/lotus.core, lotus/lotus.application
-include_dirs = lotus/lotus.core, lotus/lotus.application, lotus/include
+source_dir = lotus/lotus.core
+include_dirs = lotus/lotus.core, lotus/include
 
 defines = LOTUS_EXPORT
 libraries = opengl32, gdi32

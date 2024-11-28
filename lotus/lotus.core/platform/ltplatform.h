@@ -8,6 +8,14 @@ typedef struct tagPlatformState {
     void* windowPtr;
 } LTplatformState;
 
+typedef struct tagPlatformLibrary {
+    char* name;
+    void* module;
+} LTdynamicLib;
+
+LTdynamicLib ltPlatformLoadLib(char* name);
+b8 ltPlatformUnloadLib(LTdynamicLib* lib);
+
 f64 ltPlatformGetTime(void);
 void ltPlatformSleep(u64 ms);
 b8 ltPlatformPump(LTplatformState* state);

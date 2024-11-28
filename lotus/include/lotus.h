@@ -13,6 +13,17 @@
 #include "../lotus.core/platform/event/ltevent.h"
 #include "../lotus.core/platform/input/ltinput.h"
 
+typedef struct tagLotus {
+    b8 init;
+    char version[8];
+    void* renderState;
+    void* platformState;
+} Lotus, LotusEngine, Lotus_s;
+
+static LotusEngine Engine;
+
+LOTUS_API_ENTRY b8 lotusInit(void);
+LOTUS_API_ENTRY b8 ltPumpEvents(void);
 LOTUS_API_ENTRY void ltSwapBuffers(void);
 LOTUS_API_ENTRY void lotusExit(void);
 

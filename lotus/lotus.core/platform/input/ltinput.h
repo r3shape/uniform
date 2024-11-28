@@ -128,19 +128,18 @@ typedef enum tagkeyboardKeys {
     LOTUS_DEFINE_KEY(PERIOD, 0xBE),
     LOTUS_DEFINE_KEY(SLASH, 0xBF),
     LOTUS_DEFINE_KEY(GRAVE, 0xC0),
-    KEYS_MAX_KEYS
+    LOTUS_MAX_KEYS
 } LTkeyboardKey;
 
 b8 ltInputInit();
 void ltInputExit();
 
-// TODO: hide this behind application layer
-LOTUS_API_ENTRY void ltInputUpdate(f64 delta_time);
-
 void ltInputProcessMouseWheel(i8 z_delta);
 void ltInputProcessMouseMove(i16 x, i16 y);
 void ltInputProcessKey(LTkeyboardKey key, b8 pressed);
 void ltInputProcessButton(LTmouseButton button, b8 pressed);
+
+LOTUS_API_ENTRY void ltInputUpdate(f64 delta_time);
 
 LOTUS_API_ENTRY b8 ltIsKeyUp(LTkeyboardKey key);
 LOTUS_API_ENTRY b8 ltWasKeyUp(LTkeyboardKey key);

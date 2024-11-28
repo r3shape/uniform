@@ -9,6 +9,7 @@
 
 #include <gl/GL.h>
 
+#include "ltlogger.h"
 #include "event/ltevent.h"
 #include "input/ltinput.h"
 
@@ -287,6 +288,33 @@ LRESULT CALLBACK ltWindowProcess(HWND hwnd, u32 msg, WPARAM w, LPARAM l) {
 void ltPlatformSwapBuffers(LTplatformState* state) {
     LTplatformInternal* internalState = (LTplatformInternal*)state->internal;
     SwapBuffers(GetDC(internalState->hwnd));
+}
+
+LTdynamicLib ltPlatformLoadLib(char* name) {
+    LTdynamicLib lib = {0};
+    lib.name = name;
+    
+    lib.module = (void*)LoadLibraryA(name);
+    if (!lib.module) {
+        ltSetLogLevel(LOTUS_LOG_ERROR);
+        ltLogError("Failed to load library: %s\n", name);
+        return (LTdynamicLib){.name=NULL, .module=NULL};
+    }
+
+    return lib;
+}
+
+b8 ltPlatformUnloadLib(LTdynamicLib* lib) {
+    if (!lib || !lib->module) return LOTUS_FALSE;
+
+    if (!FreeLibrary((HMODULE)lib->module)) {
+        ltSetLogLevel(LOTUS_LOG_WARNING);
+        ltLogWarning("Failed to unload library: %s\n", lib->name);
+        return LOTUS_FALSE;
+    }
+
+    lib->module = NULL;
+    return LOTUS_TRUE;
 }
 
 #endif // LOTUS_PLATFORM_WINDOWS

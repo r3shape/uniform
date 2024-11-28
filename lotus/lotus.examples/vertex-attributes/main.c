@@ -20,6 +20,11 @@ char fShader[] = {
     "}\0"
 };
 
+b8 resizeCallback(LTeventData data, u16 eventCode, void* sender, void* listener) {
+    if (eventCode != LOTUS_EVENT_RESIZE) return 0;
+    ltSetViewport(0, 0, data.data.u16[0], data.data.u16[1]);
+}
+
 void main() {
     i32 running = lotusInit();
 
@@ -32,6 +37,9 @@ void main() {
 
     LTshaderProgram shader = ltglShaderProgram(vShader, fShader);
     LTvertexData triangle = ltglVertexData(2, 3, 0, vertices, NULL);
+
+    // handle engine-events via-callback
+    ltRegisterEvent(LOTUS_EVENT_RESIZE, 0, resizeCallback);
 
     while (running) {
         ltClearColor();
