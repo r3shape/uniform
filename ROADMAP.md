@@ -28,13 +28,10 @@
 
 ### **Documentation**
 - **Official README**
-  - [ ] Comprehensive guide to using/building the Lotus Engine
+  - [1/2] Comprehensive guide to using/building the Lotus Engine
 
 - **API Documentation**
   - [ ] Detailed Wiki page for developers and users
-
-- **Engine Design Document (EDD)**
-  - [ ] Technical breakdown of engine architecture and functionality
 
 ---
 
