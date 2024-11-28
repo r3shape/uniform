@@ -5,6 +5,7 @@
 #include "../lotus.core/defines.h"
 #include "../lotus.core/lotustypes.h"
 #include "../lotus.core/utility/ltmath.h"
+#include "../lotus.core/memory/ltmemory.h"
 #include "../lotus.core/utility/ltarray.h"
 #include "../lotus.core/utility/ltfileio.h"
 #include "../lotus.core/utility/lthashmap.h"
@@ -12,17 +13,6 @@
 #include "../lotus.core/platform/event/ltevent.h"
 #include "../lotus.core/platform/input/ltinput.h"
 
-typedef struct tagLotus {
-    b8 init;
-    char version[8];
-    void* renderState;
-    void* platformState;
-} Lotus, LotusEngine, Lotus_s;
-
-static Lotus_s Engine;
-
-LOTUS_API_ENTRY b8 lotusInit(void);
-LOTUS_API_ENTRY b8 ltPumpEvents(void);
 LOTUS_API_ENTRY void ltSwapBuffers(void);
 LOTUS_API_ENTRY void lotusExit(void);
 

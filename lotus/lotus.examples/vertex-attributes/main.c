@@ -1,4 +1,4 @@
-#include <lotus.h>
+#include "../../include/lotus.h"
 
 char vShader[] = {
     "#version 460 core\n"
@@ -21,7 +21,7 @@ char fShader[] = {
 };
 
 void main() {
-    i32 init = lotusInit();
+    i32 running = lotusInit();
 
     f32 vertices[] = {
         // uLocation      uColor
@@ -33,18 +33,21 @@ void main() {
     LTshaderProgram shader = ltglShaderProgram(vShader, fShader);
     LTvertexData triangle = ltglVertexData(2, 3, 0, vertices, NULL);
 
-    if (init) {
-        while (LOTUS_TRUE) {
-            ltPumpEvents();
-            ltClearColor();
+    while (running) {
+        ltClearColor();
+        ltPumpEvents();
 
-            ltSetShader(&shader);
-            ltDraw(&triangle);
+        // handle input-events via-state
+        if (ltIsKeyDown(LOTUS_KEY_ESCAPE)) running = 0;
+        if (ltIsKeyDown(LOTUS_KEY_R)) ltSetClearColor(1.0, 0.0, 0.0, 1.0);
+        if (ltIsKeyDown(LOTUS_KEY_G)) ltSetClearColor(0.0, 1.0, 0.0, 1.0);
+        if (ltIsKeyDown(LOTUS_KEY_B)) ltSetClearColor(0.0, 0.0, 1.0, 1.0);
 
-            ltSwapBuffers();
-        }
+        ltSetShader(&shader);
+        ltDraw(&triangle);
 
-        lotusExit();
-    }
+        ltInputUpdate(0);
+        ltSwapBuffers();
+    }; lotusExit();
 
 }

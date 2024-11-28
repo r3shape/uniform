@@ -3,6 +3,23 @@
 
 #include "defines.h"
 
+/* ENGINE TYPES */
+
+typedef struct tagAppConfig {
+    char* title;
+    u16 winpos[2];
+    u16 winsize[2];
+} LTappConfig;
+
+typedef struct LTapplication LTapplication;
+struct LTapplication{
+    void* state;
+    LTappConfig config;
+    b8 (*appInit)(LTapplication* app);
+    b8 (*appUpdate)(f32 deltaTime, LTapplication* app);
+    b8 (*appRender)(f32 deltaTime, LTapplication* app);
+};
+
 /* UTILITY TYPES */
 
 typedef struct tagKeyValue {
