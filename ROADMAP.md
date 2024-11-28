@@ -4,24 +4,23 @@
   - [✔️] Windowing
   - [✔️] Engine Logger
   - [ ] OpenGL Logger
-  - [ ] Event Processing
-  - [ ] Input Processing
+  - [✔️] Event Processing
+  - [✔️] Input Processing
   - [✔️] Vertex Data
   - [✔️] Shader Data
   - [✔️] Texture Data
   - [✔️] Render Data Processing
   - [ ] Camera Data Processing
-  - [ ] Shader Data Generation/Processing
   - [ ] Linked Array
   - [✔️] Dynamic Array
   - [✔️] String Key Hashmap
   - [✔️] Static Array Initializers
-  - [1/2] File I/O Operations
+  - [✔️] File I/O Operations
 ---
 
 ### **Documentation**
 - **Official README**
-  - [ ] Comprehensive guide to using the Lotus Engine
+  - [ ] Comprehensive guide to using/building the Lotus Engine
 
 - **API Documentation**
   - [ ] Detailed Wiki page for developers and users
