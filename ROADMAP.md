@@ -1,20 +1,28 @@
-# 🌸 **LTC 2024.1.0 Roadmap** 🌸
+# 🌸 **LTC 2024.1.0** 🌸
 
-### **Lotus-Core**
+### **Platform Layer**
   - [✔️] Windowing
   - [✔️] Engine Logger
   - [ ] OpenGL Logger
   - [✔️] Event Processing
   - [✔️] Input Processing
+
+### **Memory Layer**
+  - [✔️] Tagged Memory Allocations
+  - [✔️] Block Referencing
+  - [✔️] Memory Usage Tracking
+
+### **Graphics Layer**
   - [✔️] Vertex Data
   - [✔️] Shader Data
   - [✔️] Texture Data
   - [✔️] Render Data Processing
   - [ ] Camera Data Processing
+
+### **Utility Layer**
   - [ ] Linked Array
   - [✔️] Dynamic Array
   - [✔️] String Key Hashmap
-  - [✔️] Static Array Initializers
   - [✔️] File I/O Operations
 ---
 
