@@ -6,7 +6,7 @@
 
 #define _PI_ 3.14159265358979323846
 
-float ltToRadians(float deg);
+LOTUS_API_ENTRY float ltToRadians(float deg);
 
 LOTUS_API_ENTRY LTvec2 ltNewVec2(float x, float y);
 LOTUS_API_ENTRY LTvec2 ltScaleVec2(LTvec2 v, float scale);
