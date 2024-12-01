@@ -118,7 +118,7 @@ void* ltGetHashmap(LThashmap* m, const char* key) {
 }
 
 LTerrorType ltSetHashmap(LThashmap* m, const char* key, void* value) {
-    if (!key || !value || m->count+1 > m->max) { return LOTUS_ERR_PROCESS; }
+    if (!key || !value || m->count+1 > m->max) { return LOTUS_ERR_TYPE; }
 
     int kHash = ltStringHash(key) % m->max;
     LTkeyValue* kvp = m->map[kHash];
@@ -141,7 +141,7 @@ LTerrorType ltSetHashmap(LThashmap* m, const char* key, void* value) {
         if (!set) {
             ltSetLogLevel(LOTUS_LOG_ERROR);
             ltLogError("probing error | key[%s]", key);
-            return LOTUS_ERR_MALLOC;
+            return LOTUS_ERR_FUNC;
         }
     }
 
@@ -153,7 +153,7 @@ LTerrorType ltSetHashmap(LThashmap* m, const char* key, void* value) {
 }
 
 LTerrorType ltRemHashmap(LThashmap* m, const char* key) {
-    if (!key) { return LOTUS_ERR_PROCESS; }
+    if (!key) { return LOTUS_ERR_TYPE; }
 
     int kHash = ltStringHash(key) % m->max;
     LTkeyValue* kvp = m->map[kHash];
@@ -172,7 +172,7 @@ LTerrorType ltRemHashmap(LThashmap* m, const char* key) {
         if (!match) {
             ltSetLogLevel(LOTUS_LOG_ERROR);
             ltLogError("probing error | key [%s] is not set", key);
-            return LOTUS_ERR_MALLOC;
+            return LOTUS_ERR_FUNC;
         }
         
         kvp = m->map[kHash];

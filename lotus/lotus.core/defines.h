@@ -42,24 +42,6 @@ typedef int LTsizei, LTint, LTbitfield;
     #define ltStaticAssert _Static_assert
 #endif
 
-typedef enum LTvalueType {
-    LOTUS_NONE=0,
-    LOTUS_INT,
-    LOTUS_CHAR,
-    LOTUS_FLOAT,
-    LOTUS_STRING,
-    LOTUS_VALUES
-} LTvalueType;
-
-typedef enum LTerrorType {
-    LOTUS_ERR_NONE=0,
-    LOTUS_ERR_INIT,
-    LOTUS_ERR_TYPE,
-    LOTUS_ERR_MALLOC,
-    LOTUS_ERR_PROCESS,
-    LOTUS_ERR_TYPES,
-} LTerrorType;
-
 ltStaticAssert(sizeof(u8) == 1, "expected u8 to be 1 byte");
 ltStaticAssert(sizeof(u16) == 2, "expected u16 to be 2 bytes");
 ltStaticAssert(sizeof(u32) == 4, "expected u32 to be 4 bytes");

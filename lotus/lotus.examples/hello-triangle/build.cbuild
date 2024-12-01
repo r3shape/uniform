@@ -1,12 +1,11 @@
-[CBUILD]
-
-project_name = triangle
-
-source_dir = .
-
-libraries = Lotus
-include_dirs = ../../../include
-library_dirs = ../../../build/lotus.core
-
-output_type = exe
-output_dir = build
+{
+    "compiler": "MinGW",
+    "project": "hello-triangle",
+    "include_dirs": ["../../lotus.core", "../../include"],
+    "source_dirs": ["."],
+    "libraries": {
+        "Lotus": "../../../build/win"
+    },
+    "output": "exe",
+    "output_dir": "build/win"
+}

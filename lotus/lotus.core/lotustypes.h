@@ -5,20 +5,14 @@
 
 /* ENGINE TYPES */
 
-typedef struct tagAppConfig {
-    char* title;
-    u16 winpos[2];
-    u16 winsize[2];
-} LTappConfig;
-
-typedef struct LTapplication LTapplication;
-struct LTapplication{
-    void* state;
-    LTappConfig config;
-    b8 (*appInit)(LTapplication* app);
-    b8 (*appUpdate)(f32 deltaTime, LTapplication* app);
-    b8 (*appRender)(f32 deltaTime, LTapplication* app);
-};
+typedef enum LTerrorType {
+    LOTUS_ERR_NONE=0,
+    LOTUS_ERR_INIT,
+    LOTUS_ERR_TYPE,
+    LOTUS_ERR_FUNC,
+    LOTUS_ERR_MALLOC,
+    LOTUS_ERR_TYPES,
+} LTerrorType;
 
 /* UTILITY TYPES */
 
@@ -33,20 +27,16 @@ typedef struct tagHashmap {
     LTkeyValue** map;
 } LThashmap;
 
-typedef struct tagValue {
-    void* value;
-    LTvalueType type;
-} LTvalue;
-
-typedef struct tagArray {
-    int max;
-    int count;
-    int resize;
-    LTvalue** arr;
-} LTarray;
-
-
 /* PIPELINE TYPES */
+
+typedef enum LTGLuniformType {
+    LOTUS_UNIFORM_NONE=0,
+    LOTUS_UNIFORM_VEC2,
+    LOTUS_UNIFORM_VEC3,
+    LOTUS_UNIFORM_VEC4,
+    LOTUS_UNIFORM_MAT4,
+    LOTUS_UNIFORM_TYPES
+} LTGLuniformType;
 
 typedef struct tagVertexData {
     i32 nIndices;
