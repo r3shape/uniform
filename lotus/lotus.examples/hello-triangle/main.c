@@ -16,14 +16,14 @@ void main() {
 
     LTvertexData triangle = ltglVertexData(1, 3, 0, vertices, NULL);
 
-    // handle engine-events via-callback
+    // handle engine-events via callback
     ltRegisterEvent(LOTUS_EVENT_RESIZE, 0, resizeCallback);
 
     while (running) {
         ltClearColor();
         ltPumpEvents();
 
-        // handle input-events via-state
+        // handle input-events via state
         if (ltIsKeyDown(LOTUS_KEY_ESCAPE)) running = 0;
         if (ltIsKeyDown(LOTUS_KEY_R)) ltSetClearColor(1.0, 0.0, 0.0, 1.0);
         if (ltIsKeyDown(LOTUS_KEY_G)) ltSetClearColor(0.0, 1.0, 0.0, 1.0);

@@ -3,7 +3,6 @@
 ### **Platform Layer**
   - [✔️] Windowing
   - [✔️] Engine Logger
-  - [ ] OpenGL Logger
   - [✔️] Event Processing
   - [✔️] Input Processing
 
@@ -17,7 +16,6 @@
   - [✔️] Shader Data
   - [✔️] Texture Data
   - [✔️] Render Data Processing
-  - [ ] Camera Data Processing
 
 ### **Utility Layer**
   - [ ] Linked Array

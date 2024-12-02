@@ -18,7 +18,7 @@ typedef struct tagLotus {
     char version[8];
     void* renderState;
     void* platformState;
-} Lotus, LotusEngine, Lotus_s;
+} LotusEngine;
 
 static LotusEngine Engine;
 

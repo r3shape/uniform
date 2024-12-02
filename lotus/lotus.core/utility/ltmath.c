@@ -1,7 +1,7 @@
 #include "ltmath.h"
 
 float ltToRadians(float deg) {
-    return deg * _PI_/180.0;
+    return deg * LOTUS_PI/180.0;
 }
 
 // Creates a LTvec2

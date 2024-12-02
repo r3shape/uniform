@@ -1,0 +1,11 @@
+{
+    "compiler": "MinGW",
+    "project": "Lotus3D",
+    "include_dirs": ["lotus/lotus.3D", "lotus/include"],
+    "source_dirs": ["lotus/lotus.3D"],
+    "libraries": {
+        "Lotus": "build/lotus.core"
+    },
+    "output": "dll",
+    "output_dir": "build/lotus.3D"
+}

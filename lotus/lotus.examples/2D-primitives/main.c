@@ -1,4 +1,4 @@
-#include "../../include/lotus.h"
+#include "../../include/lotus2D.h"
 
 char vShader[] = {
     "#version 460 core\n"
@@ -28,15 +28,13 @@ b8 resizeCallback(LTeventData data, u16 eventCode, void* sender, void* listener)
 void main() {
     i32 running = lotusInit();
 
-    f32 vertices[] = {
-        // uLocation      uColor
-        -0.5, -0.5, 0.0,  1.0, 0.0, 0.0,
-         0.5, -0.5, 0.0,  0.0, 1.0, 0.0,
-         0.0,  0.5, 0.0,  0.0, 0.0, 1.0
-    };
-
     LTshaderProgram shader = ltglShaderProgram(vShader, fShader);
-    LTvertexData triangle = ltglVertexData(2, 3, 0, vertices, NULL);
+    LT2Dprimitive circle = lt2dMakeCircle(0.25f, 32, 0.0f, 0.0f, 1.0f); // Blue circle
+    LT2Dprimitive triangle = lt2dMakeTriangle(0.5, 0.5, 1.0f, 0.0f, 0.0f);  // Red triangle
+    LT2Dprimitive rectangle = lt2dMakeRectangle(0.5, 0.5, 0.0f, 1.0f, 0.0f); // Green rectangle
+
+    // "dynamic" draw target
+    LT2Dprimitive* target = &circle;
 
     // handle engine-events via callback
     ltRegisterEvent(LOTUS_EVENT_RESIZE, 0, resizeCallback);
@@ -47,15 +45,26 @@ void main() {
 
         // handle input-events via-state
         if (ltIsKeyDown(LOTUS_KEY_ESCAPE)) running = 0;
-        if (ltIsKeyDown(LOTUS_KEY_R)) ltSetClearColor(1.0, 0.0, 0.0, 1.0);
-        if (ltIsKeyDown(LOTUS_KEY_G)) ltSetClearColor(0.0, 1.0, 0.0, 1.0);
-        if (ltIsKeyDown(LOTUS_KEY_B)) ltSetClearColor(0.0, 0.0, 1.0, 1.0);
+        
+        if (ltIsKeyDown(LOTUS_KEY_R)) {
+            target = &circle;
+            ltSetClearColor(1.0, 0.0, 0.0, 1.0);
+        }
+
+        if (ltIsKeyDown(LOTUS_KEY_G)) {
+            target = &triangle;
+            ltSetClearColor(0.0, 1.0, 0.0, 1.0);
+        }
+        
+        if (ltIsKeyDown(LOTUS_KEY_B)) {
+            target = &rectangle;
+            ltSetClearColor(0.0, 0.0, 1.0, 1.0);
+        }
 
         ltSetShader(&shader);
-        ltDraw(&triangle);
+        if (target != NULL) ltDraw(&target->vertexData);
 
         ltInputUpdate(0);
         ltSwapBuffers();
     }; lotusExit();
-
 }

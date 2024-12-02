@@ -4,7 +4,7 @@
 #include "../lotustypes.h"
 #include "../defines.h"
 
-#define _PI_ 3.14159265358979323846
+#define LOTUS_PI 3.14159265358979323846
 
 LOTUS_API_ENTRY float ltToRadians(float deg);
 
