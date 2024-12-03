@@ -50,10 +50,13 @@ void main() {
 
         // handle input-events via-state
         if (ltIsKeyDown(LOTUS_KEY_ESCAPE)) running = 0;
+        
+        if (ltIsKeyDown(LOTUS_KEY_C)) sprite.primitive = lt2dMakeCircle(.25, 32, 1, 1, 1);
+        if (ltIsKeyDown(LOTUS_KEY_T)) sprite.primitive = lt2dMakeTriangle(.5, .5, 1, 1, 1);
+        if (ltIsKeyDown(LOTUS_KEY_R)) sprite.primitive = lt2dMakeRectangle(.5, .5, 1, 1, 1);
 
         ltSetShader(&shader);
-        ltSetTexture2D(&sprite.texture);
-        ltDraw(&sprite.primitive.vertexData);
+        lt2dDrawSprite(&sprite);
 
         ltInputUpdate(0);
         ltSwapBuffers();

@@ -42,6 +42,10 @@ b8 lotusInit(void) {
     }
 }
 
+void* ltGetRenderState(void) { return Engine.renderState; }
+
+void* ltGetPlatformState(void) { return Engine.platformState; }
+
 b8 ltPumpEvents(void) {
     LTplatformState* platformState = (LTplatformState*)Engine.platformState;
     return ltPlatformPump(platformState);

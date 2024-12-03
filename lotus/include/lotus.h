@@ -22,6 +22,14 @@ typedef struct tagLotus {
 
 static LotusEngine Engine;
 
+// define these externally when needed. (e.g. lotus.2D/lotus.3D modules)
+// they are implemented in `lotus.c`
+// void* ltGetRenderState(void);
+
+// define these externally when needed. (e.g. lotus.2D/lotus.3D modules)
+// they are implemented in `lotus.c`
+// void* ltGetPlatformState(void);
+
 LOTUS_API_ENTRY b8 lotusInit(void);
 LOTUS_API_ENTRY b8 ltPumpEvents(void);
 LOTUS_API_ENTRY void ltSwapBuffers(void);

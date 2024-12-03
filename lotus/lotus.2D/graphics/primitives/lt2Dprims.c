@@ -2,6 +2,13 @@
 
 #include "../../../lotus.core/utility/ltmath.h"
 #include "../../../lotus.core/graphics/gl/ltglapi.h"
+#include "../../../lotus.core/graphics/renderer/ltrenderer.h"
+
+void lt2dDrawPrimitive(LT2Dprimitive* prim) {
+    void* renderState = ltGetRenderState();
+    ltRendererSetVertexData(renderState, &prim->vertexData);
+    ltRendererDraw(renderState);
+}
 
 LT2Dprimitive lt2dMakeTriangle(f32 width, f32 height, f32 r, f32 g, f32 b) {
     f32 halfWidth = width / 2.0f;

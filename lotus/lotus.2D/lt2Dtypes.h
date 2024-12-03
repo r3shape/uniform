@@ -3,6 +3,10 @@
 
 #include "../lotus.core/lotustypes.h"
 
+// signatures of internal engine "getter" functions
+void* ltGetRenderState(void);
+void* ltGetPlatformState(void);
+
 typedef struct tag2DPrimitive {
     LTvec3 color;
     LTvertexData vertexData;

@@ -18,9 +18,9 @@ static LARGE_INTEGER startTime;
 
 typedef struct tagPlatformInternal {
     HWND hwnd;
-    HINSTANCE instance;
-    HDC deviceContext;
     HGLRC glContext;
+    HDC deviceContext;
+    HINSTANCE instance;
 } LTplatformInternal;
 
 LRESULT CALLBACK ltWindowProcess(HWND hwnd, u32 msg, WPARAM w, LPARAM l);
@@ -216,9 +216,8 @@ void ltPlatformSleep(u64 ms) {
 LRESULT CALLBACK ltWindowProcess(HWND hwnd, u32 msg, WPARAM w, LPARAM l) {
     switch(msg) {
         case WM_ERASEBKGND: return 1;
-        case WM_CLOSE:
-            ltPushEvent((LTeventData){.data.u8[0]=1}, LOTUS_EVENT_APP_QUIT, 0);
-            return 0;
+        case WM_QUIT:       // fall through WM_DESTROY
+        case WM_CLOSE:      // fall through WM_DESTROY
         case WM_DESTROY:
             ltPushEvent((LTeventData){.data.u8[0]=1}, LOTUS_EVENT_APP_QUIT, 0);
             PostQuitMessage(0);
