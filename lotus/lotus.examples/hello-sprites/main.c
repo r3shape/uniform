@@ -30,24 +30,16 @@ b8 resizeCallback(LTeventData data, u16 eventCode, void* sender, void* listener)
     ltSetViewport(0, 0, data.data.u16[0], data.data.u16[1]);
 }
 
-typedef struct tagSprite {
-    LTvec2 size;
-    LTvec2 location;
-    LTtexture2D texture;
-    LT2Dprimitive primitive;
-} LT2Dsprite;
-
 void main() {
     i32 running = lotusInit();
 
-    LTtexture2D texture = ltglTexture2D("textures\\lotus.png");
+    LT2Dsprite sprite = lt2dMakeSprite(
+        (LTvec2){0.32, 0.32},
+        (LTvec2){100.0, 100.0},
+        (LTvec3){1.0f, 1.0f, 1.0f},
+        "textures/container.jpg"
+    );
     LTshaderProgram shader = ltglShaderProgram(vShader, fShader);
-    LT2Dprimitive circle = lt2dMakeCircle(0.25f, 32, 0.0f, 0.0f, 1.0f); // Blue circle
-    LT2Dprimitive triangle = lt2dMakeTriangle(0.5, 0.5, 1.0f, 0.0f, 0.0f);  // Red triangle
-    LT2Dprimitive rectangle = lt2dMakeRectangle(0.5, 0.5, 0.0f, 1.0f, 0.0f); // Green rectangle
-
-    // "dynamic" draw target
-    LT2Dprimitive* target = &circle;
 
     // handle engine-events via callback
     ltRegisterEvent(LOTUS_EVENT_RESIZE, 0, resizeCallback);
@@ -58,25 +50,10 @@ void main() {
 
         // handle input-events via-state
         if (ltIsKeyDown(LOTUS_KEY_ESCAPE)) running = 0;
-        
-        if (ltIsKeyDown(LOTUS_KEY_R)) {
-            target = &circle;
-            ltSetClearColor(1.0, 0.0, 0.0, 1.0);
-        }
-
-        if (ltIsKeyDown(LOTUS_KEY_G)) {
-            target = &triangle;
-            ltSetClearColor(0.0, 1.0, 0.0, 1.0);
-        }
-        
-        if (ltIsKeyDown(LOTUS_KEY_B)) {
-            target = &rectangle;
-            ltSetClearColor(0.0, 0.0, 1.0, 1.0);
-        }
 
         ltSetShader(&shader);
-        ltSetTexture2D(&texture);
-        if (target != NULL) ltDraw(&target->vertexData);
+        ltSetTexture2D(&sprite.texture);
+        ltDraw(&sprite.primitive.vertexData);
 
         ltInputUpdate(0);
         ltSwapBuffers();
