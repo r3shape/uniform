@@ -2,7 +2,7 @@
 
 [![GitHub Releases Downloads](https://img.shields.io/github/downloads/d34d0s/Lotus/total)](https://github.com/d34d0s/Lotus/releases)  
 [![GitHub Stars](https://img.shields.io/github/stars/d34d0s/Lotus?style=flat&label=stars)](https://github.com/d34d0s/Lotus/stargazers)  
-[![GitHub commits since tagged version](https://img.shields.io/github/commits-since/d34d0s/Lotus/Lotus.1.0.2024)](https://github.com/d34d0s/Lotus/commits/master)  
+[![GitHub commits since tagged version](https://img.shields.io/github/commits-since/d34d0s/Lotus/Lotus.1.0.2024)](https://github.com/d34d0s/Lotus/commits/main)  
 [![License](https://img.shields.io/badge/license-apache%2Flibpng-green.svg)](LICENSE)  
 
 
