@@ -12,7 +12,7 @@ void ltPlatformSleep(u64 ms);
 b8 ltPlatformPump(LTplatformState* state);
 void ltPlatformExit(LTplatformState* state);
 void ltPlatformSwapBuffers(LTplatformState* state);
-b8 ltPlatformInit(LTplatformState* state, const char* application, i32 x, i32 y, i32 w, i32 H);
+b8 ltPlatformInit(LTplatformState* state, char* application, i32 x, i32 y, i32 w, i32 H);
 
 void* _ltMemAlloc(u64 size, b8 aligned);
 void* _ltMemZero(void* block, u64 size);

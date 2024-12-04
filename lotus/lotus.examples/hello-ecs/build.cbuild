@@ -1,0 +1,13 @@
+{
+    "compiler": "MinGW",
+    "project": "hello-ecs",
+    "include_dirs": ["../../include", "../../lotus.2D", "../../lotus.ECS"],
+    "source_dirs": ["."],
+    "libraries": {
+        "Lotus": "../../../build/lotus.core",
+        "Lotus2D": "../../../build/lotus.2D",
+        "LotusECS": "../../../build/lotus.ECS"
+    },
+    "output": "exe",
+    "output_dir": "build/win"
+}

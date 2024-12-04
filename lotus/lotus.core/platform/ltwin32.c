@@ -25,7 +25,7 @@ typedef struct tagWindowInternal {
 
 LRESULT CALLBACK ltWindowProcess(HWND hwnd, u32 msg, WPARAM w, LPARAM l);
 
-b8 ltPlatformInit(LTplatformState* state, const char* application, i32 x, i32 y, i32 w, i32 h) {
+b8 ltPlatformInit(LTplatformState* state, char* application, i32 x, i32 y, i32 w, i32 h) {
     state->window.state = malloc(sizeof(LTwindowInternal));
     LTwindowInternal* internalState = (LTwindowInternal*)state->window.state;
 

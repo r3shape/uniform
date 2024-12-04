@@ -42,6 +42,18 @@ typedef int LTsizei, LTint, LTbitfield;
     #define ltStaticAssert _Static_assert
 #endif
 
+static inline i32 ltGetBitPosition(u64 id) {
+    #if defined(__GNUC__) || defined(__clang__)
+        return __builtin_ctzll(id);  // Count trailing zeros for 64-bit
+    #elif defined(_MSC_VER)
+        unsigned long index;
+        _BitScanForward64(&index, id);  // BitScanForward for MSVC
+        return index;
+    #else
+        #error "Unsupported compiler for bit position calculation"
+    #endif
+}
+
 ltStaticAssert(sizeof(u8) == 1, "expected u8 to be 1 byte");
 ltStaticAssert(sizeof(u16) == 2, "expected u16 to be 2 bytes");
 ltStaticAssert(sizeof(u32) == 4, "expected u32 to be 4 bytes");
