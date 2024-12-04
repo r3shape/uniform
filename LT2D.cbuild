@@ -1,10 +1,11 @@
 {
     "compiler": "MinGW",
     "project": "Lotus2D",
-    "include_dirs": ["lotus/lotus.2D", "lotus/include"],
+    "include_dirs": ["lotus/lotus.2D", "lotus/lotus.ECS", "lotus/include"],
     "source_dirs": ["lotus/lotus.2D"],
     "libraries": {
-        "Lotus": "build/lotus.core"
+        "Lotus": "build/lotus.core",
+        "LotusECS": "build/lotus.ECS"
     },
     "output": "dll",
     "output_dir": "build/lotus.2D"
