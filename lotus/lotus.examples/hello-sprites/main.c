@@ -7,8 +7,11 @@ char vShader[] = {
     "layout(location = 2) in vec2 uTCoord;\n"
     "out vec2 texCoord;\n"
     "out vec3 vertexColor;\n"
+    "uniform mat4 uModel;\n"
+    "uniform mat4 uView;\n"
+    "uniform mat4 uProj;\n"
     "void main() {\n"
-    "   gl_Position = vec4(uLocation, 1.0f);\n"
+    "   gl_Position = uProj * uView * uModel * vec4(uLocation, 1.0f);\n"
     "   vertexColor = uColor;\n"
     "   texCoord = uTCoord;\n"
     "}\0"
@@ -31,11 +34,11 @@ b8 resizeCallback(LTeventData data, u16 eventCode, void* sender, void* listener)
 }
 
 void main() {
-    i32 running = lotusInit();
+    i32 running = lt2dInit();
 
     LT2Dsprite sprite = lt2dMakeSprite(
-        (LTvec2){0.32, 0.32},
-        (LTvec2){100.0, 100.0},
+        (LTvec2){32.0, 32.0},
+        (LTvec2){0.0, 0.0},
         (LTvec3){1.0f, 1.0f, 1.0f},
         "textures/container.jpg"
     );
@@ -44,6 +47,11 @@ void main() {
     // handle engine-events via callback
     ltRegisterEvent(LOTUS_EVENT_RESIZE, 0, resizeCallback);
 
+    LTvec3 eye = {0.0f, 0.0f, 1.0f};
+    LTvec3 center = {0.0f, 0.0f, 0.0f};
+    LTvec3 up = {0.0f, 1.0f, 0.0f};
+    LTmat4 mView = ltLookAt(eye, center, up);
+
     while (running) {
         ltClearColor();
         ltPumpEvents();
@@ -51,14 +59,18 @@ void main() {
         // handle input-events via-state
         if (ltIsKeyDown(LOTUS_KEY_ESCAPE)) running = 0;
         
-        if (ltIsKeyDown(LOTUS_KEY_C)) sprite.primitive = lt2dMakeCircle(.25, 32, 1, 1, 1);
-        if (ltIsKeyDown(LOTUS_KEY_T)) sprite.primitive = lt2dMakeTriangle(.5, .5, 1, 1, 1);
-        if (ltIsKeyDown(LOTUS_KEY_R)) sprite.primitive = lt2dMakeRectangle(.5, .5, 1, 1, 1);
+        if (ltIsKeyDown(LOTUS_KEY_C)) sprite.primitive = lt2dMakeCircle(32, 32, 1, 1, 1);
+        if (ltIsKeyDown(LOTUS_KEY_T)) sprite.primitive = lt2dMakeTriangle(32.0, 32.0, 1, 1, 1);
+        if (ltIsKeyDown(LOTUS_KEY_R)) sprite.primitive = lt2dMakeRectangle(32.0, 32.0, 1, 1, 1);
 
+        sprite.matrix = ltMulMat4(ltIdentity(), ltTransMat4(sprite.location.x + sprite.size.x/2, sprite.location.y + sprite.size.y/2, 0.0f));
+
+        ltglSetUniform(shader, LOTUS_UNIFORM_MAT4, "uView", &mView);
+        
         ltSetShader(&shader);
         lt2dDrawSprite(&sprite);
 
         ltInputUpdate(0);
         ltSwapBuffers();
-    }; lotusExit();
+    }; lt2dExit();
 }

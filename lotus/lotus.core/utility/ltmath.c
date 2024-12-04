@@ -118,12 +118,12 @@ LTvec4 ltNormVec4(LTvec4 v) {
     return ltScaleVec4(v, 1.0f / length);
 }
 
-
 LTmat4 ltIdentity() {
-    LTmat4 result = {1.0f, 0.0f, 0.0f, 0.0f,
-                     0.0f, 1.0f, 0.0f, 0.0f,
-                     0.0f, 0.0f, 1.0f, 0.0f,
-                     0.0f, 0.0f, 0.0f, 1.0f};
+    LTmat4 result = {0};
+    result.m[0] = 1.0f;
+    result.m[5] = 1.0f;
+    result.m[10] = 1.0f;
+    result.m[15] = 1.0f;
     return result;
 }
 
@@ -191,25 +191,31 @@ LTmat4 ltMulMat4(LTmat4 a, LTmat4 b) {
     return result;
 }
 
-LTmat4 ltOrtho(float left, float right, float bottom, float top, float near, float far) {
+LTmat4 ltOrtho(f32 left, f32 right, f32 bottom, f32 top, f32 near, f32 far) {
     LTmat4 result = ltIdentity();
+
     result.m[0] = 2.0f / (right - left);
     result.m[5] = 2.0f / (top - bottom);
     result.m[10] = -2.0f / (far - near);
+
     result.m[12] = -(right + left) / (right - left);
     result.m[13] = -(top + bottom) / (top - bottom);
     result.m[14] = -(far + near) / (far - near);
+
     return result;
 }
 
 LTmat4 ltPerspective(float fov, float aspect, float near, float far) {
+    LTmat4 result = ltIdentity();
     float tan_half_fov = tanf(fov / 2.0f);
-    LTmat4 result = {0};
+    
     result.m[0] = 1.0f / (aspect * tan_half_fov);
     result.m[5] = 1.0f / tan_half_fov;
     result.m[10] = -(far + near) / (far - near);
+    
     result.m[11] = -1.0f;
     result.m[14] = -(2.0f * far * near) / (far - near);
+    
     return result;
 }
 

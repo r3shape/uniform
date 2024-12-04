@@ -3,17 +3,6 @@
 
 #include "defines.h"
 
-/* ENGINE TYPES */
-
-typedef enum LTerrorType {
-    LOTUS_ERR_NONE=0,
-    LOTUS_ERR_INIT,
-    LOTUS_ERR_TYPE,
-    LOTUS_ERR_FUNC,
-    LOTUS_ERR_MALLOC,
-    LOTUS_ERR_TYPES,
-} LTerrorType;
-
 /* UTILITY TYPES */
 
 typedef struct tagKeyValue {
@@ -107,5 +96,43 @@ typedef struct tagMat4{
     f32 m[16];
 } LTmat4;
 
+/* ENGINE TYPES */
+
+typedef enum LTerrorType {
+    LOTUS_ERR_NONE=0,
+    LOTUS_ERR_INIT,
+    LOTUS_ERR_TYPE,
+    LOTUS_ERR_FUNC,
+    LOTUS_ERR_MALLOC,
+    LOTUS_ERR_TYPES,
+} LTerrorType;
+
+typedef struct tagWindow {
+    void* state;
+    void* handle;
+    char* title;
+    LTvec2i size;
+    LTvec2 location;
+} LTwindow;
+
+typedef struct tagPlatformState {
+    LTwindow window;
+} LTplatformState;
+
+typedef struct tagPlatformLibrary {
+    char* name;
+    void* module;
+} LTdynamicLib;
+
+typedef struct tagRendererState{
+    i32 mode;                                 // OpenGL draw mode
+    i32 passes;                               // total successful render passes
+    LTmat4 mProj;                             // current projection matrix
+    i32 vpSize[2];                            // viewport size
+    f32 clearColor[4];                        // color value populating the color buffer
+    LTtexture2D* texture2D;                   // pointer to the texture handle currently bound for rendering
+    LTvertexData* vertexData;                 // pointer to the vertex data currently being rendered
+    LTshaderProgram* shaderProgram;           // pointer to the shader program currently being used
+} LTrenderState;
 
 #endif

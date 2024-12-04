@@ -16,18 +16,18 @@
 static f64 clockFrequency;
 static LARGE_INTEGER startTime;
 
-typedef struct tagPlatformInternal {
+typedef struct tagWindowInternal {
     HWND hwnd;
     HGLRC glContext;
     HDC deviceContext;
     HINSTANCE instance;
-} LTplatformInternal;
+} LTwindowInternal;
 
 LRESULT CALLBACK ltWindowProcess(HWND hwnd, u32 msg, WPARAM w, LPARAM l);
 
 b8 ltPlatformInit(LTplatformState* state, const char* application, i32 x, i32 y, i32 w, i32 h) {
-    state->internal = malloc(sizeof(LTplatformInternal));
-    LTplatformInternal* internalState = (LTplatformInternal*)state->internal;
+    state->window.state = malloc(sizeof(LTwindowInternal));
+    LTwindowInternal* internalState = (LTwindowInternal*)state->window.state;
 
     internalState->instance = GetModuleHandleA(0);  // get handle to current application
 
@@ -86,7 +86,11 @@ b8 ltPlatformInit(LTplatformState* state, const char* application, i32 x, i32 y,
         return LOTUS_FALSE;
     } else { 
         internalState->hwnd = handle;
-        state->windowPtr = &internalState->hwnd;
+        state->window.title = application;
+        state->window.state = internalState;
+        state->window.size = (LTvec2i){w, h};
+        state->window.location = (LTvec2){x, y};
+        state->window.handle = &internalState->hwnd;
     }
 
     // get current device context and define a pixel format
@@ -139,7 +143,7 @@ b8 ltPlatformInit(LTplatformState* state, const char* application, i32 x, i32 y,
 }
 
 void ltPlatformExit(LTplatformState* state) {
-    LTplatformInternal* internalState = (LTplatformInternal*)state->internal;
+    LTwindowInternal* internalState = (LTwindowInternal*)state->window.state;
 
     if (internalState->hwnd) {
         wglMakeCurrent(NULL, NULL);
@@ -147,7 +151,7 @@ void ltPlatformExit(LTplatformState* state) {
         ReleaseDC(internalState->hwnd, internalState->deviceContext);
     }
 
-    free (state->internal);
+    free (state->window.state);
 }
 
 b8 ltPlatformPump(LTplatformState* state) {
@@ -285,7 +289,7 @@ LRESULT CALLBACK ltWindowProcess(HWND hwnd, u32 msg, WPARAM w, LPARAM l) {
 }
 
 void ltPlatformSwapBuffers(LTplatformState* state) {
-    LTplatformInternal* internalState = (LTplatformInternal*)state->internal;
+    LTwindowInternal* internalState = (LTwindowInternal*)state->window.state;
     SwapBuffers(GetDC(internalState->hwnd));
 }
 

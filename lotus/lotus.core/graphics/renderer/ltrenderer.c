@@ -1,43 +1,26 @@
 #include "ltrenderer.h"
 
 #include "../gl/ltgl.h"
+#include "../../utility/ltmath.h"
 #include "../../memory/ltmemory.h"
 #include "../../platform/ltlogger.h"
 
-typedef struct tagRendererInternal{
-    i32 mode;                                 // OpenGL draw mode
-    i32 passes;                               // total successful render passes
-    i32 vpSize[2];                            // viewport size
-    f32 clearColor[4];                        // color value populating the color buffer
-    LTtexture2D* texture2D;                   // pointer to the texture handle currently bound for rendering
-    LTvertexData* vertexData;                 // pointer to the vertex data currently being rendered
-    LTshaderProgram* shaderProgram;           // pointer to the shader program currently being used
-} LTrendererInternal;
-
-b8 ltRendererInit(LTrenderState *state, u32 vpWidth, u32 vpHeight) {
-    state->internal = (LTrendererInternal*)ltMemAlloc(sizeof(LTrendererInternal), LOTUS_MEMTAG_RENDERER);
-    if (!state->internal) {
-        ltSetLogLevel(LOTUS_LOG_FATAL);
-        ltLogFatal("Failed to allocate internal render state structure", 0);
-        return LOTUS_FALSE;
-    }
-    
+b8 ltRendererInit(LTrenderState* state, u32 vpWidth, u32 vpHeight) {
     if (!ltglLoadFunctions()) {
         ltSetLogLevel(LOTUS_LOG_FATAL);
         ltLogFatal("Failed to load modern OpenGL functions", 0);
-        ltMemFree(state->internal, sizeof(LTrendererInternal), LOTUS_MEMTAG_RENDERER);
         return LOTUS_FALSE;
     }
     
-    LTrendererInternal* internalState = (LTrendererInternal*)state->internal;
-
-    internalState->passes = 0;
-    internalState->mode = GL_TRIANGLES;
-    internalState->vpSize[0] = vpWidth;
-    internalState->vpSize[1] = vpHeight;
-    internalState->texture2D = NULL;
-    internalState->vertexData = NULL;
-    internalState->shaderProgram = NULL;
+    state->passes = 0;
+    state->mode = GL_TRIANGLES;
+    state->vpSize[0] = vpWidth;
+    state->vpSize[1] = vpHeight;
+    
+    state->texture2D = NULL;
+    state->vertexData = NULL;
+    state->mProj = ltIdentity();
+    state->shaderProgram = NULL;
 
     ltglEnable(GL_BLEND);
     ltglEnable(GL_CULL_FACE);
@@ -61,22 +44,22 @@ b8 ltRendererInit(LTrenderState *state, u32 vpWidth, u32 vpHeight) {
 }
 
 void ltRendererExit(LTrenderState *state) {
-    ltMemFree(state->internal, sizeof(LTrendererInternal), LOTUS_MEMTAG_RENDERER);
+    state->texture2D = NULL;
+    state->vertexData = NULL;
+    state->shaderProgram = NULL;
 }
 
 void ltRendererSetViewport(LTrenderState *state, i32 x, i32 y, i32 width, i32 height) {
-    LTrendererInternal* internalState = (LTrendererInternal*)state->internal;
-    internalState->vpSize[0] = width;
-    internalState->vpSize[1] = height;
+    state->vpSize[0] = width;
+    state->vpSize[1] = height;
     ltglViewport(x, y, width, height);
 }
 
 void ltRendererSetClearColor(LTrenderState *state, f32 r, f32 g, f32 b, f32 a) {
-    LTrendererInternal* internalState = (LTrendererInternal*)state->internal;
-    internalState->clearColor[0] = r;
-    internalState->clearColor[1] = g;
-    internalState->clearColor[2] = b;
-    internalState->clearColor[3] = a;
+    state->clearColor[0] = r;
+    state->clearColor[1] = g;
+    state->clearColor[2] = b;
+    state->clearColor[3] = a;
     ltglClearColor(r, g, b, a);
 }
 
@@ -85,51 +68,48 @@ void ltRendererClearColor(void) {
 }
 
 void ltRendererSetVertexData(LTrenderState *state, LTvertexData* data) {
-    LTrendererInternal* internalState = (LTrendererInternal*)state->internal;
-    internalState->vertexData = data;
+    if (data == NULL) return;
+    state->vertexData = data;
 }
 
 void ltRendererSetTexture2D(LTrenderState *state, LTtexture2D* texture) {
-    LTrendererInternal* internalState = (LTrendererInternal*)state->internal;
-    internalState->texture2D = texture;
+    if (texture == NULL) return;
+    state->texture2D = texture;
 }
 
 void ltRendererSetShader(LTrenderState *state, LTshaderProgram* program) {
-    LTrendererInternal* internalState = (LTrendererInternal*)state->internal;
-    internalState->shaderProgram = program;
+    if (program == NULL) return;
+    state->shaderProgram = program;
 }
 
 void ltRendererDrawArrays(LTrenderState *state) {
-    LTrendererInternal* internalState = (LTrendererInternal*)state->internal;
-    if (!internalState->vertexData) return;
-    if (internalState->shaderProgram) ltglUseProgram(internalState->shaderProgram->program);
-    if (internalState->texture2D) ltglBindTexture(GL_TEXTURE_2D, internalState->texture2D->handle);
-    ltglBindVertexArray(internalState->vertexData->vertexArray);
-    ltglDrawArrays(internalState->mode, 0, internalState->vertexData->nVertices);
+    if (!state->vertexData) return;
+    if (state->shaderProgram) ltglUseProgram(state->shaderProgram->program);
+    if (state->texture2D) ltglBindTexture(GL_TEXTURE_2D, state->texture2D->handle);
+    ltglBindVertexArray(state->vertexData->vertexArray);
+    ltglDrawArrays(state->mode, 0, state->vertexData->nVertices);
     ltglBindTexture(GL_TEXTURE_2D, 0);
     ltglBindVertexArray(0);
 }
 
 void ltRendererDrawIndexed(LTrenderState *state, void* offset) {
-    LTrendererInternal* internalState = (LTrendererInternal*)state->internal;
-    if (!internalState->vertexData) return;
-    if (internalState->shaderProgram) ltglUseProgram(internalState->shaderProgram->program);
-    if (internalState->texture2D) ltglBindTexture(GL_TEXTURE_2D, internalState->texture2D->handle);
-    ltglBindVertexArray(internalState->vertexData->vertexArray);
-    ltglDrawElements(internalState->mode, internalState->vertexData->nIndices, GL_UNSIGNED_INT, offset);
+    if (!state->vertexData) return;
+    if (state->shaderProgram) ltglUseProgram(state->shaderProgram->program);
+    if (state->texture2D) ltglBindTexture(GL_TEXTURE_2D, state->texture2D->handle);
+    ltglBindVertexArray(state->vertexData->vertexArray);
+    ltglDrawElements(state->mode, state->vertexData->nIndices, GL_UNSIGNED_INT, offset);
     ltglBindTexture(GL_TEXTURE_2D, 0);
     ltglBindVertexArray(0);
 }
 
 void ltRendererDraw(LTrenderState *state) {
-    LTrendererInternal* internalState = (LTrendererInternal*)state->internal;
-    if (!internalState->vertexData) return;
-    if (internalState->shaderProgram) ltglUseProgram(internalState->shaderProgram->program);
-    if (internalState->texture2D) ltglBindTexture(GL_TEXTURE_2D, internalState->texture2D->handle);
-    ltglBindVertexArray(internalState->vertexData->vertexArray);
-    if (internalState->vertexData->nIndices > 0) {
-        ltglDrawElements(internalState->mode, internalState->vertexData->nIndices, GL_UNSIGNED_INT, (void*)0);
-    } else { ltglDrawArrays(internalState->mode, 0, internalState->vertexData->nVertices); }
+    if (!state->vertexData) return;
+    if (state->shaderProgram) ltglUseProgram(state->shaderProgram->program);
+    if (state->texture2D) ltglBindTexture(GL_TEXTURE_2D, state->texture2D->handle);
+    ltglBindVertexArray(state->vertexData->vertexArray);
+    if (state->vertexData->nIndices > 0) {
+        ltglDrawElements(state->mode, state->vertexData->nIndices, GL_UNSIGNED_INT, (void*)0);
+    } else { ltglDrawArrays(state->mode, 0, state->vertexData->nVertices); }
     ltglBindTexture(GL_TEXTURE_2D, 0);
     ltglBindVertexArray(0);
 }

@@ -3,10 +3,7 @@
 
 #include "../../defines.h"
 #include "../gl/ltglapi.h"
-
-typedef struct tagRenderState {
-    void *internal;
-} LTrenderState;
+#include "../../lotustypes.h"
 
 void ltRendererExit(LTrenderState *state);
 b8 ltRendererInit(LTrenderState *state, u32 vpWidth, u32 vpHeight);

@@ -1,6 +1,7 @@
 #ifndef LT3DTYPES_H
 #define LT3DTYPES_H
 
+#include "../lotus.core/defines.h"
 #include "../lotus.core/lotustypes.h"
 
 typedef struct tag3DPrimitive {

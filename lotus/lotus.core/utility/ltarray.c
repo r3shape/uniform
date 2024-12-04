@@ -2,7 +2,6 @@
 #include "../memory/ltmemory.h"
 #include "../platform/ltlogger.h"
 
-
 void* ltMakeDArray(u64 max, u64 stride) {
 
     u64 total_size = (LOTUS_ARRAY_FIELDS * sizeof(u64)) + (max * stride);
@@ -15,7 +14,6 @@ void* ltMakeDArray(u64 max, u64 stride) {
 
     return (void*)(header + LOTUS_ARRAY_FIELDS);
 }
-
 
 void* ltResizeDArray(u64 max, void* arr) {
     u64* header = (u64*)arr - LOTUS_ARRAY_FIELDS;
@@ -37,7 +35,6 @@ void* ltResizeDArray(u64 max, void* arr) {
     return (void*)(header + LOTUS_ARRAY_FIELDS);
 }
 
-
 void ltDestroyDArray(void* arr) {
     u64* header = (u64*)arr - LOTUS_ARRAY_FIELDS;
     u64 max = header[LOTUS_ARRFIELD_MAX];
@@ -45,18 +42,15 @@ void ltDestroyDArray(void* arr) {
     ltMemFree(header, (LOTUS_ARRAY_FIELDS * sizeof(u64)) + (max * stride), LOTUS_MEMTAG_ARRAY);
 }
 
-
 u64 ltGetDArrayField(u64 field, void* arr) {
     u64* header = (u64*)arr - LOTUS_ARRAY_FIELDS;
     return header[field];
 }
 
-
 void ltSetDArrayField(u64 field, u64 value, void* arr) {
     u64* header = (u64*)arr - LOTUS_ARRAY_FIELDS;
     header[field] = value;
 }
-
 
 int ltPushDArray(void* element, void* arr) {
     u64* header = (u64*)arr - LOTUS_ARRAY_FIELDS;
@@ -76,7 +70,6 @@ int ltPushDArray(void* element, void* arr) {
     header[LOTUS_ARRFIELD_LENGTH] += 1;
     return 0;
 }
-
 
 int ltPopDArray(void* element, void* arr) {
     u64* header = (u64*)arr - LOTUS_ARRAY_FIELDS;
@@ -120,5 +113,3 @@ int ltPopAtDArray(u64 index, void* element, void* arr) {
     header[LOTUS_ARRFIELD_LENGTH] -= 1;
     return 0;
 }
-
-

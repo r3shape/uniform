@@ -9,9 +9,6 @@
 #include "platform/input/ltinput.h"
 #include "graphics/renderer/ltrenderer.h"
 
-static LTrenderState _renderState;
-static LTplatformState _platformState;
-
 b8 lotusInit(void) {
     ltMemoryInit();
 
@@ -22,8 +19,8 @@ b8 lotusInit(void) {
     if (
         !ltEventInit()                                                                      ||
         !ltInputInit()                                                                      ||
-        !ltPlatformInit(&_platformState, "Lotus Engine Test", 100, 100, 1280, 720)          ||
-        !ltRendererInit(&_renderState, 1280, 720)                                        // ||
+        !ltPlatformInit(&Engine.platformState, "Lotus Engine Test", 100, 100, 1280, 720)          ||
+        !ltRendererInit(&Engine.renderState, 1280, 720)                                        // ||
         ) {
             ltSetLogLevel(LOTUS_LOG_FATAL);
             ltLogError("failed to initialize Lotus");
@@ -36,29 +33,24 @@ b8 lotusInit(void) {
         _ltMemFree(memStats, LOTUS_FALSE);
 
         Engine.init = LOTUS_TRUE;
-        Engine.renderState = &_renderState;
-        Engine.platformState = &_platformState;
         return LOTUS_TRUE;
     }
 }
 
-void* ltGetRenderState(void) { return Engine.renderState; }
+LTrenderState* ltGetRenderState(void) { return &Engine.renderState; }
 
-void* ltGetPlatformState(void) { return Engine.platformState; }
+LTplatformState* ltGetPlatformState(void) { return &Engine.platformState; }
 
 b8 ltPumpEvents(void) {
-    LTplatformState* platformState = (LTplatformState*)Engine.platformState;
-    return ltPlatformPump(platformState);
+    return ltPlatformPump(&Engine.platformState);
 }
 
 void ltSetClearColor(f32 r, f32 g, f32 b, f32 a) {
-    LTrenderState* renderState = (LTrenderState*)Engine.renderState;
-    ltRendererSetClearColor(renderState, r, g, b, a);
+    ltRendererSetClearColor(&Engine.renderState, r, g, b, a);
 }
 
 void ltSetViewport(u32 x, u32 y, u32 w, u32 h) {
-    LTrenderState* renderState = (LTrenderState*)Engine.renderState;
-    ltRendererSetViewport(renderState, x, y, w, h);
+    ltRendererSetViewport(&Engine.renderState, x, y, w, h);
 }
 
 void ltClearColor(void) {
@@ -66,45 +58,37 @@ void ltClearColor(void) {
 }
 
 void ltSetShader(LTshaderProgram* shader) {
-    LTrenderState* renderState = (LTrenderState*)Engine.renderState;
-    ltRendererSetShader(renderState, shader);
+    ltRendererSetShader(&Engine.renderState, shader);
 }
 
 void ltSetTexture2D(LTtexture2D* texture) {
-    LTrenderState* renderState = (LTrenderState*)Engine.renderState;
-    ltRendererSetTexture2D(renderState, texture);
+    ltRendererSetTexture2D(&Engine.renderState, texture);
 }
 
 void ltDraw(LTvertexData* data) {
-    LTrenderState* renderState = (LTrenderState*)Engine.renderState;
-    ltRendererSetVertexData(renderState, data);
-    ltRendererDraw((LTrenderState*)Engine.renderState);
+    ltRendererSetVertexData(&Engine.renderState, data);
+    ltRendererDraw(&Engine.renderState);
 }
 
 void ltDrawArrays(LTvertexData* data) {
-    LTrenderState* renderState = (LTrenderState*)Engine.renderState;
-    ltRendererSetVertexData(renderState, data);
-    ltRendererDrawArrays((LTrenderState*)Engine.renderState);
+    ltRendererSetVertexData(&Engine.renderState, data);
+    ltRendererDrawArrays(&Engine.renderState);
 }
 
 void ltDrawIndexed(LTvertexData* data, void* offset) {
-    LTrenderState* renderState = (LTrenderState*)Engine.renderState;
-    ltRendererSetVertexData(renderState, data);
-    ltRendererDrawIndexed((LTrenderState*)Engine.renderState, offset);
+    ltRendererSetVertexData(&Engine.renderState, data);
+    ltRendererDrawIndexed(&Engine.renderState, offset);
 }
 
 void ltSwapBuffers(void) {
-    LTplatformState* platformState = (LTplatformState*)Engine.platformState;
-    ltPlatformSwapBuffers(platformState);
+    ltPlatformSwapBuffers(&Engine.platformState);
 }
 
 void lotusExit(void) {
-    LTrenderState* renderState = (LTrenderState*)Engine.renderState;
-    LTplatformState* platformState = (LTplatformState*)Engine.platformState;
     ltInputExit();
     ltEventExit();
-    ltRendererExit(renderState);
-    ltPlatformExit(platformState);
+    ltRendererExit(&Engine.renderState);
+    ltPlatformExit(&Engine.platformState);
     ltMemoryExit();
 }
 

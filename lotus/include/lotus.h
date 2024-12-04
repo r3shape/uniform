@@ -16,8 +16,8 @@
 typedef struct tagLotus {
     b8 init;
     char version[8];
-    void* renderState;
-    void* platformState;
+    LTrenderState renderState;
+    LTplatformState platformState;
 } LotusEngine;
 
 static LotusEngine Engine;
@@ -25,15 +25,13 @@ static LotusEngine Engine;
 // define these externally when needed. (e.g. lotus.2D/lotus.3D modules)
 // they are implemented in `lotus.c`
 // void* ltGetRenderState(void);
-
-// define these externally when needed. (e.g. lotus.2D/lotus.3D modules)
-// they are implemented in `lotus.c`
 // void* ltGetPlatformState(void);
 
 LOTUS_API_ENTRY b8 lotusInit(void);
+LOTUS_API_ENTRY void lotusExit(void);
+
 LOTUS_API_ENTRY b8 ltPumpEvents(void);
 LOTUS_API_ENTRY void ltSwapBuffers(void);
-LOTUS_API_ENTRY void lotusExit(void);
 
 LOTUS_API_ENTRY void ltClearColor(void);
 LOTUS_API_ENTRY void ltSetViewport(u32 x, u32 y, u32 w, u32 h);

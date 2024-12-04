@@ -2,16 +2,7 @@
 #define LTPLATFORM_H
 
 #include "../defines.h"
-
-typedef struct tagPlatformState {
-    void* internal;
-    void* windowPtr;
-} LTplatformState;
-
-typedef struct tagPlatformLibrary {
-    char* name;
-    void* module;
-} LTdynamicLib;
+#include "../lotustypes.h"
 
 LTdynamicLib ltPlatformLoadLib(char* name);
 b8 ltPlatformUnloadLib(LTdynamicLib* lib);

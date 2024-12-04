@@ -44,7 +44,6 @@ void ltDestroyHashmap(LThashmap* m) {
     ltMemFree(m, sizeof(LThashmap), LOTUS_MEMTAG_HASHMAP);
 }
 
-
 bool ltProbeHashmapF(LThashmap* m, int* kHash, const char* key) {
     bool match = 0;
     LTkeyValue* kvp = m->map[*kHash];
@@ -88,7 +87,6 @@ bool ltProbeHashmapR(LThashmap* m, int* kHash, const char* key) {
         }
     } return match;
 }
-
 
 void* ltGetHashmap(LThashmap* m, const char* key) {
     if (!key) { return NULL; }

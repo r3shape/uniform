@@ -5,7 +5,7 @@
 #include "../../../lotus.core/graphics/renderer/ltrenderer.h"
 
 void lt2dDrawPrimitive(LT2Dprimitive* prim) {
-    void* renderState = ltGetRenderState();
+    LTrenderState* renderState = ltGetRenderState();
     ltRendererSetVertexData(renderState, &prim->vertexData);
     ltRendererDraw(renderState);
 }
