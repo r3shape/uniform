@@ -1,5 +1,7 @@
 #include "../../include/lotusECS.h"
 
+// yeah that says 'transfom'... but fuck it :)
+
 int main () {
     b8 ecsInit = ltECSInit();
 
