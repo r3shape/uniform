@@ -63,14 +63,6 @@ void ltGetMemoryTagStr(char* buffer, LTmemoryTag tag) {
             sprintf(buffer, "HASHMAP");
             break;
         }
-        case LOTUS_MEMTAG_JOB: {
-            sprintf(buffer, "JOB");
-            break;
-        }
-        case LOTUS_MEMTAG_BST: {
-            sprintf(buffer, "BST");
-            break;
-        }
         case LOTUS_MEMTAG_EVENT: {
             sprintf(buffer, "EVENT");
             break;
@@ -81,6 +73,10 @@ void ltGetMemoryTagStr(char* buffer, LTmemoryTag tag) {
         }
         case LOTUS_MEMTAG_ENTITY: {
             sprintf(buffer, "ENTITY");
+            break;
+        }
+        case LOTUS_MEMTAG_COMPONENT: {
+            sprintf(buffer, "COMPONENT");
             break;
         }
         case LOTUS_MEMTAG_TEXTURE: {
@@ -97,18 +93,6 @@ void ltGetMemoryTagStr(char* buffer, LTmemoryTag tag) {
         }
         case LOTUS_MEMTAG_TRANSFORM: {
             sprintf(buffer, "TRANSFORM");
-            break;
-        }
-        case LOTUS_MEMTAG_ENTITY_NODE: {
-            sprintf(buffer, "ENTITY NODE");
-            break;
-        }
-        case LOTUS_MEMTAG_RING_QUEUE: {
-            sprintf(buffer, "RING QUEUE");
-            break;
-        }
-        case LOTUS_MEMTAG_APPLICATION: {
-            sprintf(buffer, "APPLICATION");
             break;
         }
         case LOTUS_MEMTAG_MAX: break;

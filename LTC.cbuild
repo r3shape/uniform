@@ -3,6 +3,7 @@
     "project": "Lotus",
     "include_dirs": ["lotus/lotus.core", "lotus/include"],
     "source_dirs": ["lotus/lotus.core"],
+    "defines": ["LOTUS_EXPORT"],
     "libraries": {
         "gdi32": null,
         "opengl32": null

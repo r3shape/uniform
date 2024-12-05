@@ -3,6 +3,7 @@
     "project": "Lotus2D",
     "include_dirs": ["lotus/lotus.2D", "lotus/lotus.ECS", "lotus/include"],
     "source_dirs": ["lotus/lotus.2D"],
+    "defines": ["LOTUS_EXPORT"],
     "libraries": {
         "Lotus": "build/lotus.core",
         "LotusECS": "build/lotus.ECS"

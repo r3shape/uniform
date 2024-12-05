@@ -3,6 +3,7 @@
     "project": "LotusECS",
     "include_dirs": ["lotus/lotus.ECS", "lotus/include"],
     "source_dirs": ["lotus/lotus.ECS"],
+    "defines": ["LOTUS_EXPORT"],
     "libraries": {
         "Lotus": "build/lotus.core"
     },

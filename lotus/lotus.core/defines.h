@@ -87,17 +87,26 @@ ltStaticAssert(sizeof(b32) == 4, "expected b32 to be 4 bytes");
 
 #ifdef LOTUS_EXPORT
     #ifdef _MSC_VER
-        #define LOTUS_API __declspec(dllexport)
-    #else 
-        #define LOTUS_API __attribute__((visibility("default")))
+        #define LOTUS_API_ENTRY __declspec(dllexport)
+    #elif defined(__GNUC__) || defined(__clang__)
+        #define LOTUS_API_ENTRY __attribute__((visibility("default")))
+    #else
+        #define LOTUS_API_ENTRY
     #endif
 #else
     #ifdef _MSC_VER
         #define LOTUS_API_ENTRY __declspec(dllimport)
-    #else 
+    #elif defined(__GNUC__) || defined(__clang__)
+        #define LOTUS_API_ENTRY __attribute__((visibility("default")))
+    #else
         #define LOTUS_API_ENTRY
     #endif
 #endif
 
+#ifdef _MSC_VER
+    #define LOTUS_INTERNAL
+#elif defined(__GNUC__) || defined(__clang__)
+    #define LOTUS_INTERNAL __attribute__((visibility("hidden")))
+#endif
 
 #endif
