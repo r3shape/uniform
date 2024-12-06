@@ -16,12 +16,14 @@ b8 ltTransformDataInit(LTscene* scene) {
         ltTransformDataExit
     )) return LOTUS_FALSE;
     
+    transformInternal.scene = scene;
     transformInternal.init = LOTUS_TRUE;
     return LOTUS_TRUE;
 }
 
 void ltTransformDataExit(LTscene* scene) {
     scene->componentManager.unregisterComponent(LOTUS_TRANSFORM_COMPONENT);
+    transformInternal.scene = (void*)0;
     transformInternal.init = LOTUS_FALSE;
 }
 

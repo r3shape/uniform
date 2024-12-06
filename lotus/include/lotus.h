@@ -1,7 +1,6 @@
 #ifndef LOTUS_H
 #define LOTUS_H
 
-#include "version.h"
 #include "../lotus.core/defines.h"
 #include "../lotus.core/lotustypes.h"
 #include "../lotus.core/utility/ltmath.h"

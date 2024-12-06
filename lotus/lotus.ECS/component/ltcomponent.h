@@ -5,7 +5,8 @@
 #include "transform/lttransform.h"
 
 union LTcomponentData {
-    LTtransform_itf transform;
+    LTmeshComponent mesh;
+    LTtransformComponent transform;
 };
 
 struct LTcomponent {

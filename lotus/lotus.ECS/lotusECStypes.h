@@ -4,7 +4,7 @@
 #include "../lotus.core/defines.h"
 #include "../lotus.core/lotustypes.h"
 
-#define LOTUS_ENTITY_MAX        (u16)1 << 16
+#define LOTUS_ENTITY_MAX        ((1U << 16) - 1)
 
 typedef i16 LTentity;
 typedef struct LTscene LTscene;
@@ -14,7 +14,7 @@ typedef enum LTcomponentType {
     LOTUS_TEXTURE_COMPONENT,
     LOTUS_TRANSFORM_COMPONENT,
     LOTUS_COMPONENT_TYPES,
-    LOTUS_COMPONENT_MAX = (u8)1 << 8
+    LOTUS_COMPONENT_MAX = ((1U << 8) - 1)
 } LTcomponentType;
 
 typedef struct LTcomponent LTcomponent;

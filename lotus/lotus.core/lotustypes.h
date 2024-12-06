@@ -27,6 +27,14 @@ typedef enum LTGLuniformType {
     LOTUS_UNIFORM_TYPES
 } LTGLuniformType;
 
+typedef struct tagVertexBuffer {
+    u32 nIndices;
+    u32* indices;
+    u32 nVertices;
+    f32* vertices;
+    u32 nAttributes;
+} LTvertexBuffer;
+
 typedef struct tagVertexData {
     i32 nIndices;
     i32 nVertices;

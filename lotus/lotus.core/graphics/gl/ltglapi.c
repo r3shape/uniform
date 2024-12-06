@@ -6,6 +6,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../../vendor/stb/stb_image.h"
 
+LTvertexData ltglVertexDataBuffer(LTvertexBuffer buffer) {
+    return ltglVertexData(buffer.nAttributes, buffer.nVertices, buffer.nIndices, buffer.vertices, buffer.indices);
+}
+
 LTvertexData ltglVertexData(u32 nAttributes, u32 nVertices, u32 nIndices, f32* vertices, u32* indices) {
     LTvertexData data = {.nVertices=nVertices, .nIndices=nIndices};
     ltglGenVertexArrays(1, &data.vertexArray);

@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "../include/lotus.h"
-
+#include "../include/version.h"
 #include "memory/ltmemory.h"
 #include "platform/ltlogger.h"
 #include "platform/ltplatform.h"

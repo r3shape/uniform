@@ -6,6 +6,13 @@
 
 #define LOTUS_PI 3.14159265358979323846
 
+static f32 LOTUS_IDENTITY_MATRIX[] = {
+    1.0, 0.0, 0.0, 0.0,
+    0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 1.0, 0.0,
+    0.0, 0.0, 0.0, 1.0
+};
+
 LOTUS_API_ENTRY float ltToRadians(float deg);
 
 LOTUS_API_ENTRY LTvec2 ltNewVec2(float x, float y);

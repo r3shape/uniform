@@ -1,3 +1,8 @@
+#ifndef LOTUS_VERSION_H
+#define LOTUS_VERSION_H
+
 int LOTUS_YEAR = 2024;
 int LOTUS_MINOR = 0;
 int LOTUS_PATCH = 1;
+
+#endif
