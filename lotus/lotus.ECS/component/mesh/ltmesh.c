@@ -4,7 +4,7 @@
 #include "../../../lotus.core/utility/ltmath.h"
 #include "../../../lotus.core/graphics/gl/ltglapi.h"
 
-static LTmeshData meshInternal;
+static LTmeshData meshInternal = {0};
 
 b8 ltMeshDataInit(LTscene* scene) {
     if (!scene->componentManager.registerComponent(
