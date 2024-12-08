@@ -3,7 +3,7 @@
 #include "../ltcomponent.h"
 #include "../../../lotus.core/utility/ltmath.h"
 
-static LTtransformData transformInternal;
+static LTtransformData transformInternal ={0};
 
 b8 ltTransformDataInit(LTscene* scene) {
     if (!scene->componentManager.registerComponent(
