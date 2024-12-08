@@ -9,6 +9,8 @@
 #include "platform/input/ltinput.h"
 #include "graphics/renderer/ltrenderer.h"
 
+static LotusEngine Engine ={0};
+
 b8 lotusInit(void) {
     ltMemoryInit();
 
