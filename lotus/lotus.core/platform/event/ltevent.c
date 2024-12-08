@@ -18,7 +18,7 @@ typedef struct tagEventInternal {
     // event code lookup-table.
     LTeventCodeEntry registered[LOTUS_EVENT_CODE_MAX];
 } LTeventInternal;
-static LTeventInternal state;
+static LTeventInternal state = {0};
 
 
 b8 ltEventInit(void) {
