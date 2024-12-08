@@ -19,8 +19,6 @@ typedef struct tagLotus {
     LTplatformState platformState;
 } LotusEngine;
 
-static LotusEngine Engine;
-
 // define these externally when needed. (e.g. lotus.2D/lotus.3D modules)
 // they are implemented in `lotus.c`
 // void* ltGetRenderState(void);
