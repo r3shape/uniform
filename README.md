@@ -1,4 +1,4 @@
-![banner3x](https://github.com/user-attachments/assets/414cf8b5-ae3f-4469-bbf1-59ecae33bd28)
+![LOTUS002](https://github.com/user-attachments/assets/fa87cae9-bb12-414f-b278-f6462b4a7290)
 
 [![GitHub Releases Downloads](https://img.shields.io/github/downloads/d34d0s/Lotus/total)](https://github.com/d34d0s/Lotus/releases)  
 [![GitHub Stars](https://img.shields.io/github/stars/d34d0s/Lotus?style=flat&label=stars)](https://github.com/d34d0s/Lotus/stargazers)  
