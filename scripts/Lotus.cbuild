@@ -1,0 +1,24 @@
+{
+    "compiler": "MinGW",
+    "project": "LotusEngine",
+    "include_dirs": [
+        "lotus/include",
+        "lotus/modules/lotus.CORE/include",
+        "lotus/modules/lotus.ECS/include",
+        "lotus/modules/lotus.SCENE/include",
+        "lotus/modules/lotus.PLUG/include"
+    ],
+    "source_dirs": [
+        "lotus/modules/lotus.CORE/src",
+        "lotus/modules/lotus.ECS/src",
+        "lotus/modules/lotus.SCENE/src",
+        "lotus/modules/lotus.PLUG/src"
+    ],
+    "defines": ["LOTUS_EXPORT"],
+    "libraries": {
+        "gdi32": null,
+        "opengl32": null
+    },
+    "output": "dll",
+    "output_dir": "build"
+}

@@ -1,44 +1,56 @@
-#ifndef LOTUS_H
-#define LOTUS_H
+#pragma once
 
-#include "../lotus.core/defines.h"
-#include "../lotus.core/lotustypes.h"
-#include "../lotus.core/utility/ltmath.h"
-#include "../lotus.core/memory/ltmemory.h"
-#include "../lotus.core/utility/ltarray.h"
-#include "../lotus.core/utility/ltfileio.h"
-#include "../lotus.core/utility/lthashmap.h"
-#include "../lotus.core/graphics/gl/ltglapi.h"
-#include "../lotus.core/platform/event/ltevent.h"
-#include "../lotus.core/platform/input/ltinput.h"
+#include "../modules/lotus.CORE/include/types.h"
+#include "../modules/lotus.CORE/include/defines.h"
 
-typedef struct tagLotus {
-    b8 init;
-    char version[8];
-    LTrenderState renderState;
-    LTplatformState platformState;
-} LotusEngine;
+#include "../modules/lotus.CORE/include/utility/lotus_math.h"
+#include "../modules/lotus.CORE/include/utility/lotus_fileio.h"
+#include "../modules/lotus.CORE/include/utility/lotus_array.h"
+#include "../modules/lotus.CORE/include/utility/lotus_hashmap.h"    
 
-// define these externally when needed. (e.g. lotus.2D/lotus.3D modules)
-// they are implemented in `lotus.c`
-// void* ltGetRenderState(void);
-// void* ltGetPlatformState(void);
+#if defined(LOTUS_APPLICATION)
+    #include "../modules/lotus.CORE/include/application/lotus_app.h"
+#endif  // LOTUS_APPLICATION
 
-LOTUS_API_ENTRY b8 lotusInit(void);
-LOTUS_API_ENTRY void lotusExit(void);
+#if defined(LOTUS_2D)
+    #include "../modules/lotus.2D/include/lotus_2D.h"
+#endif  // LOTUS_2D
 
-LOTUS_API_ENTRY b8 ltPumpEvents(void);
-LOTUS_API_ENTRY void ltSwapBuffers(void);
+#if defined(LOTUS_3D)
+    #include "../modules/lotus.3D/include/lotus_3D.h"
+#endif  // LOTUS_3D
 
-LOTUS_API_ENTRY void ltClearColor(void);
-LOTUS_API_ENTRY void ltSetViewport(u32 x, u32 y, u32 w, u32 h);
-LOTUS_API_ENTRY void ltSetClearColor(f32 r, f32 g, f32 b, f32 a);
+#if defined(LOTUS_SCENE)
+    #include "../modules/lotus.SCENE/include/lotus_scene.h"
+#endif  // LOTUS_SCENE
 
-LOTUS_API_ENTRY void ltSetShader(LTshaderProgram* shader);
-LOTUS_API_ENTRY void ltSetTexture2D(LTtexture2D* texture);
+#if defined(LOTUS_PLUG)
+    #include "../modules/lotus.PLUG/include/lotus_plug.h"
+#endif  // LOTUS_PLUG
 
-LOTUS_API_ENTRY void ltDraw(LTvertexData* data);
-LOTUS_API_ENTRY void ltDrawArrays(LTvertexData* data);
-LOTUS_API_ENTRY void ltDrawIndexed(LTvertexData* data, void* offset);
+#if defined(LOTUS_PLATFORM)
+    #include "../modules/lotus.CORE/include/platform/lotus_memory.h"
+    #include "../modules/lotus.CORE/include/platform/lotus_input.h"
+    #include "../modules/lotus.CORE/include/platform/lotus_event.h"
+    #include "../modules/lotus.CORE/include/platform/lotus_platform.h"
+#endif  // LOTUS_PLATFORM
 
-#endif
+#if defined(LOTUS_GRAPHICS)
+    #include "../modules/lotus.CORE/include/graphics/lotus_gl.h"
+#endif // LOTUS_GRAPHICS
+
+#if defined(LOTUS_ECS)
+    #include "../modules/lotus.ECS/include/lotus_ecs.h"
+#endif // LOTUS_ECS
+
+#if defined(LOTUS_CORE)
+    #include "../modules/lotus.CORE/include/application/lotus_app.h"
+
+    #include "../modules/lotus.CORE/include/platform/lotus_memory.h"
+    
+    #include "../modules/lotus.CORE/include/platform/lotus_input.h"
+    #include "../modules/lotus.CORE/include/platform/lotus_event.h"
+    #include "../modules/lotus.CORE/include/platform/lotus_platform.h"
+    
+    #include "../modules/lotus.CORE/include/graphics/lotus_gl.h"
+#endif  // LOTUS_CORE
