@@ -36,7 +36,7 @@ Lotus now includes pre-configured `.cbuild` files for easy setup and compilation
 3. **Build the Engine**:  
    Use the provided `.cbuild` configuration to build Lotus:  
    ```bash
-   cbuild lotus.cbuild
+   cbuild scripts/lotus.cbuild
    ```
 
 4. **Output**:  
