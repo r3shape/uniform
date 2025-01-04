@@ -95,21 +95,26 @@ void _lotus_rem_mesh(void* data, Lotus_Entity entity) {
     ubyte4 count = LOTUS_ARRAY_GET_HEADER_FIELD(mesh_data->attrs, LOTUS_ARRAY_LENGTH_FIELD);
     _increment_mesh_data_arrays(mesh_data, count-1);
     
+    Lotus_Vertex_Data vertex_data = {
+        .attrs = mesh_data->attrs[entity],
+        .vbo = mesh_data->vbo[entity],
+        .ebo = mesh_data->ebo[entity],
+        .vao = mesh_data->vao[entity],
+        .vertices = mesh_data->vertices[entity],
+        .vertex_count = mesh_data->vertex_count[entity],
+        .indices = mesh_data->indices[entity],
+        .index_count = mesh_data->index_count[entity]
+    };
+    internal_graphics_api->destroy_vertex_data(&vertex_data);
+    
     mesh_data->attrs[entity] = 0;
-    
-    internal_graphics_api->GL_API.delete_buffers(1, &mesh_data->vbo[entity]);
     mesh_data->vbo[entity] = 0;
-    
-    internal_graphics_api->GL_API.delete_buffers(1, &mesh_data->ebo[entity]);
     mesh_data->ebo[entity] = 0;
-    
-    internal_graphics_api->GL_API.delete_vertex_arrays(1, &mesh_data->vao[entity]);
     mesh_data->vao[entity] = 0;
-    
-    mesh_data->index_count[entity] = 0;
-    mesh_data->vertex_count[entity] = 0;
     mesh_data->vertices[entity] = NULL;
+    mesh_data->vertex_count[entity] = 0;
     mesh_data->indices[entity] = NULL;
+    mesh_data->index_count[entity] = 0;
 }
 
 void _lotus_set_mesh(void* data, Lotus_Component component, Lotus_Entity entity) {
@@ -117,75 +122,22 @@ void _lotus_set_mesh(void* data, Lotus_Component component, Lotus_Entity entity)
     if (!_lotus_validate_mesh_data(mesh_data) || component.type != LOTUS_MESH_COMPONENT) return;
 
     if (component.type == LOTUS_MESH_COMPONENT) {
-        if ((component.data.mesh.attrs & ~((1 << LOTUS_VERTEX_ATTRIBS) - 1)) != 0 || !component.data.mesh.vertices) {
-            return;
-        }
+        Lotus_Vertex_Data data = internal_graphics_api->make_vertex_data(
+            component.data.mesh.vertices,
+            component.data.mesh.vertex_count,
+            component.data.mesh.indices,
+            component.data.mesh.index_count,
+            component.data.mesh.attrs
+        );
 
-        // calculate stride and offsets dynamically
-        ubyte4 stride = 0;
-        ubyte4 offsets[LOTUS_VERTEX_ATTRIBS] = {0};
-        const ubyte4 attr_sizes[LOTUS_VERTEX_ATTRIBS] = {
-            3, // LOTUS_LOCATION_ATTR: vec3
-            3, // LOTUS_COLOR_ATTR: vec3
-            2, // LOTUS_TCOORD_ATTR: vec2
-            2  // LOTUS_NORMAL_ATTR: vec2
-        };
-
-        for (int i = 0; i < LOTUS_VERTEX_ATTRIBS; i++) {
-            if ((component.data.mesh.attrs & (1 << i)) != 0) {
-                // accumulate stride for enabled vertex attributes
-                offsets[i] = stride;
-                stride += attr_sizes[i];
-            }
-        }
-
-        internal_graphics_api->GL_API.gen_vertex_arrays(1, &mesh_data->vao[entity]);
-        internal_graphics_api->GL_API.gen_buffers(1, &mesh_data->vbo[entity]);
-
-        internal_graphics_api->GL_API.bind_vertex_array(mesh_data->vao[entity]);
-        internal_graphics_api->GL_API.bind_buffer(LOTUS_ARRAY_BUFFER, mesh_data->vbo[entity]);
-        
-        size_t vertex_data_size = component.data.mesh.vertex_count * (stride * sizeof(f32));
-        internal_graphics_api->GL_API.buffer_data(LOTUS_ARRAY_BUFFER, vertex_data_size, component.data.mesh.vertices, LOTUS_STATIC_DRAW);
-
-        // generate EBO if indices are provided
-        if (component.data.mesh.index_count > 0 && component.data.mesh.indices) {
-            internal_graphics_api->GL_API.gen_buffers(1, &mesh_data->ebo[entity]);
-
-            internal_graphics_api->GL_API.bind_buffer(LOTUS_ELEMENT_ARRAY_BUFFER, mesh_data->ebo[entity]);
-            
-            size_t index_data_size = component.data.mesh.index_count * sizeof(ubyte4);
-            internal_graphics_api->GL_API.buffer_data(LOTUS_ELEMENT_ARRAY_BUFFER, index_data_size, component.data.mesh.indices, LOTUS_STATIC_DRAW);
-            
-            mesh_data->indices[entity] = component.data.mesh.indices;
-            mesh_data->index_count[entity] = component.data.mesh.index_count;
-        } else {
-            mesh_data->ebo[entity] = 0;
-            mesh_data->indices[entity] = NULL;
-            mesh_data->index_count[entity] = 0;
-        }
-
-        // configure vertex attributes dynamically
-        for (int i = 0; i < LOTUS_VERTEX_ATTRIBS; i++) {
-            if ((component.data.mesh.attrs & (1 << i)) != 0) {
-                internal_graphics_api->GL_API.vertex_attrib_pointer(
-                    i, 
-                    attr_sizes[i], 
-                    GL_FLOAT, 
-                    GL_FALSE, 
-                    stride * sizeof(f32), 
-                    (void*)(offsets[i] * sizeof(f32))
-                );
-                internal_graphics_api->GL_API.enable_vertex_attrib_array(i);
-            }
-        }
-
-        internal_graphics_api->GL_API.bind_buffer(LOTUS_ARRAY_BUFFER, 0);
-        internal_graphics_api->GL_API.bind_vertex_array(0);
-
-        mesh_data->attrs[entity] = component.data.mesh.attrs;
-        mesh_data->vertex_count[entity] = component.data.mesh.vertex_count;
-        mesh_data->vertices[entity] = component.data.mesh.vertices;
+        mesh_data->attrs[entity] = data.attrs;
+        mesh_data->vbo[entity] = data.vbo;
+        mesh_data->ebo[entity] = data.ebo;
+        mesh_data->vao[entity] = data.vao;
+        mesh_data->vertex_count[entity] = data.vertex_count;
+        mesh_data->vertices[entity] = data.vertices;
+        mesh_data->index_count[entity] = data.index_count;
+        mesh_data->indices[entity] = data.indices;
 
     } else { return; }
 }

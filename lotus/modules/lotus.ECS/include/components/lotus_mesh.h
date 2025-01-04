@@ -2,14 +2,6 @@
 
 #include "../lotus_ecs_types.h"
 
-typedef enum Lotus_Vertex_Attribute {
-    LOTUS_LOCATION_ATTR = 1 << 0, // 1 (0b0001)
-    LOTUS_COLOR_ATTR    = 1 << 1, // 2 (0b0010)
-    LOTUS_TCOORD_ATTR   = 1 << 2, // 4 (0b0100)
-    LOTUS_NORMAL_ATTR   = 1 << 3, // 8 (0b1000)
-    LOTUS_VERTEX_ATTRIBS  = 1 << 4 
-} Lotus_Vertex_Attribute;
-
 typedef struct Lotus_Mesh {
     ubyte attrs;
     ubyte4 vbo;

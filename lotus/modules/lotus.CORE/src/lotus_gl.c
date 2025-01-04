@@ -33,6 +33,101 @@ void _graphics_shutdown_impl(void) {
 }
 
 
+Lotus_Vertex_Data _graphics_make_vertex_data_impl(f32* vertices, ubyte4 vertex_count, ubyte4* indices, ubyte4 index_count, ubyte attrs) {
+    if ((attrs & ~((1 << LOTUS_VERTEX_ATTRIBS) - 1)) != 0 || !vertices) {
+        return (Lotus_Vertex_Data){0};
+    }
+
+    Lotus_Vertex_Data vertex_data;
+
+    // calculate stride and offsets dynamically
+    ubyte4 stride = 0;
+    ubyte4 offsets[LOTUS_VERTEX_ATTRIBS] = {0};
+    const ubyte4 attr_sizes[LOTUS_VERTEX_ATTRIBS] = {
+        3, // LOTUS_LOCATION_ATTR:  vec3
+        3, // LOTUS_COLOR_ATTR:     vec3
+        2, // LOTUS_TCOORD_ATTR:    vec2
+        2  // LOTUS_NORMAL_ATTR:    vec2
+    };
+
+    for (int i = 0; i < LOTUS_VERTEX_ATTRIBS; i++) {
+        if ((attrs & (1 << i)) != 0) {
+            // accumulate stride for enabled vertex attributes
+            offsets[i] = stride;
+            stride += attr_sizes[i];
+        }
+    }
+
+    internal_graphics_api.GL_API.gen_vertex_arrays(1, &vertex_data.vao);
+    internal_graphics_api.GL_API.gen_buffers(1, &vertex_data.vbo);
+
+    internal_graphics_api.GL_API.bind_vertex_array(vertex_data.vao);
+    internal_graphics_api.GL_API.bind_buffer(LOTUS_ARRAY_BUFFER, vertex_data.vbo);
+    
+    size_t vertex_data_size = vertex_count * (stride * sizeof(f32));
+    internal_graphics_api.GL_API.buffer_data(LOTUS_ARRAY_BUFFER, vertex_data_size, vertices, LOTUS_STATIC_DRAW);
+
+    // generate EBO if indices are provided
+    if (index_count > 0 && indices) {
+        internal_graphics_api.GL_API.gen_buffers(1, &vertex_data.ebo);
+
+        internal_graphics_api.GL_API.bind_buffer(LOTUS_ELEMENT_ARRAY_BUFFER, vertex_data.ebo);
+        
+        size_t index_data_size = index_count * sizeof(ubyte4);
+        internal_graphics_api.GL_API.buffer_data(LOTUS_ELEMENT_ARRAY_BUFFER, index_data_size, indices, LOTUS_STATIC_DRAW);
+        
+        vertex_data.indices = indices;
+        vertex_data.index_count = index_count;
+    } else {
+        vertex_data.ebo = 0;
+        vertex_data.indices = NULL;
+        vertex_data.index_count = 0;
+    }
+
+    // configure vertex attributes dynamically
+    for (int i = 0; i < LOTUS_VERTEX_ATTRIBS; i++) {
+        if ((attrs & (1 << i)) != 0) {
+            internal_graphics_api.GL_API.vertex_attrib_pointer(
+                i, 
+                attr_sizes[i], 
+                GL_FLOAT, 
+                GL_FALSE, 
+                stride * sizeof(f32), 
+                (void*)(offsets[i] * sizeof(f32))
+            );
+            internal_graphics_api.GL_API.enable_vertex_attrib_array(i);
+        }
+    }
+
+    internal_graphics_api.GL_API.bind_buffer(LOTUS_ARRAY_BUFFER, 0);
+    internal_graphics_api.GL_API.bind_vertex_array(0);
+
+    vertex_data.attrs = attrs;
+    vertex_data.vertices = vertices;
+    vertex_data.vertex_count = vertex_count;
+
+    return vertex_data;
+}
+
+void _graphics_destroy_vertex_data_impl(Lotus_Vertex_Data* vertex_data) {
+    vertex_data->attrs = 0;
+    
+    internal_graphics_api.GL_API.delete_buffers(1, &vertex_data->vbo);
+    vertex_data->vbo = 0;
+    
+    internal_graphics_api.GL_API.delete_buffers(1, &vertex_data->ebo);
+    vertex_data->ebo = 0;
+    
+    internal_graphics_api.GL_API.delete_vertex_arrays(1, &vertex_data->vao);
+    vertex_data->vao = 0;
+    
+    vertex_data->vertices = NULL;
+    vertex_data->vertex_count = 0;
+    vertex_data->indices = NULL;
+    vertex_data->index_count = 0;
+}
+
+
 Lotus_Shader _graphics_make_shader_impl(const char* vertex_shader, const char* fragment_shader) {
     lotus_set_log_level(LOTUS_LOG_ERROR);
     ubyte4 link = 0;
@@ -208,6 +303,9 @@ Lotus_Graphics_API* lotus_init_graphics(void) {
         .initialize = _graphics_initialize_impl,
         .shutdown = _graphics_shutdown_impl,
         
+        .make_vertex_data = _graphics_make_vertex_data_impl,
+        .destroy_vertex_data = _graphics_destroy_vertex_data_impl,
+
         .make_shader = _graphics_make_shader_impl,
         .destroy_shader = _graphics_destroy_shader_impl,
         

@@ -66,10 +66,19 @@ typedef enum Lotus_Draw_Mode {
     LOTUS_DRAW_MODES
 } Lotus_Draw_Mode;
 
+typedef enum Lotus_Vertex_Attribute {
+    LOTUS_LOCATION_ATTR = 1 << 0, // 1 (0b0001)
+    LOTUS_COLOR_ATTR    = 1 << 1, // 2 (0b0010)
+    LOTUS_TCOORD_ATTR   = 1 << 2, // 4 (0b0100)
+    LOTUS_NORMAL_ATTR   = 1 << 3, // 8 (0b1000)
+    LOTUS_VERTEX_ATTRIBS  = 1 << 4 
+} Lotus_Vertex_Attribute;
+
 typedef struct Lotus_Vertex_Data {
-    sbyte vbo;
-    sbyte ebo;
-    sbyte vao;
+    ubyte attrs;
+    ubyte4 vbo;
+    ubyte4 ebo;
+    ubyte4 vao;
     f32* vertices;
     ubyte4 vertex_count;
     ubyte4* indices;
@@ -94,6 +103,9 @@ typedef struct Lotus_Graphics_State {
 typedef struct Lotus_Graphics_API {
     Lotus_Graphics_State* (*initialize)(void);
     void (*shutdown)(void);
+
+    Lotus_Vertex_Data (*make_vertex_data)(f32* vertices, ubyte4 vertex_count, ubyte4* indices, ubyte4 index_count, ubyte attrs);
+    void (*destroy_vertex_data)(Lotus_Vertex_Data* vertex_data);
 
     Lotus_Shader (*make_shader)(const char* vertex_shader, const char* fragment_shader);
     void (*destroy_shader)(Lotus_Shader* shader);
