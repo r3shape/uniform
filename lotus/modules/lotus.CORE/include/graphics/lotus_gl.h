@@ -100,6 +100,12 @@ typedef struct Lotus_Graphics_State {
     Lotus_Draw_Call draw_calls[LOTUS_MAX_DRAW_CALLS];
 } Lotus_Graphics_State;
 
+typedef struct Lotus_Primitive {
+    Lotus_Vec3 color;
+    Lotus_Vec3 dimensions;
+    Lotus_Vertex_Data vertex_data;
+} Lotus_Primitive;
+
 typedef struct Lotus_Graphics_API {
     Lotus_Graphics_State* (*initialize)(void);
     void (*shutdown)(void);
@@ -119,8 +125,17 @@ typedef struct Lotus_Graphics_API {
     void (*set_shader)(Lotus_Shader* shader);
 
     void (*draw_begin)(Lotus_Draw_Mode mode, Lotus_Vec4 color4, Lotus_Mat4 projection);
-    void (*draw)(Lotus_Vertex_Data vertex_data);
-    void (*draw_end)(void); // flush draw call queue
+    void (*draw_clear)(void); // clear the window
+    void (*draw_data)(Lotus_Vertex_Data vertex_data); // immideately draw given vertex data
+    void (*draw_primitive)(Lotus_Primitive primitive); // immideately draw given primivie data
+
+    // 2D draw context API
+    struct lotus_2D {
+        Lotus_Primitive (*make_triangle)(Lotus_Vec2 dimensions, Lotus_Vec3 color);
+        Lotus_Primitive (*make_circle)(f32 radius, Lotus_Vec3 color);
+        Lotus_Primitive (*make_rectangle)(Lotus_Vec2 dimensions, Lotus_Vec3 color);
+    } lotus_2D;
+    void (*destroy_primitive)(Lotus_Primitive* primitive);
 
     struct GL_API {
         // BUFFER FUNCTIONS

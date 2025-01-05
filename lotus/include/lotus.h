@@ -12,14 +12,6 @@
     #include "../modules/lotus.CORE/include/application/lotus_app.h"
 #endif  // LOTUS_APPLICATION
 
-#if defined(LOTUS_2D)
-    #include "../modules/lotus.2D/include/lotus_2D.h"
-#endif  // LOTUS_2D
-
-#if defined(LOTUS_3D)
-    #include "../modules/lotus.3D/include/lotus_3D.h"
-#endif  // LOTUS_3D
-
 #if defined(LOTUS_SCENE)
     #include "../modules/lotus.SCENE/include/lotus_scene.h"
 #endif  // LOTUS_SCENE

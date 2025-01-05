@@ -25,7 +25,8 @@ typedef long double f80, f96, f128;
 #define LOTUS_TRUE     1
 #define LOTUS_FALSE    0
 
-#define LOTUS_LITERAL(type, value) &(type){value}
+#define LOTUS_LITERAL(type, value)      (type){value}
+#define LOTUS_LITERAL_REF(type, value) &(type){value}
 
 #define LOTUS_LOGO (ubyte[]){    \
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d,\

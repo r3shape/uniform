@@ -1,3 +1,4 @@
+#define LOTUS_2D
 #define LOTUS_APPLICATION
 #include "../../lotus/include/lotus.h"
 
@@ -62,6 +63,8 @@ void load_plug() {
 
 ubyte midframe_callback(Lotus_Event data, ubyte2 event_code) {
     if (event_code == LOTUS_APPLICATION_MIDFRAME_EVENT) {
+        app->resource.graphics_api->draw_clear();
+
         f32 speed = 0.01;
         
         if (lotus_key_is_down(LOTUS_KEY_ESCAPE)) app->state.running = LOTUS_FALSE;
@@ -79,7 +82,8 @@ ubyte midframe_callback(Lotus_Event data, ubyte2 event_code) {
 
         app->resource.graphics_api->send_uniform(&my_shader, LOTUS_UNIFORM_MAT4, "u_view");
 
-        app->resource.graphics_api->draw((Lotus_Vertex_Data){
+        app->resource.graphics_api->set_uniform(&my_shader, "u_model", e0_transform.data.transform.model);
+        app->resource.graphics_api->draw_data((Lotus_Vertex_Data){
             .vbo = e0_mesh.data.mesh.vbo,
             .ebo = e0_mesh.data.mesh.ebo,
             .vao = e0_mesh.data.mesh.vao,
@@ -101,7 +105,7 @@ int main() {
 
     app_api->add_component(scene_id, LOTUS_MESH_COMPONENT, e0);
     app_api->add_component(scene_id, LOTUS_TRANSFORM_COMPONENT, e0);
-
+    
     app_api->set_component(scene_id, 
         (Lotus_Component){ 
             .type = LOTUS_MESH_COMPONENT, 
@@ -114,10 +118,10 @@ int main() {
             },
         }, e0
     );
-
+    
     e0_mesh = app_api->get_component(scene_id, LOTUS_MESH_COMPONENT, e0);
     e0_transform = app_api->get_component(scene_id, LOTUS_TRANSFORM_COMPONENT, e0);
-
+    
     my_shader = app->resource.graphics_api->make_shader(vShader, fShader);
     app->resource.graphics_api->set_shader(&my_shader);
     
@@ -129,10 +133,18 @@ int main() {
     app->resource.graphics_api->set_uniform(&my_shader, "u_view", &m_view);
     
     // 2D camera
-    // app->resource.graphics_api->draw_begin(LOTUS_TRIANGLE_MODE, LOTUS_COLOR4(133, 161, 172, 255), lotus_ortho(0, 1, 0, 1, 0.1, 10));
+    // app->resource.graphics_api->draw_begin(
+    //     LOTUS_TRIANGLE_MODE,
+    //     LOTUS_COLOR4(133, 161, 172, 255),
+    //     lotus_ortho(0, app->resource.window.size[0], 0, app->resource.window.size[1], 0.1, 10)
+    // );
     
     // 3D camera
-    app->resource.graphics_api->draw_begin(LOTUS_TRIANGLE_MODE, LOTUS_COLOR4(133, 161, 172, 255), lotus_perspective(lotus_to_radians(45.0), 1280/720, 0.1, 1000.0));
+    app->resource.graphics_api->draw_begin(
+        LOTUS_TRIANGLE_MODE,
+        LOTUS_COLOR4(133, 161, 172, 255),
+        lotus_perspective(lotus_to_radians(45.0), app->resource.window.size[0]/app->resource.window.size[1], 0.1, 1000.0)
+    );
     
     app_api->set_callback(LOTUS_APPLICATION_MIDFRAME_EVENT, midframe_callback);
     

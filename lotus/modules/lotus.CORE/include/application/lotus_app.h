@@ -38,7 +38,7 @@ struct Lotus_Application {
     struct state {
         ubyte running;
         ubyte callback_count;
-        
+
         ubyte scene_count;
         Lotus_Scene* current_scene;
     } state;
@@ -48,12 +48,12 @@ struct Lotus_Application {
         Lotus_Allocator allocator;
         
         Lotus_Scene* scenes[LOTUS_ENGINE_SCENE_MAX];
-
-        Lotus_Plug_API* plug_api;
-        Lotus_Plug_Manager* plug_manager;
         
         Lotus_Platform_API* platform_api;
         Lotus_Graphics_API* graphics_api;
+
+        Lotus_Plug_API* plug_api;
+        Lotus_Plug_Manager* plug_manager;
     } resource;
 
     Lotus_Event_Callback callbacks[LOTUS_APPLICATION_EVENTS];

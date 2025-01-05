@@ -57,7 +57,6 @@ ubyte _application_run_impl(void) {
         }
         
         result = lotus_push_event((Lotus_Event){0}, LOTUS_APPLICATION_MIDFRAME_EVENT);
-        internal_application_instance.resource.graphics_api->draw_end();
         
         // run component systems
         if (internal_application_instance.state.current_scene) {
@@ -137,6 +136,7 @@ Lotus_Application* _application_initialize_impl(const char* app_name, ubyte4 win
         return NULL;
     }
     
+    // initialize engine APIs
     internal_application_instance.resource.graphics_api = lotus_init_graphics();
     if (!internal_application_instance.resource.graphics_api) {
         lotus_log_fatal("Failed to initialize graphics api!");

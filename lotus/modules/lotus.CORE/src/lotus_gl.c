@@ -237,53 +237,73 @@ void _graphics_draw_begin_impl(Lotus_Draw_Mode mode, Lotus_Vec4 color4, Lotus_Ma
     internal_graphics_state.clear_color = color4;
 }
 
-void _graphics_draw_impl(Lotus_Vertex_Data vertex_data) {
+void _graphics_draw_data_impl(Lotus_Vertex_Data vertex_data) {
     if (vertex_data.vertex_count <= 0 || !vertex_data.vertices || vertex_data.vao < 0) {
         return; // error: invalid vertex data for draw call
     }; if (internal_graphics_state.draws >= LOTUS_MAX_DRAW_CALLS) {
         return; // error: exceeded max draw buffers
     }
-    
-    ubyte8 index = internal_graphics_state.draws;
- 
-    Lotus_Draw_Call* draw_call = &internal_graphics_state.draw_calls[index];
-    draw_call->mode = internal_graphics_state.mode;
-    draw_call->shader = internal_graphics_state.shader;
-    draw_call->vertex_data = vertex_data;
 
-    internal_graphics_state.draws++;
+    if (internal_graphics_state.shader && internal_graphics_state.shader->program >= 0) {
+        internal_graphics_api.GL_API.use_program(internal_graphics_state.shader->program);
+        internal_graphics_api.send_uniform(internal_graphics_state.shader, LOTUS_UNIFORM_MAT4, "u_model");
+        internal_graphics_api.send_uniform(internal_graphics_state.shader, LOTUS_UNIFORM_MAT4, "u_projection");
+    }
+
+    internal_graphics_api.GL_API.bind_vertex_array(vertex_data.vao);
+    if (vertex_data.indices && vertex_data.index_count > 0) {
+        internal_graphics_api.GL_API.draw_elements(internal_graphics_state.mode, vertex_data.index_count, GL_UNSIGNED_INT, NULL);
+    } else {
+        internal_graphics_api.GL_API.draw_arrays(internal_graphics_state.mode, 0, vertex_data.vertex_count);
+    }
+
+    internal_graphics_api.GL_API.bind_vertex_array(0);
 }
 
-void _graphics_draw_end_impl(void) {
+void _graphics_draw_primitive_impl(Lotus_Primitive primitive) {
+    internal_graphics_api.draw_data(primitive.vertex_data);
+}
+
+void _graphics_draw_clear_impl(void) {
     internal_graphics_api.GL_API.clear_color(
         internal_graphics_state.clear_color.x,
         internal_graphics_state.clear_color.y,
         internal_graphics_state.clear_color.z,
         internal_graphics_state.clear_color.w
     ); internal_graphics_api.GL_API.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    for (ubyte8 i = 0; i < internal_graphics_state.draws; ++i) {
-        Lotus_Draw_Call draw_call = internal_graphics_state.draw_calls[i];
-
-
-        if (internal_graphics_state.shader && internal_graphics_state.shader->program >= 0) {
-            internal_graphics_api.GL_API.use_program(internal_graphics_state.shader->program);
-            internal_graphics_api.send_uniform(internal_graphics_state.shader, LOTUS_UNIFORM_MAT4, "u_model");
-            internal_graphics_api.send_uniform(internal_graphics_state.shader, LOTUS_UNIFORM_MAT4, "u_projection");
-        }
-
-        internal_graphics_api.GL_API.bind_vertex_array(draw_call.vertex_data.vao);
-        if (draw_call.vertex_data.indices && draw_call.vertex_data.index_count > 0) {
-            internal_graphics_api.GL_API.draw_elements(internal_graphics_state.mode, draw_call.vertex_data.index_count, GL_UNSIGNED_INT, NULL);
-        } else {
-            internal_graphics_api.GL_API.draw_arrays(internal_graphics_state.mode, 0, draw_call.vertex_data.vertex_count);
-        }
-
-        internal_graphics_api.GL_API.bind_vertex_array(0);
-    }
-    internal_graphics_state.draws = 0;
 }
 
+void _lotus_destroy_primitive_impl(Lotus_Primitive* primitive) {
+    internal_graphics_api.destroy_vertex_data(&primitive->vertex_data);
+}
+
+/* LOTUS 2D CONTEXT API*/
+Lotus_Primitive _make_circle_2D_impl(f32 radius, Lotus_Vec3 color) {
+    return (Lotus_Primitive) {0};
+}
+
+Lotus_Primitive _make_triangle_2D_impl(Lotus_Vec2 dimensions, Lotus_Vec3 color) {
+    f32 half_width = dimensions.x / 2.0f;
+    f32 half_height = dimensions.y / 2.0f;
+    
+    f32 vertices[] = {
+        -half_width, -half_height, 0.0,  color.x, color.y, color.z,   0.0, 0.0,
+         half_width, -half_height, 0.0,  color.x, color.y, color.z,   1.0, 0.0,
+         0.0,         half_height, 0.0,  color.x, color.y, color.z,   0.5, 1.0
+    };
+
+    Lotus_Primitive prim = {
+        .color = color,
+        .dimensions = lotus_new_vec3(dimensions.x, dimensions.y, 0),
+        .vertex_data = internal_graphics_api.make_vertex_data(vertices, 3, NULL, 0, LOTUS_LOCATION_ATTR|LOTUS_COLOR_ATTR|LOTUS_TCOORD_ATTR)
+    };
+
+    return prim;
+}
+
+Lotus_Primitive _make_rectangle_2D_impl(Lotus_Vec2 dimensions, Lotus_Vec3 color) {
+    return (Lotus_Primitive) {0};
+}
 
 #if defined(LOTUS_PLATFORM_WINDOWS)
 #include <Windows.h>
@@ -296,7 +316,7 @@ static void* _get_gl_fn(const char* name) {
 }
 #endif
 
-Lotus_Graphics_API* lotus_init_graphics(void) {
+Lotus_Graphics_API* lotus_init_graphics() {
     lotus_set_log_level(LOTUS_LOG_FATAL);
 
     internal_graphics_api = (Lotus_Graphics_API) {
@@ -318,12 +338,19 @@ Lotus_Graphics_API* lotus_init_graphics(void) {
         .set_shader = _graphics_set_shader_impl,
         
         .draw_begin = _graphics_draw_begin_impl,
-        .draw = _graphics_draw_impl,
-        .draw_end = _graphics_draw_end_impl,
+        .draw_clear = _graphics_draw_clear_impl,
+        .draw_data = _graphics_draw_data_impl,
+        .draw_primitive = _graphics_draw_primitive_impl,
+
+        .destroy_primitive = _lotus_destroy_primitive_impl,
+        .lotus_2D.make_circle = _make_circle_2D_impl,
+        .lotus_2D.make_triangle = _make_triangle_2D_impl,
+        .lotus_2D.make_rectangle = _make_rectangle_2D_impl,
 
         .GL_API = {NULL}
     };
 
+    // load GL functions
     struct {
         void **function;
         const char *name;
@@ -405,13 +432,12 @@ Lotus_Graphics_API* lotus_init_graphics(void) {
         {(void**)&internal_graphics_api.GL_API.get_string, "glGetString"}
     };
 
-    // Load all functions
     for (size_t i = 0; i < sizeof(functions) / sizeof(functions[0]); ++i) {
         *functions[i].function = _get_gl_fn(functions[i].name);
         if (!*functions[i].function) {
             lotus_log_fatal("Failed to load GL function: %s\n", functions[i].name);
         }
-    }    
+    }
 
     return &internal_graphics_api;
 }
