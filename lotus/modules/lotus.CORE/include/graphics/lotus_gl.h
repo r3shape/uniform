@@ -129,6 +129,9 @@ typedef struct Lotus_Graphics_API {
     void (*draw_data)(Lotus_Vertex_Data vertex_data); // immideately draw given vertex data
     void (*draw_primitive)(Lotus_Primitive primitive); // immideately draw given primivie data
 
+    // graphics state setters/toggles
+    void (*wireframe_mode)(ubyte toggle);
+
     // 2D draw context API
     struct lotus_2D {
         Lotus_Primitive (*make_triangle)(Lotus_Vec2 dimensions, Lotus_Vec3 color);

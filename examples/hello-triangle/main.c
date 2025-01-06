@@ -42,6 +42,9 @@ ubyte hello_triangle_callback(Lotus_Event data, ubyte2 event_code) {
     if (event_code == LOTUS_APPLICATION_MIDFRAME_EVENT) {
         app->resource.graphics_api->draw_clear();
     
+        if (lotus_key_is_down(LOTUS_KEY_W)) app->resource.graphics_api->wireframe_mode(LOTUS_TRUE);
+        else app->resource.graphics_api->wireframe_mode(LOTUS_FALSE);
+
         app->resource.graphics_api->send_uniform(&my_shader, LOTUS_UNIFORM_MAT4, "u_view");
 
         app->resource.graphics_api->draw_primitive(triangle_prim);

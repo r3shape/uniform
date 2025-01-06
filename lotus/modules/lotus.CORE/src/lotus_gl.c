@@ -273,19 +273,30 @@ void _graphics_draw_clear_impl(void) {
     ); internal_graphics_api.GL_API.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void _lotus_destroy_primitive_impl(Lotus_Primitive* primitive) {
+void _graphics_destroy_primitive_impl(Lotus_Primitive* primitive) {
     internal_graphics_api.destroy_vertex_data(&primitive->vertex_data);
 }
 
+
+/* Graphics State Setters/Toggles */
+void _graphics_wireframe_mode_impl(ubyte toggle) {
+    if (toggle) {
+        internal_graphics_api.GL_API.polygon_mode(GL_FRONT_AND_BACK, GL_LINE);
+    } else {
+        internal_graphics_api.GL_API.polygon_mode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+}
+
+
 /* LOTUS 2D CONTEXT API*/
-Lotus_Primitive _make_circle_2D_impl(f32 radius, Lotus_Vec3 color) {
+Lotus_Primitive _graphics_make_circle_2D_impl(f32 radius, Lotus_Vec3 color) {
     return (Lotus_Primitive) {0};
 }
 
-Lotus_Primitive _make_triangle_2D_impl(Lotus_Vec2 dimensions, Lotus_Vec3 color) {
+Lotus_Primitive _graphics_make_triangle_2D_impl(Lotus_Vec2 dimensions, Lotus_Vec3 color) {
     f32 half_width = dimensions.x / 2.0f;
     f32 half_height = dimensions.y / 2.0f;
-    
+
     f32 vertices[] = {
         -half_width, -half_height, 0.0,  color.x, color.y, color.z,   0.0, 0.0,
          half_width, -half_height, 0.0,  color.x, color.y, color.z,   1.0, 0.0,
@@ -301,7 +312,7 @@ Lotus_Primitive _make_triangle_2D_impl(Lotus_Vec2 dimensions, Lotus_Vec3 color) 
     return prim;
 }
 
-Lotus_Primitive _make_rectangle_2D_impl(Lotus_Vec2 dimensions, Lotus_Vec3 color) {
+Lotus_Primitive _graphics_make_rectangle_2D_impl(Lotus_Vec2 dimensions, Lotus_Vec3 color) {
     return (Lotus_Primitive) {0};
 }
 
@@ -342,10 +353,12 @@ Lotus_Graphics_API* lotus_init_graphics() {
         .draw_data = _graphics_draw_data_impl,
         .draw_primitive = _graphics_draw_primitive_impl,
 
-        .destroy_primitive = _lotus_destroy_primitive_impl,
-        .lotus_2D.make_circle = _make_circle_2D_impl,
-        .lotus_2D.make_triangle = _make_triangle_2D_impl,
-        .lotus_2D.make_rectangle = _make_rectangle_2D_impl,
+        .wireframe_mode = _graphics_wireframe_mode_impl,
+
+        .destroy_primitive = _graphics_destroy_primitive_impl,
+        .lotus_2D.make_circle = _graphics_make_circle_2D_impl,
+        .lotus_2D.make_triangle = _graphics_make_triangle_2D_impl,
+        .lotus_2D.make_rectangle = _graphics_make_rectangle_2D_impl,
 
         .GL_API = {NULL}
     };

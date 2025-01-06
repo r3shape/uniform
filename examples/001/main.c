@@ -78,6 +78,9 @@ ubyte midframe_callback(Lotus_Event data, ubyte2 event_code) {
         if (lotus_key_is_down(LOTUS_KEY_Q)) e0_transform.data.transform.rotation->z -= 1.5;
         if (lotus_key_is_down(LOTUS_KEY_E)) e0_transform.data.transform.rotation->z += 1.5;
         
+        if (lotus_key_is_down(LOTUS_KEY_F1)) app->resource.graphics_api->wireframe_mode(LOTUS_TRUE);
+        else app->resource.graphics_api->wireframe_mode(LOTUS_FALSE);
+
         if (lotus_key_is_down(LOTUS_KEY_F5)) load_plug();
 
         app->resource.graphics_api->send_uniform(&my_shader, LOTUS_UNIFORM_MAT4, "u_view");
