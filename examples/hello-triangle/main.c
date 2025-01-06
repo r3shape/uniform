@@ -2,35 +2,13 @@
 #define LOTUS_APPLICATION
 #include "../../lotus/include/lotus.h"
 
-char vShader[] = {
-    "#version 460 core\n"
-    "layout(location = 0) in vec3 a_Location;\n"
-    "layout(location = 1) in vec3 a_Color;\n"
-    "uniform mat4 u_model;\n"
-    "uniform mat4 u_view;\n"
-    "uniform mat4 u_projection;\n"
-    "out vec3 vertex_color;\n"
-    "void main() {\n"
-    "   gl_Position = u_projection * u_view * u_model * vec4(a_Location, 1.0f);\n"
-    "   vertex_color = a_Color;\n"
-    "}\0"
-};
-
-char fShader[] = {
-    "#version 460 core\n"
-    "in vec3 vertex_color;\n"
-    "out vec4 frag_color;\n"
-    "void main() {\n"
-    "   frag_color = vec4(vertex_color, 1.0f);\n"
-    "}\0"
-};
-Lotus_Shader my_shader;
-
 Lotus_Application_API* app_api = NULL;
 Lotus_Application* app = NULL;
 
 Lotus_Mat4 m_model;
 Lotus_Primitive triangle_prim;
+
+Lotus_Shader my_shader;
 
 // camera-data handled manually until implentation :)
 Lotus_Mat4 m_view;
@@ -59,7 +37,10 @@ int main() {
 
     triangle_prim = app->resource.graphics_api->lotus_2D.make_triangle(lotus_new_vec2(64, 64), LOTUS_COLOR3(25, 80, 150));
     
-    my_shader = app->resource.graphics_api->make_shader(vShader, fShader);
+    char* vsrc = lotus_read_file("../../lotus/assets/shaders/default001/vertex.glsl");
+    char* fsrc = lotus_read_file("../../lotus/assets/shaders/default001/fragment.glsl");
+
+    my_shader = app->resource.graphics_api->make_shader(vsrc, fsrc);
     app->resource.graphics_api->set_shader(&my_shader);
     
     // set model matrix
