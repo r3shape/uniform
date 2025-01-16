@@ -1,6 +1,5 @@
-#include "../include/platform/lotus_event.h"
-
-#include "../include/utility/lotus_array.h"
+#include "../../include/platform/lotus_event.h"
+#include "../../include/utility/lotus_array.h"
 
 static Lotus_Event_State internal_event_state = {0};
 

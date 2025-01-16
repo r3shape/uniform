@@ -1,6 +1,6 @@
-#include "../include/platform/lotus_input.h"
-#include "../include/platform/lotus_event.h"
-#include "../include/memory/lotus_memory.h"
+#include "../../include/platform/lotus_input.h"
+#include "../../include/platform/lotus_event.h"
+#include "../../include/memory/lotus_memory.h"
 
 static Lotus_Input_State internal_input_state = {0};
 

@@ -3,24 +3,24 @@
 #include <stdio.h>
 
 void lotus_init_core(void) {
-    printf("Sylva Core Initializing...\n");
+    printf("Lotus Core Initializing...\n");
     
     if (!lotus_init_memory()) {
-        printf("Failed to initialize Sylva Memory Layer!\n");
+        printf("Failed to initialize Lotus Memory Layer!\n");
     }
     
     if (!lotus_init_platform()) {
-        printf("Failed to initialize Sylva Platform Layer!\n");
+        printf("Failed to initialize Lotus Platform Layer!\n");
     }
 
-    printf("Sylva Core Initialized!\n");
+    printf("Lotus Core Initialized!\n");
 }
 
 void lotus_shutdown_core(void) {
-    printf("Sylva Core Shutting Down...\n");
+    printf("Lotus Core Shutting Down...\n");
     
     lotus_shutdown_platform();
     lotus_shutdown_memory();
 
-    printf("Sylva Core Shutdown!\n");   
+    printf("Lotus Core Shutdown!\n");   
 }
