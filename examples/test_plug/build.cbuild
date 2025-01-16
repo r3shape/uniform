@@ -1,9 +1,0 @@
-{
-    "compiler": "MinGW",
-    "project": "test_plug",
-    "include_dirs": ["../../lotus/include"],
-    "source_dirs": ["./"],
-    "libraries": { "LotusEngine": "../../build" },
-    "output": "dll",
-    "output_dir": "build"
-}
