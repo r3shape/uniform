@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-void lotus_print_array(ubyte* tag, void* array) {
+void lotus_print_array(char* tag, void* array) {
     if (!array) return;
 
     ubyte4* header = LOTUS_ARRAY_GET_HEADER(array);

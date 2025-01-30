@@ -234,6 +234,21 @@ ubyte _windows_hide_cursor_impl(Lotus_Window *window) {
     else return LOTUS_FALSE;
 }
 
+ubyte _windows_center_cursor_impl(Lotus_Window *window) {
+    if (!window || !window->internal_data) return LOTUS_FALSE;    // error: null ptr!
+
+    Platform_Window_Data *windowData = (Platform_Window_Data *)window->internal_data;
+
+    RECT rect;
+    GetWindowRect(windowData->handle, &rect);
+    
+    if (SetCursorPos(
+        (rect.left + rect.right) / 2,
+        (rect.top + rect.bottom) / 2
+    )) { return LOTUS_TRUE; }
+    return LOTUS_FALSE;
+}
+
 ubyte _windows_bound_cursor_impl(Lotus_Window *window) {
     if (!window || !window->internal_data) return LOTUS_FALSE;    // error: null ptr!
 
@@ -441,6 +456,7 @@ ubyte lotus_init_platform(void) {
     lotus_platform_api->show_cursor = _windows_show_cursor_impl;
     lotus_platform_api->hide_cursor = _windows_hide_cursor_impl;
     lotus_platform_api->bound_cursor = _windows_bound_cursor_impl;
+    lotus_platform_api->center_cursor = _windows_center_cursor_impl;
     lotus_platform_api->unbound_cursor = _windows_unbound_cursor_impl;
 
     lotus_platform_api->create_gl_context = _windows_create_gl_context_impl;

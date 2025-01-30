@@ -38,12 +38,15 @@ int main() {
     );
 
     lotus_graphics_api->set_uniform(&shader, "u_view", &cam.view);
+    lotus_platform_api->hide_cursor(&window);
     
     f32 angle = 0.0;
     ubyte running = 1;
     while (running) {
         lotus_platform_api->poll_events();
         lotus_graphics_api->draw_clear();
+
+        lotus_platform_api->center_cursor(&window);
 
         if (lotus_key_is_down(LOTUS_KEY_ESCAPE)) running = 0;
 

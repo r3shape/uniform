@@ -19,7 +19,7 @@ typedef enum Lotus_Array_Field {
 LOTUS_API void* lotus_create_array(ubyte4 stride, ubyte4 capacity);
 LOTUS_API void lotus_destroy_array(void* array);
 
-LOTUS_API void lotus_print_array(ubyte* tag, void* array);
+LOTUS_API void lotus_print_array(char* tag, void* array);
 
 LOTUS_API void lotus_pop_array(void* array, void* out_value);
 LOTUS_API void* lotus_push_array(void* array, void* in_value);

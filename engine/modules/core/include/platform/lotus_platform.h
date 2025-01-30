@@ -52,6 +52,7 @@ typedef struct Lotus_Platform_API {
     ubyte (*show_cursor)(Lotus_Window *window);
     ubyte (*hide_cursor)(Lotus_Window *window);
     ubyte (*bound_cursor)(Lotus_Window *window);
+    ubyte (*center_cursor)(Lotus_Window *window);
     ubyte (*unbound_cursor)(Lotus_Window *window);
     
     Lotus_Window (*create_window)(const char *title, int width, int height);
