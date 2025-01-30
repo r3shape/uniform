@@ -32,7 +32,6 @@ typedef struct Lotus_Platform_State {
     Lotus_Window *windowPtr;
     f64 clock_frequency;
     Lotus_Platform_Tag platform;
-    Lotus_Event_State *event_state;
     Lotus_Input_State *input_state;
 } Lotus_Platform_State;
 

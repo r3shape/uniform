@@ -23,10 +23,9 @@ void _windows_cleanup_impl(void) {
     UnregisterClass("Lotus Window Class", GetModuleHandle(NULL));
     
     lotus_shutdown_input();
-    lotus_shutdown_event();
+    lotus_shutdown_events();
     
     internal_platform_state.input_state = NULL;
-    internal_platform_state.event_state = NULL;
     internal_platform_state.clock_frequency = 0.0;
     internal_platform_state.platform = LOTUS_PLATFORM_TAGS;
 }
@@ -39,7 +38,7 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM wParam, LPARAM lPa
         case WM_QUIT:       // fall through WM_DESTROY
         case WM_CLOSE:      // fall through WM_DESTROY
         case WM_DESTROY:
-            lotus_push_event((Lotus_Event){.event_data.ubyte[0]=1}, LOTUS_EVENT_APP_QUIT);
+            lotus_event_api->push_event((Lotus_Event){.ubyte[0]=1}, LOTUS_EVENT_APP_QUIT);
             PostQuitMessage(0);
             return 0;
         case WM_EXITSIZEMOVE: {
@@ -56,7 +55,7 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM wParam, LPARAM lPa
            
             ubyte2 width = newRect.right - newRect.left;
             ubyte2 height = newRect.bottom - newRect.top;
-            lotus_push_event((Lotus_Event){.event_data.ubyte2[0]=width, .event_data.ubyte2[1]=height}, LOTUS_EVENT_RESIZE);
+            lotus_event_api->push_event((Lotus_Event){.ubyte2[0]=width, .ubyte2[1]=height}, LOTUS_EVENT_RESIZE);
         } break;
         case WM_KILLFOCUS: {
             ClipCursor(NULL);
@@ -223,6 +222,7 @@ void _windows_destroy_window_impl(Lotus_Window *window) {
 ubyte _windows_show_cursor_impl(Lotus_Window *window) {
     if (!window) return LOTUS_FALSE;    // error: null ptr!
 
+    // TODO: move this logic to the window process based on a window state flag
     if (ShowCursor(LOTUS_TRUE) >= 0) return LOTUS_TRUE;
     else return LOTUS_FALSE;
 }
@@ -230,6 +230,7 @@ ubyte _windows_show_cursor_impl(Lotus_Window *window) {
 ubyte _windows_hide_cursor_impl(Lotus_Window *window) {
     if (!window) return LOTUS_FALSE;    // error: null ptr!
 
+    // TODO: move this logic to the window process based on a window state flag
     if (ShowCursor(LOTUS_FALSE) < 0) return LOTUS_TRUE;
     else return LOTUS_FALSE;
 }
@@ -239,9 +240,9 @@ ubyte _windows_center_cursor_impl(Lotus_Window *window) {
 
     Platform_Window_Data *windowData = (Platform_Window_Data *)window->internal_data;
 
+    // TODO: move this logic to the window process based on a window state flag
     RECT rect;
     GetWindowRect(windowData->handle, &rect);
-    
     if (SetCursorPos(
         (rect.left + rect.right) / 2,
         (rect.top + rect.bottom) / 2
@@ -257,6 +258,7 @@ ubyte _windows_bound_cursor_impl(Lotus_Window *window) {
     RECT rect;
     GetWindowRect(windowData->handle, &rect);
 
+    // TODO: move this logic to the window process based on a window state flag
     if (ClipCursor(&rect)) {
         window->cursor_bounded = LOTUS_TRUE;
         windowData->rid.dwFlags = RIDEV_NOLEGACY;   // enable raw input / disable legacy input
@@ -272,6 +274,7 @@ ubyte _windows_unbound_cursor_impl(Lotus_Window *window) {
     Platform_Window_Data *windowData = (Platform_Window_Data *)window->internal_data;
     if (!windowData) return LOTUS_FALSE;
 
+    // TODO: move this logic to the window process based on a window state flag
     if (ClipCursor(NULL)) {
         window->cursor_bounded = LOTUS_FALSE;
         windowData->rid.dwFlags = 0;   // enable legacy input / disable raw input
@@ -425,8 +428,7 @@ ubyte _windows_unload_library_impl(Lotus_DyLib *library) {
 ubyte lotus_init_platform(void) {
     internal_platform_state.platform = LOTUS_WINDOWS_TAG;
     
-    internal_platform_state.event_state = lotus_init_event();
-    if (!internal_platform_state.event_state) return LOTUS_FALSE;   // error: failed to init event layer!
+    if (!lotus_init_events()) return LOTUS_FALSE;   // error: failed to init event layer!
     
     internal_platform_state.input_state = lotus_init_input();
     if (!internal_platform_state.input_state) return LOTUS_FALSE;   // error: failed to init input layer!
