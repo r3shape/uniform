@@ -49,13 +49,9 @@ void lotus_update_camera(Lotus_Camera *camera) {
 
 void lotus_freelook_camera(Lotus_Camera *camera) {
     if (!camera) return; // error: null pointer!
-
-    sbyte4 x, y;
-    sbyte4 xLast, yLast;
+    sbyte2 x, y;
     lotus_mouse_get_position(&x, &y);
-    lotus_mouse_get_last_position(&xLast, &yLast);
-    
-    lotus_rotate_camera(camera, (x - xLast), (yLast - y));
+    lotus_rotate_camera(camera, x, -y);
 }
 
 void lotus_translate_camera(Lotus_Camera *camera, sbyte x, sbyte y, sbyte z) {

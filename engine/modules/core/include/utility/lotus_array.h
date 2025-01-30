@@ -12,14 +12,14 @@ typedef enum Lotus_Array_Field {
 } Lotus_Array_Field;
 
 #define LOTUS_ARRAY_HEADER_SIZE (4 * sizeof(ubyte4))
-#define LOTUS_ARRAY_GET_HEADER(array) ((ubyte4*)((char*)array - LOTUS_ARRAY_HEADER_SIZE))
+#define LOTUS_ARRAY_GET_HEADER(array) ((ubyte4*)((ubyte*)array - LOTUS_ARRAY_HEADER_SIZE))
 #define LOTUS_ARRAY_GET_HEADER_FIELD(array, field) LOTUS_ARRAY_GET_HEADER(array)[field]
 #define LOTUS_ARRAY_SET_HEADER_FIELD(array, field, value) LOTUS_ARRAY_GET_HEADER(array)[field] = value
 
 LOTUS_API void* lotus_create_array(ubyte4 stride, ubyte4 capacity);
 LOTUS_API void lotus_destroy_array(void* array);
 
-LOTUS_API void lotus_print_array(char* tag, void* array);
+LOTUS_API void lotus_print_array(ubyte* tag, void* array);
 
 LOTUS_API void lotus_pop_array(void* array, void* out_value);
 LOTUS_API void* lotus_push_array(void* array, void* in_value);

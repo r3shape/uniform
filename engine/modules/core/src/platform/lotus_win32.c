@@ -12,6 +12,7 @@ typedef struct Platform_Window_Data {
     HGLRC gl_context;
     HDC device_context;
     HINSTANCE instance;
+    RAWINPUTDEVICE rid;
 } Platform_Window_Data;
 
 Lotus_Platform_API *lotus_platform_api = NULL;
@@ -19,7 +20,7 @@ static Lotus_Platform_State internal_platform_state = {0};
 
 /* PLATFORM API IMPLEMENTATION */
 void _windows_cleanup_impl(void) {
-    UnregisterClass("Sylva Window Class", GetModuleHandle(NULL));
+    UnregisterClass("Lotus Window Class", GetModuleHandle(NULL));
     
     lotus_shutdown_input();
     lotus_shutdown_event();
@@ -45,7 +46,7 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM wParam, LPARAM lPa
             RECT newRect = {0};
             GetWindowRect(handle, &newRect);
 
-            if (window && window->cursor_bounded) {
+            if (window && (window->cursor_bounded == LOTUS_TRUE)) {
                 window->location[0] = newRect.left;
                 window->location[1] = newRect.top;
                 window->size[0] = newRect.right;
@@ -57,11 +58,14 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM wParam, LPARAM lPa
             ubyte2 height = newRect.bottom - newRect.top;
             lotus_push_event((Lotus_Event){.event_data.ubyte2[0]=width, .event_data.ubyte2[1]=height}, LOTUS_EVENT_RESIZE);
         } break;
+        case WM_KILLFOCUS: {
+            ClipCursor(NULL);
+        } break;
         case WM_SETFOCUS: {
             RECT newRect = {0};
             GetWindowRect(handle, &newRect);
             
-            if (window && window->cursor_bounded) {
+            if (window && (window->cursor_bounded == LOTUS_TRUE)) {
                 window->location[0] = newRect.left;
                 window->location[1] = newRect.top;
                 window->size[0] = newRect.right;
@@ -69,9 +73,7 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM wParam, LPARAM lPa
                 ClipCursor(&newRect);
             }
         } break;
-        case WM_KILLFOCUS: {
-            ClipCursor(NULL);
-        } break;
+        /* LEGACY INPUT */
         case WM_KEYUP:          // fall through WM_SYSKEYUP
         case WM_KEYDOWN:        // fall through WM_SYSKEYUP
         case WM_SYSKEYDOWN:     // fall through WM_SYSKEYUP
@@ -81,48 +83,57 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM wParam, LPARAM lPa
             ubyte pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
             lotus_process_key_input(key, pressed);
         } break;
-        case WM_MOUSEMOVE: {
-            // mouse movement
-            sbyte4 x = GET_X_LPARAM(lParam); 
-            sbyte4 y = GET_Y_LPARAM(lParam);
-            lotus_process_mouse_move_input(x, y);
-        } break;
-        case WM_MOUSEWHEEL: {
-            sbyte4 z = GET_WHEEL_DELTA_WPARAM(wParam);
-            if (z != 0) {
-                // clamp input to OS-independent values (-1, 1)
-                z = (z < 0) ? -1 : 1;
-                lotus_process_mouse_wheel_input(z);
+        /* RAW INPUT */
+        case WM_INPUT: {
+            UINT dwSize;
+            GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
+            
+            RAWINPUT raw;
+            if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, &raw, &dwSize, sizeof(RAWINPUTHEADER)) != dwSize) {
+                printf("GetRawInputData did not return correct size!\n");
+                return DefWindowProcA(handle, msg, wParam, lParam);
             }
-        } break;
-        case WM_LBUTTONDOWN:    // fall through WM_RBUTTONUP
-        case WM_MBUTTONDOWN:    // fall through WM_RBUTTONUP
-        case WM_RBUTTONDOWN:    // fall through WM_RBUTTONUP
-        case WM_LBUTTONUP:      // fall through WM_RBUTTONUP
-        case WM_MBUTTONUP:      // fall through WM_RBUTTONUP
-        case WM_RBUTTONUP: {
-            Lotus_Mouse_Button button = LOTUS_MBUTTON_MAX_BUTTONS;
-            ubyte pressed = msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN;
-            switch (msg) {
-                case WM_LBUTTONDOWN:
-                case WM_LBUTTONUP:
-                    button = LOTUS_MBUTTON_LEFT;
-                    break;
-                
-                case WM_MBUTTONDOWN:
-                case WM_MBUTTONUP:
-                    button = LOTUS_MBUTTON_MIDDLE;
-                    break;
-                
-                case WM_RBUTTONDOWN:
-                case WM_RBUTTONUP:
-                    button = LOTUS_MBUTTON_RIGHT;
-                    break;
+
+            if (raw.header.dwType == RIM_TYPEMOUSE) {
+                RAWMOUSE *mouse = &raw.data.mouse;
+
+                // handle mouse movement
+                if (mouse->usFlags & MOUSE_MOVE_ABSOLUTE) {
+                    // ignore absolute movement (used for remote desktop, etc.)
+                } else {
+                    sbyte2 x = (sbyte2)mouse->lLastX;
+                    sbyte2 y = (sbyte2)mouse->lLastY;
+                    lotus_process_mouse_move_input(x, y);
+                }
+
+                // handle mouse buttons
+                if (mouse->usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN) {
+                    lotus_process_mouse_button_input(LOTUS_MBUTTON_LEFT, 1);
+                }
+                if (mouse->usButtonFlags & RI_MOUSE_LEFT_BUTTON_UP) {
+                    lotus_process_mouse_button_input(LOTUS_MBUTTON_LEFT, 0);
+                }
+                if (mouse->usButtonFlags & RI_MOUSE_RIGHT_BUTTON_DOWN) {
+                    lotus_process_mouse_button_input(LOTUS_MBUTTON_RIGHT, 1);
+                }
+                if (mouse->usButtonFlags & RI_MOUSE_RIGHT_BUTTON_UP) {
+                    lotus_process_mouse_button_input(LOTUS_MBUTTON_RIGHT, 0);
+                }
+                if (mouse->usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_DOWN) {
+                    lotus_process_mouse_button_input(LOTUS_MBUTTON_MIDDLE, 1);
+                }
+                if (mouse->usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_UP) {
+                    lotus_process_mouse_button_input(LOTUS_MBUTTON_MIDDLE, 0);
+                }
+
+                // handle mouse wheel
+                if (mouse->usButtonFlags & RI_MOUSE_WHEEL) {
+                    sbyte4 z = (sbyte4)((SHORT)mouse->usButtonData) / WHEEL_DELTA;
+                    lotus_process_mouse_wheel_input(z);
+                }
             }
-            if (button != LOTUS_MBUTTON_MAX_BUTTONS) lotus_process_mouse_button_input(button, pressed);
         } break;
     }
-    
     return DefWindowProcA(handle, msg, wParam, lParam);
 }
 
@@ -139,15 +150,16 @@ Lotus_Window _windows_create_window_impl(const char *title, int width, int heigh
     WNDCLASS wc = {0};
     wc.lpfnWndProc = _window_proc;
     wc.hInstance = data->instance;
-    wc.lpszClassName = "Sylva Window Class";
+    wc.lpszClassName = "Lotus Window Class";
 
     if (!RegisterClass(&wc)) {
+        free(window.internal_data);
         return (Lotus_Window){0};
     }
 
     // Create the window
     HWND hwnd = CreateWindow(
-        "Sylva Window Class",
+        "Lotus Window Class",
         title,
         WS_OVERLAPPEDWINDOW | WS_VISIBLE,
         CW_USEDEFAULT,  // default x
@@ -160,12 +172,25 @@ Lotus_Window _windows_create_window_impl(const char *title, int width, int heigh
         NULL);
 
     if (!hwnd) {
+        free(window.internal_data);
         return (Lotus_Window){0};
     }
 
     data->handle = hwnd;
     data->gl_context = NULL;
     data->device_context = GetDC(hwnd);
+
+     // Register rawinput devices
+    data->rid.usUsagePage = 0x01;       // HID_USAGE_PAGE_GENERIC
+    data->rid.usUsage = 0x02;           // HID_USAGE_GENERIC_MOUSE
+    data->rid.dwFlags = 0;              // RIDEV_NOLEGACY adds mouse and ignores legacy mouse messages
+    data->rid.hwndTarget = data->handle;
+
+    if (!RegisterRawInputDevices(&data->rid, 1, sizeof(data->rid))) {
+        printf("Failed to register rawinput devices!\n");
+        free(window.internal_data);
+        return (Lotus_Window){0};
+    }
 
     // Initialize the generic window structure
     strncpy(window.title, title, sizeof(window.title) - 1);
@@ -175,6 +200,7 @@ Lotus_Window _windows_create_window_impl(const char *title, int width, int heigh
     window.size[0] = width;
     window.size[1] = height;
     window.aspect_ratio = (float)width / height;
+    window.cursor_bounded = LOTUS_FALSE;
 
     internal_platform_state.windowPtr = &window;
 
@@ -218,6 +244,7 @@ ubyte _windows_bound_cursor_impl(Lotus_Window *window) {
 
     if (ClipCursor(&rect)) {
         window->cursor_bounded = LOTUS_TRUE;
+        windowData->rid.dwFlags = RIDEV_NOLEGACY;   // enable raw input / disable legacy input
         return LOTUS_TRUE;
     }
 
@@ -227,11 +254,12 @@ ubyte _windows_bound_cursor_impl(Lotus_Window *window) {
 ubyte _windows_unbound_cursor_impl(Lotus_Window *window) {
     if (!window) return LOTUS_FALSE;    // error: null ptr!
     
-    Platform_Window_Data *data = (Platform_Window_Data *)window->internal_data;
-    if (!data) return LOTUS_FALSE;
+    Platform_Window_Data *windowData = (Platform_Window_Data *)window->internal_data;
+    if (!windowData) return LOTUS_FALSE;
 
     if (ClipCursor(NULL)) {
         window->cursor_bounded = LOTUS_FALSE;
+        windowData->rid.dwFlags = 0;   // enable legacy input / disable raw input
         return LOTUS_TRUE;
     }
 

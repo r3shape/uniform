@@ -18,6 +18,10 @@ void lotus_update_input(f64 delta_time) {
 
     // TODO: lotus_memory_api->copy() needed!
     memcpy(&internal_input_state.previous, &internal_input_state.current, sizeof(Llotus_Input_State));
+    
+    // reset current rawinput mouse deltas
+    internal_input_state.current.mouse[0] = 0.0;
+    internal_input_state.current.mouse[1] = 0.0;
 }
 
 ubyte lotus_key_is_up(Lotus_Keyboard_Key key) {
@@ -60,14 +64,14 @@ ubyte lotus_button_was_down(Lotus_Mouse_Button button) {
     return internal_input_state.previous.buttons[button] == LOTUS_TRUE;
 }
 
-void lotus_mouse_get_position(sbyte4* x, sbyte4* y) {
+void lotus_mouse_get_position(sbyte2* x, sbyte2* y) {
     if (!internal_input_state.init) {
         *x = 0; *y = 0;
         return;
     }; *x = internal_input_state.current.mouse[0]; *y = internal_input_state.current.mouse[1];
 }
 
-void lotus_mouse_get_last_position(sbyte4* x, sbyte4* y) {
+void lotus_mouse_get_last_position(sbyte2* x, sbyte2* y) {
     if (!internal_input_state.init) {
         *x = 0; *y = 0;
         return;
@@ -81,13 +85,16 @@ void lotus_process_mouse_wheel_input(sbyte z_delotus_a) {
 }
 
 void lotus_process_mouse_move_input(sbyte2 x, sbyte2 y) {
-    if (internal_input_state.current.mouse[0] != x || internal_input_state.current.mouse[1] != y) {
-        internal_input_state.current.mouse[0] = x;
-        internal_input_state.current.mouse[1] = y;
+    if (x != 0 || y != 0) {
+        internal_input_state.previous.mouse[0] = internal_input_state.current.mouse[0];
+        internal_input_state.previous.mouse[1] = internal_input_state.current.mouse[1];
+
+        internal_input_state.current.mouse[0] += x; // WM_INPUT returns mouse deltas so just accumulate them
+        internal_input_state.current.mouse[1] += y;
 
         Lotus_Event event;
-        event.event_data.ubyte2[0] = x;
-        event.event_data.ubyte2[1] = y;
+        event.event_data.ubyte2[0] = internal_input_state.current.mouse[0];
+        event.event_data.ubyte2[1] = internal_input_state.current.mouse[1];
         lotus_push_event(event, LOTUS_EVENT_MOUSE_MOVE);
     }
 }

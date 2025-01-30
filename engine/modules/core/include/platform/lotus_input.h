@@ -164,5 +164,5 @@ LOTUS_API ubyte lotus_button_was_up(Lotus_Mouse_Button button);
 LOTUS_API ubyte lotus_button_is_down(Lotus_Mouse_Button button);
 LOTUS_API ubyte lotus_button_was_down(Lotus_Mouse_Button button);
 
-LOTUS_API void lotus_mouse_get_position(sbyte4* x, sbyte4* y);
-LOTUS_API void lotus_mouse_get_last_position(sbyte4* x, sbyte4* y);
+LOTUS_API void lotus_mouse_get_position(sbyte2* x, sbyte2* y);
+LOTUS_API void lotus_mouse_get_last_position(sbyte2* x, sbyte2* y);

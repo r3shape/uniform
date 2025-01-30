@@ -23,8 +23,6 @@ int main() {
     );
     lotus_graphics_api->set_shader(&shader);
 
-    // camera data handled manually for now :)
-
     Lotus_Mat4 model = lotus_identity();
     Lotus3D_Primitive cube = lotus3d_create_cube(lotus_new_vec3(100, 100, 100), LOTUS_COLOR3(25, 80, 150));
 
@@ -41,9 +39,6 @@ int main() {
 
     lotus_graphics_api->set_uniform(&shader, "u_view", &cam.view);
     
-    // lotus_platform_api->hide_cursor(&window);
-    lotus_platform_api->bound_cursor(&window);
-
     f32 angle = 0.0;
     ubyte running = 1;
     while (running) {
@@ -61,11 +56,11 @@ int main() {
         if (lotus_key_is_down(LOTUS_KEY_SPACE)) lotus_translate_camera(&cam, 0, 1, 0);
         if (lotus_key_is_down(LOTUS_KEY_SHIFT)) lotus_translate_camera(&cam, 0, -1, 0);
     
-        // camera data handled manually for now :)
+        // camera uniform handled manually for now :)
         lotus_graphics_api->send_uniform(&shader, LOTUS_UNIFORM_MAT4, "u_view");
         
         angle += 1;
-        // model = lotus_mul_mat4(lotus_identity(), lotus_rot_mat4(1, 0, 0, angle));
+        model = lotus_mul_mat4(lotus_identity(), lotus_rot_mat4(1, 1, 1, angle));
 
         lotus_graphics_api->set_uniform(&shader, "u_model", &model);
         lotus_graphics_api->draw_data(cube.vertexData);
