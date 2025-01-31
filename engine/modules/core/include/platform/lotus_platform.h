@@ -12,7 +12,7 @@ typedef enum Lotus_Platform_Tag {
 } Lotus_Platform_Tag;
 
 typedef struct Lotus_DyLib {
-    const char *name;
+    char *name;
     void *handle;
 } Lotus_DyLib;
 
@@ -45,7 +45,7 @@ typedef struct Lotus_Platform_API {
     f64 (*get_time)(void);
     void (*sleep)(f64 seconds);
     
-    Lotus_DyLib (*load_library)(const char *path, const char *name);
+    Lotus_DyLib (*load_library)(const char *path, char *name);
     void *(*get_library_symbol)(Lotus_DyLib *library, const char *symbol_name);
     ubyte (*unload_library)(Lotus_DyLib *library);
     

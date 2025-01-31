@@ -413,7 +413,7 @@ void *_windows_get_gl_context_impl(Lotus_Window *window) {
 Lotus_Platform_State *_windows_get_state_impl(void) { return &internal_platform_state; }
 
 
-Lotus_DyLib _windows_load_library_impl(const char *path, const char *name) {
+Lotus_DyLib _windows_load_library_impl(const char *path, char *name) {
     char full_path[MAX_PATH];
     snprintf(full_path, sizeof(full_path), "%s/%s.dll", path, name);
 
@@ -423,7 +423,7 @@ Lotus_DyLib _windows_load_library_impl(const char *path, const char *name) {
         return (Lotus_DyLib){.name = NULL, .handle = NULL};
     }
 
-    Lotus_DyLib lib = {.name = strdup(name), .handle = handle};
+    Lotus_DyLib lib = {.name = name, .handle = handle};
     return lib;
 }
 
@@ -443,8 +443,9 @@ ubyte _windows_unload_library_impl(Lotus_DyLib *library) {
         return LOTUS_FALSE;
     }
 
-    free((char*)library->name);
+    library->name = NULL;
     library->handle = NULL;
+
     return LOTUS_TRUE;
 }
 #endif // LOTUS_PLATFORM_WINDOWS == LOTUS_TRUE

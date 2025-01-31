@@ -100,8 +100,8 @@ int hashmap_test() {
 }
 
 int graphics_test() {
-    Lotus_Window window = lotus_platform_api->create_window("My Lotus Window", 1280, 720);
-    lotus_platform_api->create_gl_context(&window);
+    Lotus_Window* window = lotus_platform_api->create_window("My Lotus Window", 1280, 720);
+    lotus_platform_api->create_gl_context(window);
 
     lotus_init_graphics();
 
@@ -130,7 +130,7 @@ int graphics_test() {
     lotus_graphics_api->draw_begin(
         LOTUS_TRIANGLE_MODE,
         LOTUS_COLOR4(133, 161, 172, 255),
-        lotus_ortho(0, window.size[0], 0, window.size[1], 0.1, 10.0)
+        lotus_ortho(0, window->size[0], 0, window->size[1], 0.1, 10.0)
     );
     
     ubyte4 frame = 0;
@@ -149,14 +149,14 @@ int graphics_test() {
         lotus_graphics_api->draw_data(rectangle.vertexData);
 
         lotus_platform_api->poll_inputs();
-        lotus_platform_api->swap_buffers(&window);
+        lotus_platform_api->swap_buffers(window);
         frame++;
     }
 
     lotus_graphics_api->destroy_vertex_data(&triangle.vertexData);
     lotus_graphics_api->destroy_vertex_data(&rectangle.vertexData);
-    lotus_platform_api->destroy_gl_context(&window);
-    lotus_platform_api->destroy_window(&window);
+    lotus_platform_api->destroy_gl_context(window);
+    lotus_platform_api->destroy_window(window);
 
     lotus_shutdown_graphics();
 

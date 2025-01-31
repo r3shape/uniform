@@ -6,13 +6,15 @@
         "engine/modules/core/include",
         "engine/modules/ecs/include",
         "engine/modules/2d/include",
-        "engine/modules/3d/include"
+        "engine/modules/3d/include",
+        "engine/modules/lotus_next/include"
     ],
     "source_dirs": [
         "engine/modules/core/src",
         "engine/modules/ecs/src",
         "engine/modules/2d/src",
-        "engine/modules/3d/src"
+        "engine/modules/3d/src",
+        "engine/modules/lotus_next/src"
     ],
     "defines": [
         "LOTUS_DLL_EXPORT"

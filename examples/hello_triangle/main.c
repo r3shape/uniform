@@ -15,7 +15,7 @@ int main() {
     );
     lotus_graphics_api->set_shader(&shader);
 
-    // camera data handled manually for now :)
+    // 2D camera data handled manually for now :)
     Lotus_Mat4 view = lotus_identity();
     view = lotus_look_at(
         lotus_new_vec3(0.0f, 0.0f, 1.0f),
@@ -34,12 +34,14 @@ int main() {
         lotus_ortho(0, window->size[0], 0, window->size[1], 0.1, 10.0)
     );
     
-    ubyte4 frame = 0;
-    while (frame < 255) {
+    ubyte running = 1;
+    while (running) {
         lotus_platform_api->poll_events();
         lotus_graphics_api->draw_clear();
 
-        // camera data handled manually for now :)
+        if (lotus_key_is_down(LOTUS_KEY_ESCAPE)) running = 0;
+
+        // camera uniform handled manually for now :)
         lotus_graphics_api->send_uniform(&shader, LOTUS_UNIFORM_MAT4, "u_view");
         
         lotus_graphics_api->set_uniform(&shader, "u_model", &tModel);
@@ -47,7 +49,6 @@ int main() {
         
         lotus_platform_api->poll_inputs();
         lotus_platform_api->swap_buffers(window);
-        frame++;
     }
 
     lotus_graphics_api->destroy_vertex_data(&triangle.vertexData);

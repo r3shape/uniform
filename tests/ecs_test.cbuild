@@ -1,8 +1,8 @@
 {
     "compiler": "MinGW",
-    "project": "Core_Test",
+    "project": "ecs_test",
     "include_dirs": ["engine/include"],
-    "source_files": ["examples/core_test/main.c"],
+    "source_files": ["tests/ecs_test.c"],
     "libraries": {
         "Lotus": "build"
     },

@@ -1,0 +1,11 @@
+{
+    "compiler": "MinGW",
+    "project": "plug_test",
+    "include_dirs": ["engine/include"],
+    "source_files": ["tests/plug_test.c"],
+    "libraries": {
+        "Lotus": "build"
+    },
+    "output": "exe",
+    "output_dir": "build"
+}
