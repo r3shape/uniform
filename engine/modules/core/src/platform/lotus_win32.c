@@ -31,8 +31,23 @@ void _windows_cleanup_impl(void) {
 }
 
 LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM wParam, LPARAM lParam) {
-    Lotus_Window *window = internal_platform_state.windowPtr;
-    Platform_Window_Data *windowData = (window == NULL) ? NULL : (Platform_Window_Data *)window->internal_data;
+    Lotus_Window *window = internal_platform_state.window;
+    if (!window) return DefWindowProcA(handle, msg, wParam, lParam);    // error: how did you get here?
+
+    Platform_Window_Data *window_data = (Platform_Window_Data *)window->internal_data;
+
+    RECT window_rect;
+    GetWindowRect(window_data->handle, &window_rect);
+
+    // only handle window flags during focus
+    if (window->focused) {
+        ShowCursor(lotus_platform_api->get_window_flag(window, LOTUS_SHOW_CURSOR));
+        if (lotus_platform_api->get_window_flag(window, LOTUS_BIND_CURSOR))
+            ClipCursor(&window_rect);
+        if (lotus_platform_api->get_window_flag(window, LOTUS_CENTER_CURSOR))
+            SetCursorPos((window_rect.left + window_rect.right) / 2, (window_rect.top + window_rect.bottom) / 2);
+    }
+
     switch(msg) {
         case WM_ERASEBKGND: return 1;
         case WM_QUIT:       // fall through WM_DESTROY
@@ -45,7 +60,7 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM wParam, LPARAM lPa
             RECT newRect = {0};
             GetWindowRect(handle, &newRect);
 
-            if (window && (window->cursor_bounded == LOTUS_TRUE)) {
+            if (lotus_platform_api->get_window_flag(window, LOTUS_BIND_CURSOR)) {
                 window->location[0] = newRect.left;
                 window->location[1] = newRect.top;
                 window->size[0] = newRect.right;
@@ -58,13 +73,14 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM wParam, LPARAM lPa
             lotus_event_api->push_event((Lotus_Event){.ubyte2[0]=width, .ubyte2[1]=height}, LOTUS_EVENT_RESIZE);
         } break;
         case WM_KILLFOCUS: {
+            window->focused = LOTUS_FALSE;
             ClipCursor(NULL);
         } break;
         case WM_SETFOCUS: {
-            RECT newRect = {0};
-            GetWindowRect(handle, &newRect);
-            
-            if (window && (window->cursor_bounded == LOTUS_TRUE)) {
+            window->focused = LOTUS_TRUE;
+            if (lotus_platform_api->get_window_flag(window, LOTUS_BIND_CURSOR)) {
+                RECT newRect = {0};
+                GetWindowRect(handle, &newRect);
                 window->location[0] = newRect.left;
                 window->location[1] = newRect.top;
                 window->size[0] = newRect.right;
@@ -136,14 +152,18 @@ LRESULT CALLBACK _window_proc(HWND handle, ubyte4 msg, WPARAM wParam, LPARAM lPa
     return DefWindowProcA(handle, msg, wParam, lParam);
 }
 
-Lotus_Window _windows_create_window_impl(const char *title, int width, int height) {
-    Lotus_Window window;
-
-    window.internal_data = (Platform_Window_Data *)malloc(sizeof(Platform_Window_Data));
-    if (!window.internal_data) {
-        return (Lotus_Window){0};
+Lotus_Window* _windows_create_window_impl(const char *title, int width, int height) {
+    internal_platform_state.window = (Lotus_Window*)malloc(sizeof(Lotus_Window));
+    if (!internal_platform_state.window) return NULL;    // error: out of memory!
+    
+    internal_platform_state.window->internal_data = (Platform_Window_Data *)malloc(sizeof(Platform_Window_Data));
+    if (!internal_platform_state.window->internal_data) {   // error: out of memory!
+        free(internal_platform_state.window);
+        return NULL;
     }
-    Platform_Window_Data *data = (Platform_Window_Data*)window.internal_data;
+
+    Lotus_Window* window = internal_platform_state.window;
+    Platform_Window_Data *data = (Platform_Window_Data*)window->internal_data;
 
     // Register window class
     WNDCLASS wc = {0};
@@ -151,9 +171,10 @@ Lotus_Window _windows_create_window_impl(const char *title, int width, int heigh
     wc.hInstance = data->instance;
     wc.lpszClassName = "Lotus Window Class";
 
-    if (!RegisterClass(&wc)) {
-        free(window.internal_data);
-        return (Lotus_Window){0};
+    if (!RegisterClass(&wc)) {  // error: failed to register window class!
+        free(window->internal_data);
+        free(window);
+        return NULL;
     }
 
     // Create the window
@@ -170,9 +191,10 @@ Lotus_Window _windows_create_window_impl(const char *title, int width, int heigh
         data->instance,
         NULL);
 
-    if (!hwnd) {
-        free(window.internal_data);
-        return (Lotus_Window){0};
+    if (!hwnd) {    // error: failed to create window class!
+        free(window->internal_data);
+        free(window);
+        return NULL;
     }
 
     data->handle = hwnd;
@@ -182,105 +204,109 @@ Lotus_Window _windows_create_window_impl(const char *title, int width, int heigh
      // Register rawinput devices
     data->rid.usUsagePage = 0x01;       // HID_USAGE_PAGE_GENERIC
     data->rid.usUsage = 0x02;           // HID_USAGE_GENERIC_MOUSE
-    data->rid.dwFlags = 0;              // RIDEV_NOLEGACY adds mouse and ignores legacy mouse messages
+    data->rid.dwFlags = 0;              // RIDEV_NOLEGACY adds raw mouse and ignores legacy mouse messages
     data->rid.hwndTarget = data->handle;
 
     if (!RegisterRawInputDevices(&data->rid, 1, sizeof(data->rid))) {
-        printf("Failed to register rawinput devices!\n");
-        free(window.internal_data);
-        return (Lotus_Window){0};
+        // error: failed to register rawinput devices!
+        free(window->internal_data);
+        free(window);
+        return NULL;
     }
 
     // Initialize the generic window structure
-    strncpy(window.title, title, sizeof(window.title) - 1);
-    window.title[sizeof(window.title) - 1] = '\0';
-    window.location[0] = CW_USEDEFAULT;
-    window.location[1] = CW_USEDEFAULT;
-    window.size[0] = width;
-    window.size[1] = height;
-    window.aspect_ratio = (float)width / height;
-    window.cursor_bounded = LOTUS_FALSE;
+    strncpy(window->title, title, sizeof(window->title) - 1);
+    window->focused = LOTUS_TRUE;
+    window->flags = 0;
+    window->title[sizeof(window->title) - 1] = '\0';
+    window->location[0] = CW_USEDEFAULT;
+    window->location[1] = CW_USEDEFAULT;
+    window->size[0] = width;
+    window->size[1] = height;
+    window->aspect_ratio = (float)width / height;
 
-    internal_platform_state.windowPtr = &window;
+    // Set default window flags
+    if (
+        !lotus_platform_api->set_window_flag(window, LOTUS_SHOW_CURSOR)
+    ) { // error: failed to set default flags!
+        free(window->internal_data);
+        free(window);
+        return NULL;
+    }
 
     return window;
 }
 
 void _windows_destroy_window_impl(Lotus_Window *window) {
     if (!window) return;    // error: null ptr!
-    if (window && window->internal_data) {
+    if (window->internal_data) {
         Platform_Window_Data *data = (Platform_Window_Data*)window->internal_data;
         if (data->handle) {
             DestroyWindow(data->handle);
         }
         free(data);
-        window->internal_data = NULL;
     }
+    free(window);
 }
 
 
+/* WINDOW STATE API */
+ubyte _get_window_flag_impl(Lotus_Window *window, ubyte2 flag) {
+    if (!window) return LOTUS_FALSE;
+    return ((window->flags & flag) == flag) ? LOTUS_TRUE : LOTUS_FALSE;
+}
+
+ubyte _set_window_flag_impl(Lotus_Window *window, ubyte2 flag) {
+    if (!window) return LOTUS_FALSE;
+    window->flags |= flag;
+    return LOTUS_TRUE;
+}
+
+ubyte _rem_window_flag_impl(Lotus_Window *window, ubyte2 flag) {
+    if (!window) return LOTUS_FALSE;
+    window->flags &= ~flag;
+    return LOTUS_TRUE;
+}
+
+
+/* WINDOW CURSOR API */
 ubyte _windows_show_cursor_impl(Lotus_Window *window) {
     if (!window) return LOTUS_FALSE;    // error: null ptr!
-
-    // TODO: move this logic to the window process based on a window state flag
-    if (ShowCursor(LOTUS_TRUE) >= 0) return LOTUS_TRUE;
+    if (lotus_platform_api->set_window_flag(window, LOTUS_SHOW_CURSOR)) return LOTUS_TRUE;
     else return LOTUS_FALSE;
 }
 
 ubyte _windows_hide_cursor_impl(Lotus_Window *window) {
     if (!window) return LOTUS_FALSE;    // error: null ptr!
-
-    // TODO: move this logic to the window process based on a window state flag
-    if (ShowCursor(LOTUS_FALSE) < 0) return LOTUS_TRUE;
+    if (lotus_platform_api->rem_window_flag(window, LOTUS_SHOW_CURSOR)) return LOTUS_TRUE;
     else return LOTUS_FALSE;
 }
 
 ubyte _windows_center_cursor_impl(Lotus_Window *window) {
-    if (!window || !window->internal_data) return LOTUS_FALSE;    // error: null ptr!
-
-    Platform_Window_Data *windowData = (Platform_Window_Data *)window->internal_data;
-
-    // TODO: move this logic to the window process based on a window state flag
-    RECT rect;
-    GetWindowRect(windowData->handle, &rect);
-    if (SetCursorPos(
-        (rect.left + rect.right) / 2,
-        (rect.top + rect.bottom) / 2
-    )) { return LOTUS_TRUE; }
-    return LOTUS_FALSE;
-}
-
-ubyte _windows_bound_cursor_impl(Lotus_Window *window) {
-    if (!window || !window->internal_data) return LOTUS_FALSE;    // error: null ptr!
-
-    Platform_Window_Data *windowData = (Platform_Window_Data *)window->internal_data;
-
-    RECT rect;
-    GetWindowRect(windowData->handle, &rect);
-
-    // TODO: move this logic to the window process based on a window state flag
-    if (ClipCursor(&rect)) {
-        window->cursor_bounded = LOTUS_TRUE;
-        windowData->rid.dwFlags = RIDEV_NOLEGACY;   // enable raw input / disable legacy input
-        return LOTUS_TRUE;
-    }
-
-    return LOTUS_FALSE;
-}
-
-ubyte _windows_unbound_cursor_impl(Lotus_Window *window) {
     if (!window) return LOTUS_FALSE;    // error: null ptr!
-    
-    Platform_Window_Data *windowData = (Platform_Window_Data *)window->internal_data;
-    if (!windowData) return LOTUS_FALSE;
+    if (lotus_platform_api->set_window_flag(window, LOTUS_CENTER_CURSOR)) return LOTUS_TRUE;
+    return LOTUS_FALSE;
+}
 
-    // TODO: move this logic to the window process based on a window state flag
-    if (ClipCursor(NULL)) {
-        window->cursor_bounded = LOTUS_FALSE;
-        windowData->rid.dwFlags = 0;   // enable legacy input / disable raw input
-        return LOTUS_TRUE;
+ubyte _windows_decenter_cursor_impl(Lotus_Window *window) {
+    if (!window) return LOTUS_FALSE;    // error: null ptr!
+    if (lotus_platform_api->rem_window_flag(window, LOTUS_CENTER_CURSOR)) return LOTUS_TRUE;
+    return LOTUS_FALSE;
+}
+
+ubyte _windows_bind_cursor_impl(Lotus_Window *window) {
+    if (!window) return LOTUS_FALSE;    // error: null ptr!
+    if (lotus_platform_api->set_window_flag(window, LOTUS_BIND_CURSOR)) return LOTUS_TRUE;
+    return LOTUS_FALSE;
+}
+
+ubyte _windows_unbind_cursor_impl(Lotus_Window *window) {
+    Platform_Window_Data *window_data = (Platform_Window_Data *)window->internal_data;
+    if (!window || !window_data) return LOTUS_FALSE;    // error: null ptr!
+
+    if (lotus_platform_api->rem_window_flag(window, LOTUS_BIND_CURSOR)) {
+        if (ClipCursor(NULL)) return LOTUS_TRUE;
     }
-
     return LOTUS_FALSE;
 }
 
@@ -455,11 +481,16 @@ ubyte lotus_init_platform(void) {
     lotus_platform_api->create_window = _windows_create_window_impl;
     lotus_platform_api->destroy_window = _windows_destroy_window_impl;
 
+    lotus_platform_api->get_window_flag = _get_window_flag_impl;
+    lotus_platform_api->set_window_flag = _set_window_flag_impl;
+    lotus_platform_api->rem_window_flag = _rem_window_flag_impl;
+
     lotus_platform_api->show_cursor = _windows_show_cursor_impl;
     lotus_platform_api->hide_cursor = _windows_hide_cursor_impl;
-    lotus_platform_api->bound_cursor = _windows_bound_cursor_impl;
+    lotus_platform_api->bind_cursor = _windows_bind_cursor_impl;
+    lotus_platform_api->unbind_cursor = _windows_unbind_cursor_impl;
     lotus_platform_api->center_cursor = _windows_center_cursor_impl;
-    lotus_platform_api->unbound_cursor = _windows_unbound_cursor_impl;
+    lotus_platform_api->decenter_cursor = _windows_decenter_cursor_impl;
 
     lotus_platform_api->create_gl_context = _windows_create_gl_context_impl;
     lotus_platform_api->get_gl_context = _windows_get_gl_context_impl;

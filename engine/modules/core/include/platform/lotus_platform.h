@@ -16,20 +16,24 @@ typedef struct Lotus_DyLib {
     void *handle;
 } Lotus_DyLib;
 
+typedef enum Lotus_Window_Flag {
+    LOTUS_SHOW_CURSOR =     (1 << 0),
+    LOTUS_BIND_CURSOR =     (1 << 1),
+    LOTUS_CENTER_CURSOR =   (1 << 2)
+} Lotus_Window_Flag;
+
 typedef struct Lotus_Window{
+    ubyte focused;         // Window focused (LOTUS_TRUE/LOTUS_FALSE)
+    ubyte2 flags;          // Window flags
     char title[256];       // Window title
     int location[2];       // Window x, y position
     int size[2];           // Window width and height
     float aspect_ratio;    // Aspect ratio (width / height)
     void *internal_data;   // Pointer to platform-specific window data
-    
-    // TODO: condense into bitfield (window->stateField & (1 << field)) == FIELD
-    // window state boolans
-    ubyte cursor_bounded;
 } Lotus_Window;
 
 typedef struct Lotus_Platform_State {
-    Lotus_Window *windowPtr;
+    Lotus_Window *window;
     f64 clock_frequency;
     Lotus_Platform_Tag platform;
     Lotus_Input_State *input_state;
@@ -48,13 +52,18 @@ typedef struct Lotus_Platform_API {
     ubyte (*poll_events)(void);
     void (*poll_inputs)(void);
 
+    ubyte (*get_window_flag)(Lotus_Window *window, ubyte2 flag);
+    ubyte (*set_window_flag)(Lotus_Window *window, ubyte2 flag);
+    ubyte (*rem_window_flag)(Lotus_Window *window, ubyte2 flag);
+
     ubyte (*show_cursor)(Lotus_Window *window);
     ubyte (*hide_cursor)(Lotus_Window *window);
-    ubyte (*bound_cursor)(Lotus_Window *window);
+    ubyte (*bind_cursor)(Lotus_Window *window);
+    ubyte (*unbind_cursor)(Lotus_Window *window);
     ubyte (*center_cursor)(Lotus_Window *window);
-    ubyte (*unbound_cursor)(Lotus_Window *window);
+    ubyte (*decenter_cursor)(Lotus_Window *window);
     
-    Lotus_Window (*create_window)(const char *title, int width, int height);
+    Lotus_Window *(*create_window)(const char *title, int width, int height);
     void (*destroy_window)(Lotus_Window *window);
 
     ubyte (*create_gl_context)(Lotus_Window *window);
