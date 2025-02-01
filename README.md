@@ -1,25 +1,35 @@
-![Lotus Logo](lotus/assets/logo.png)
+![Lotus Nightshade](lotus/assets/logo.png)
 
-[![GitHub Stars](https://img.shields.io/github/stars/d34d0s/Lotus?style=flat&label=stars)](https://github.com/d34d0s/Lotus/stargazers)  
-[![License](https://img.shields.io/badge/license-apache%2Flibpng-green.svg)](LICENSE)  
+![GitHub Stars](https://img.shields.io/github/stars/d34d0s/Lotus?style=flat&label=stars)  
+![Nightshade Build](https://img.shields.io/github/actions/workflow/status/d34d0s/Lotus/nightshade.yaml?branch=nightshade)  
+![License](https://img.shields.io/badge/license-apache%2Flibpng-green.svg)  
 
-### Relevant Links
+### 🌑 Welcome to **Lotus Nightshade** 🌑  
+This is the **nightly** branch of Lotus, where developers build and explore **experimental features**, **engine architecture**, and **performance optimizations**.
 
-[ [Official Wiki](https://github.com/d34d0s/Lotus/wiki) | [API Documentation](https://github.com/d34d0s/Lotus/wiki/Lotus-API-Docs) | [Lotus Examples](https://github.com/d34d0s/Lotus/tree/main/examples) | [CBuild](https://github.com/d34d0s/CBuild) ]  
-[ [Official Discord](https://discord.gg/kreGBCVsQQ) | [Official Reddit](https://www.reddit.com/r/LotusEngine/) | [Lotus Discussions](https://github.com/d34d0s/Lotus/discussions) | [Lotus FAQ](https://github.com/d34d0s/Lotus/wiki/Lotus-FAQ) ]  
+> **Nightshade** is for developers who want to explore the engine; adding, removing, breaking, and fixing. Features developed on the `nightshade` branch are more than capable of making it onto `main`, and thus **pull-requests to `main` from this branch require a unit-test for the proposed code**.
 
-<br>
+---
 
-## Building the Engine Source 🛠️
-(**NOTE**): Using the `CBuild` CLI build-tool requires you to have python installed! More info can be found on the [CBuild Repository](https://github.com/d34d0s/CBuild)
+### 🌌 Relevant Links 🌌
 
-Lotus now includes pre-configured `.cbuild` files for easy setup and compilation! Users are encouraged to use the **[CBuild](https://github.com/d34d0s/CBuild)** CLI tool, which is lightweight and tailored for projects like Lotus.
+[Official Wiki](https://github.com/d34d0s/Lotus/wiki) | [API Documentation](https://github.com/d34d0s/Lotus/wiki/Lotus-API-Docs) | [Lotus Examples](https://github.com/d34d0s/Lotus/tree/nightshade/examples) | [CBuild](https://github.com/d34d0s/CBuild)  
+[Official Discord](https://discord.gg/kreGBCVsQQ) | [Official Reddit](https://www.reddit.com/r/LotusEngine/) | [Lotus Discussions](https://github.com/d34d0s/Lotus/discussions) | [Lotus FAQ](https://github.com/d34d0s/Lotus/wiki/Lotus-FAQ)
 
 
-### Option 1: Build with CBuild (Recommended)
+## 🌌 Building the Engine Source 🌌  
+(*For the skilled and daring.*)
+
+> **NOTE**: If you're using the `CBuild` CLI tool, ensure **Python** is installed. For more information, check out the [CBuild Repository](https://github.com/d34d0s/CBuild).
+
+Lotus includes **pre-configured `.cbuild` files** for easy setup and compilation. **[CBuild](https://github.com/d34d0s/CBuild)** is the recommended tool for fast, efficient builds.
+
+---
+
+### 🌑 Option 1: Build with **CBuild** (Recommended for Advanced Users)
 
 1. **Install CBuild**:  
-   Install the tool via PyPI:
+   Install via **PyPI**:  
    ```bash
    pip install cbuild
    ```
@@ -31,7 +41,6 @@ Lotus now includes pre-configured `.cbuild` files for easy setup and compilation
    ```
 
 3. **Build the Engine**:  
-   Use the provided `.cbuild` configuration to build Lotus:  
    ```bash
    cbuild scripts/lotus.cbuild
    ```
@@ -39,11 +48,11 @@ Lotus now includes pre-configured `.cbuild` files for easy setup and compilation
 4. **Output**:  
    The compiled `Lotus.dll` will be located in the `build` directory.
 
-<br>
+---
 
-### Option 2: Manual Compilation
+### 🌌 Option 2: Manual Compilation (For the Brave)
 
-If you prefer manual setup, follow these steps:
+For those who wish to **wield the tools** themselves:
 
 1. **Clone the Repository**:  
    ```bash
@@ -52,34 +61,33 @@ If you prefer manual setup, follow these steps:
    ```
 
 2. **Compile the Engine**:  
-   Use GCC to build Lotus:  
+   Manually compile using **GCC**:  
    ```bash
    gcc -c lotus/modules/core/src/*.c -Ilotus/include -DLOTUS_DLL_EXPORT -o build/*.o
    gcc -shared build/*.o -lopengl32 -lgdi32 -o build/Lotus.dll
    ```
 
-3. **Install the Compiled Binaries**:  
-   Move the compiled files to your project's directories as needed:  
+3. **Install Compiled Binaries**:  
    ```bash
    cp build/Lotus.dll your_project/bin/
    ```
 
 <br>
 
-## Building Projects with Lotus
+## 🌌 Building Projects with **Lotus**
 
 1. **Prepare Your Project**:  
-   Set up your source files and include paths.
+   Set up your source files, including necessary paths.
 
 2. **Compile with CBuild or GCC**:  
-   - Example using GCC:  
-     ```bash
-     gcc my_project.c -Ilotus/include -lLotus -o my_project.exe
-     ```
+   Example using **GCC**:  
+   ```bash
+   gcc my_project.c -Ilotus/include -lLotus -o my_project.exe
+   ```
 
 <br>
 
-## 🪷 Lotus' Contributors 🪷  
+## 🌑 Lotus Contributors 🌑
 
 <a href="https://github.com/d34d0s/Lotus/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=d34d0s/Lotus&max=500&columns=20&anon=1" />
@@ -87,8 +95,6 @@ If you prefer manual setup, follow these steps:
 
 <br>
 
-## 🪷 License 🪷  
+## ⚖️ License
 
-Lotus is licensed under the Apache 2.0 license.  
-
-<br>
+Lotus is licensed under the **Apache 2.0 License**.
