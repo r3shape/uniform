@@ -1,4 +1,4 @@
-![Lotus Nightshade](lotus/assets/logo.png)
+![Lotus Nightshade](lotus/assets/logo-nightshade.png)
 
 ![GitHub Stars](https://img.shields.io/github/stars/d34d0s/Lotus?style=flat&label=stars)  
 ![Nightshade Build](https://img.shields.io/github/actions/workflow/status/d34d0s/Lotus/nightshade.yaml?branch=nightshade)  
@@ -8,6 +8,9 @@
 This is the **nightly** branch of Lotus, where developers build and explore **experimental features**, **engine architecture**, and **performance optimizations**.
 
 > **Nightshade** is for developers who want to explore the engine; adding, removing, breaking, and fixing. Features developed on the `nightshade` branch are more than capable of making it onto `main`, and thus **pull-requests to `main` from this branch require a unit-test for the proposed code**.
+<br>
+
+> ## Build Schedule: **MON-FRI 12:00 AM EST**.
 
 ---
 

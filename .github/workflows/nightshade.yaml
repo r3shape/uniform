@@ -4,13 +4,12 @@ on:
   workflow_dispatch:  # allow manual runs from actions UI
   schedule:
     - cron: "0 0 * * *"  # runs every night at midnight EST
-  push:
-    branches:
-      - nightshade  # also runs when pushing to nightshade branch
 
 jobs:
   build:
     runs-on: windows-latest
+
+    if: github.ref == 'refs/heads/nightshade'
 
     steps:
       - name: Set Timezone to EST/EDT
