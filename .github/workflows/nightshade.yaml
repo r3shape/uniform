@@ -3,7 +3,7 @@ name: Lotus Nightshade Build
 on:
   workflow_dispatch:  # allow manual runs from actions UI
   schedule:
-    - cron: "0 0 * * *"  # runs every night at midnight EST
+    - cron: "0 0 * * MON-FRI"  # runs every night monday-friday at midnight EST
 
 jobs:
   build:
