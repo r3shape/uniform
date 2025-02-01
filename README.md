@@ -37,7 +37,7 @@ Lotus now includes pre-configured `.cbuild` files for easy setup and compilation
    ```
 
 4. **Output**:  
-   The compiled `Lotus.dll` will be located in the `build/lotus.core` directory.
+   The compiled `Lotus.dll` will be located in the `build` directory.
 
 <br>
 
@@ -54,14 +54,14 @@ If you prefer manual setup, follow these steps:
 2. **Compile the Engine**:  
    Use GCC to build Lotus:  
    ```bash
-   gcc -c lotus/lotus.core/*.c -Ilotus/include -DLOTUS_EXPORT -o build/lotus.core/*.o
-   gcc -shared build/lotus.core/*.o -lopengl32 -lgdi32 -o build/lotus.core/Lotus.dll
+   gcc -c lotus/modules/core/src/*.c -Ilotus/include -DLOTUS_DLL_EXPORT -o build/*.o
+   gcc -shared build/*.o -lopengl32 -lgdi32 -o build/Lotus.dll
    ```
 
 3. **Install the Compiled Binaries**:  
    Move the compiled files to your project's directories as needed:  
    ```bash
-   cp build/lotus.core/Lotus.dll your_project/bin/
+   cp build/Lotus.dll your_project/bin/
    ```
 
 <br>

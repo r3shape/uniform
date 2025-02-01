@@ -7,5 +7,5 @@
 #elif defined(LOTUS_3D)
 #include "../modules/3D/include/lotus_3D.h"
 #elif defined(LOTUS_NEXT)
-#include "../modules/lotus_next/include/lotus_plug.h"
+#include "../modules/next/include/lotus_plug.h"
 #endif
