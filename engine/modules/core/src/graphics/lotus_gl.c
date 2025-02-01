@@ -116,7 +116,7 @@ void _graphics_destroy_vertex_data_impl(Lotus_Vertex_Data *vertexData) {
 }
 
 
-Lotus_Shader _graphics_make_shader_impl(const char *vertex_shader, const char *fragment_shader) {
+Lotus_Shader _graphics_create_shader_impl(const char *vertex_shader, const char *fragment_shader) {
     ubyte4 link = 0;
     ubyte4 compile = 0;
 
@@ -170,23 +170,30 @@ void _graphics_destroy_shader_impl(Lotus_Shader *shader) {
 }
 
 
-void _graphics_set_uniform_impl(Lotus_Shader *shader, const char *name, void *value) {
-    lotus_set_hashmap(shader->uniforms, name, value);
+ubyte _graphics_set_uniform_impl(Lotus_Shader *shader, const char *name, void *value) {
+    if (!shader || !name) return LOTUS_FALSE;   // error: value error!
+    return lotus_set_hashmap(shader->uniforms, name, value);
 }
 
 Lotus_Uniform _graphics_get_uniform_impl(Lotus_Shader *shader, const char *name) {
     sbyte4 location = lotus_graphics_api->GL_API.get_uniform_location(shader->program, name);
-    if (location < 0) return (Lotus_Uniform){0};
+    if (location < 0) {
+        return (Lotus_Uniform){ .location = -1, .value = NULL, .name = NULL };
+    }
     
     void *value = lotus_get_hashmap(shader->uniforms, name);
-    if (!value) return (Lotus_Uniform){0};
+    if (!value) {
+        return (Lotus_Uniform){ .location = -1, .value = NULL, .name = NULL };
+    }
     
-    return (Lotus_Uniform){.location=location, .name=name, .value=value};
+    return (Lotus_Uniform){.location = location, .value = value, .name = name};
 }
 
 void _graphics_send_uniform_impl(Lotus_Shader *shader, Lotus_Uniform_Type type, const char *name) {
     Lotus_Uniform uniform = lotus_graphics_api->get_uniform(shader, name);
-    if (uniform.location < 0) return;
+    if (uniform.location < 0 || !uniform.value) {
+        return;
+    }
     
     lotus_graphics_api->GL_API.use_program(shader->program);
     switch (type) {
@@ -232,6 +239,7 @@ void _graphics_draw_data_impl(Lotus_Vertex_Data vertexData) {
     if (internal_graphics_state.shader && internal_graphics_state.shader->program >= 0) {
         lotus_graphics_api->GL_API.use_program(internal_graphics_state.shader->program);
         lotus_graphics_api->send_uniform(internal_graphics_state.shader, LOTUS_UNIFORM_MAT4, "u_model");
+        lotus_graphics_api->send_uniform(internal_graphics_state.shader, LOTUS_UNIFORM_MAT4, "u_view");
         lotus_graphics_api->send_uniform(internal_graphics_state.shader, LOTUS_UNIFORM_MAT4, "u_projection");
     }
 
@@ -273,7 +281,7 @@ static void *_get_gl_fn(const char *name) {
 }
 
 void _load_gl_functions(void) {
-    struct {
+    struct gl_func {
         void **function;
         const char *name;
     } functions[] = {
@@ -375,7 +383,7 @@ ubyte lotus_init_graphics(void) {
     lotus_graphics_api->create_vertex_data = _graphics_make_vertex_data_impl;
     lotus_graphics_api->destroy_vertex_data = _graphics_destroy_vertex_data_impl;
 
-    lotus_graphics_api->make_shader = _graphics_make_shader_impl;
+    lotus_graphics_api->create_shader = _graphics_create_shader_impl;
     lotus_graphics_api->destroy_shader = _graphics_destroy_shader_impl;
     
     lotus_graphics_api->set_uniform = _graphics_set_uniform_impl;

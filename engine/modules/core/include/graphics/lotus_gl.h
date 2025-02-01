@@ -32,8 +32,6 @@
 #define LOTUS_LINE                       0x1B01
 #define LOTUS_FRONT_AND_BACK             0x0408
 
-#define LOTUS_MAX_DRAW_CALLS            ((1U << 8) - 1)
-
 #define LOTUS_COLOR3(r, g, b) lotus_new_vec3(r/255.0, g/255.0, b/255.0)
 #define LOTUS_COLOR4(r, g, b, a) lotus_new_vec4(r/255.0, g/255.0, b/255.0, a/255.0)
 
@@ -100,10 +98,10 @@ typedef struct Lotus_Graphics_API {
     Lotus_Vertex_Data (*create_vertex_data)(f32* vertices, ubyte4 vertexCount, ubyte4* indices, ubyte4 indexCount, ubyte attrs);
     void (*destroy_vertex_data)(Lotus_Vertex_Data* vertexData);
 
-    Lotus_Shader (*make_shader)(const char* vertex_shader, const char* fragment_shader);
+    Lotus_Shader (*create_shader)(const char* vertex_shader, const char* fragment_shader);
     void (*destroy_shader)(Lotus_Shader* shader);
 
-    void (*set_uniform)(Lotus_Shader* shader, const char* name, void* value);
+    ubyte (*set_uniform)(Lotus_Shader* shader, const char* name, void* value);
     Lotus_Uniform (*get_uniform)(Lotus_Shader* shader, const char* name);
     void (*send_uniform)(Lotus_Shader* shader, Lotus_Uniform_Type type, const char* name);
 

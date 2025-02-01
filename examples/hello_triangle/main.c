@@ -1,61 +1,73 @@
+/* Now fully ECS-driven! */
+
 #define LOTUS_2D
 #include "../../engine/include/lotus.h"
 
 int main() {
-    lotus_init_core();
-
-    Lotus_Window* window = lotus_platform_api->create_window("Hello Triangle 2D", 1280, 720);
+    lotus_init_2D();
+    
+    Lotus_Window* window = lotus_platform_api->create_window("Hello Triangle", 1280, 720);
     lotus_platform_api->create_gl_context(window);
 
     lotus_init_graphics();
+    lotus_graphics_api->GL_API.viewport(0,0, window->size[0], window->size[1]);
 
-    Lotus_Shader shader = lotus_graphics_api->make_shader(
+    Lotus_Camera cam = lotus_init_camera(
+        lotus_new_vec3(0, 0, 1.0),
+        lotus_new_vec3(0, 0, 0)
+    );
+
+    Lotus_Shader shader = lotus_graphics_api->create_shader(
         lotus_read_file("engine/assets/shaders/default001/vertex.glsl"),
         lotus_read_file("engine/assets/shaders/default001/fragment.glsl")
     );
     lotus_graphics_api->set_shader(&shader);
 
-    // 2D camera data handled manually for now :)
-    Lotus_Mat4 view = lotus_identity();
-    view = lotus_look_at(
-        lotus_new_vec3(0.0f, 0.0f, 1.0f),
-        lotus_new_vec3(0.0f, 0.0f, 0.0f),
-        lotus_new_vec3(0.0f, 1.0f, 0.0f)
-    );
-    lotus_graphics_api->set_uniform(&shader, "u_view", &view);
-
-    Lotus_Mat4 tModel = lotus_identity();
-    tModel = lotus_mul_mat4(lotus_identity(), lotus_trans_mat4(1280/2, 720/2, 0));
-    Lotus2D_Primitive triangle = lotus2d_create_triangle(lotus_new_vec2(32, 32), LOTUS_COLOR3(25, 80, 150));
-
     lotus_graphics_api->draw_begin(
         LOTUS_TRIANGLE_MODE,
-        LOTUS_COLOR4(133, 161, 172, 255),
+        LOTUS_COLOR4(123, 161, 172, 255),
         lotus_ortho(0, window->size[0], 0, window->size[1], 0.1, 10.0)
     );
-    
+
+    ubyte2 entity = lotus_ecs_api->create_entity();
+    Lotus_Mesh2D* mesh = lotus_ecs_api->add_component(entity, LOTUS_MESH2D);
+    Lotus_Transform2D* transform = lotus_ecs_api->add_component(entity, LOTUS_TRANSFORM2D);
+
+    mesh->size = lotus_new_vec2(64, 64);
+    mesh->color = LOTUS_COLOR3(85, 42, 115);
+    mesh->vertexData = lotus_2D->create_triangle2D(mesh->size, mesh->color);
+
+    transform->speed = 5.0;
+    transform->scale = lotus_new_vec2(1.0, 1.0);
+    transform->location = lotus_new_vec2(640, 360);
+
     ubyte running = 1;
     while (running) {
         lotus_platform_api->poll_events();
+        lotus_platform_api->poll_inputs();
         lotus_graphics_api->draw_clear();
 
         if (lotus_key_is_down(LOTUS_KEY_ESCAPE)) running = 0;
+        
+        if (lotus_key_is_down(LOTUS_KEY_A)) transform->velocity.x = -transform->speed;
+        else if (lotus_key_is_down(LOTUS_KEY_D)) transform->velocity.x = transform->speed;
+        else transform->velocity.x = 0.0;
+        
+        if (lotus_key_is_down(LOTUS_KEY_W)) transform->velocity.y = transform->speed;
+        else if (lotus_key_is_down(LOTUS_KEY_S)) transform->velocity.y = -transform->speed;
+        else transform->velocity.y = 0.0;
 
-        // camera uniform handled manually for now :)
-        lotus_graphics_api->send_uniform(&shader, LOTUS_UNIFORM_MAT4, "u_view");
-        
-        lotus_graphics_api->set_uniform(&shader, "u_model", &tModel);
-        lotus_graphics_api->draw_data(triangle.vertexData);
-        
-        lotus_platform_api->poll_inputs();
+        lotus_ecs_api->run_system(LOTUS_TRANSFORM2D);
+        lotus_ecs_api->run_system(LOTUS_MESH2D);
+
+        lotus_update_camera(&cam);
         lotus_platform_api->swap_buffers(window);
     }
 
-    lotus_graphics_api->destroy_vertex_data(&triangle.vertexData);
-    lotus_platform_api->destroy_gl_context(window);
-    lotus_platform_api->destroy_window(window);
+    lotus_graphics_api->destroy_shader(&shader);
+    lotus_ecs_api->destroy_entity(entity);
 
     lotus_shutdown_graphics();
-    lotus_shutdown_core();
+    lotus_shutdown_2D();
     return 0;
 }

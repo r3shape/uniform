@@ -1,6 +1,6 @@
-#include "../include/lotus_3d.h"
+#include "../include/lotus_shapes3D.h"
 
-Lotus3D_Primitive lotus3d_create_cube(Lotus_Vec3 size, Lotus_Vec3 color) {
+Lotus_Vertex_Data _create_cube3D_impl(Lotus_Vec3 size, Lotus_Vec3 color) {
     float half_width  = (size.x / 100.0) / 2.0f;
     float half_height = (size.y / 100.0) / 2.0f;
     float half_depth  = (size.z / 100.0) / 2.0f;
@@ -31,17 +31,9 @@ Lotus3D_Primitive lotus3d_create_cube(Lotus_Vec3 size, Lotus_Vec3 color) {
         3, 2, 6, 6, 7, 3
     };
 
-    Lotus3D_Primitive prim = {
-        .vertexData = lotus_graphics_api->create_vertex_data(
-            vertices, 8,
-            indices,  36,
-            LOTUS_LOCATION_ATTR | LOTUS_COLOR_ATTR | LOTUS_TCOORD_ATTR
-        ),
-        .color = color,
-        .size = size
-    };
-
-    return prim;
+    return lotus_graphics_api->create_vertex_data(
+        vertices, 8,
+        indices,  36,
+        LOTUS_LOCATION_ATTR | LOTUS_COLOR_ATTR | LOTUS_TCOORD_ATTR
+    );
 }
-
-

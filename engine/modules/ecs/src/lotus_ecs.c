@@ -239,6 +239,11 @@ ubyte lotus_init_ecs(void) {
     lotus_ecs_api->destroy_prefab = _destroy_prefab_impl;
     lotus_ecs_api->instance_prefab = _instance_prefab_impl;
 
+    internal_ecs_state.em.free_count = 0;
+    internal_ecs_state.em.entity_count = 0;
+    internal_ecs_state.cm.count = 0;
+    internal_ecs_state.pm.count = 0;
+
     return LOTUS_TRUE;
 }
 
@@ -251,6 +256,7 @@ void lotus_shutdown_ecs(void) {
 
     memset(&internal_ecs_state.em, 0, sizeof(Lotus_Entity_Manager));
     memset(&internal_ecs_state.cm, 0, sizeof(Lotus_Component_Manager));
+    memset(&internal_ecs_state.pm, 0, sizeof(Lotus_Prefab_Manager));
 
     lotus_memory_api->free(lotus_ecs_api);
 }

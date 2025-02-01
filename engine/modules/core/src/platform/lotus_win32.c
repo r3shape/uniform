@@ -502,6 +502,8 @@ ubyte lotus_init_platform(void) {
 }
 
 void lotus_shutdown_platform(void) {
+    lotus_platform_api->destroy_gl_context(internal_platform_state.window);
+    lotus_platform_api->destroy_window(internal_platform_state.window);
     lotus_platform_api->cleanup();
     lotus_memory_api->free(lotus_platform_api);
 }

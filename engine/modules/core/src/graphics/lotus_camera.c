@@ -1,3 +1,4 @@
+#include "../../include/graphics/lotus_gl.h"
 #include "../../include/graphics/lotus_camera.h"
 #include "../../include/platform/lotus_input.h"
 
@@ -12,7 +13,7 @@ Lotus_Camera lotus_init_camera(Lotus_Vec3 location, Lotus_Vec3 target) {
 
         .fov = 45.0,
         .speed = 0.1f,
-        .sensitivity = 0.1f,
+        .sensitivity = 10.0f,
 
         .nearPlane = 0.1f,
         .farPlane =  1000.0f,
@@ -45,6 +46,7 @@ void lotus_update_camera(Lotus_Camera *camera) {
     camera->up = lotus_cross_vec3(camera->right, camera->direction);
     
     camera->view = lotus_look_at(camera->location, lotus_add_vec3(camera->location, camera->direction), camera->up);
+    lotus_graphics_api->set_uniform(lotus_graphics_api->get_state()->shader, "u_view", &camera->view);
 }
 
 void lotus_freelook_camera(Lotus_Camera *camera) {
@@ -70,8 +72,8 @@ void lotus_translate_camera(Lotus_Camera *camera, sbyte x, sbyte y, sbyte z) {
 void lotus_rotate_camera(Lotus_Camera *camera, f32 deltaX, f32 deltaY) {
     if (!camera) return; // error: null pointer!
 
-    camera->yaw += deltaX * camera->sensitivity;
-    camera->pitch += deltaY * camera->sensitivity;
+    camera->yaw += deltaX * (camera->sensitivity / 100.0f);
+    camera->pitch += deltaY * (camera->sensitivity / 100.0f);
 
     if (camera->pitch > 89.0f) camera->pitch = 89.0f;
     if (camera->pitch < -89.0f) camera->pitch = -89.0f;

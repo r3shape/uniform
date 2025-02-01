@@ -3,11 +3,9 @@
 #include "../modules/core/include/lotus_core.h"
 
 #if defined(LOTUS_2D)
-#include "../modules/2d/include/lotus_2d.h"
+#include "../modules/2D/include/lotus_2D.h"
 #elif defined(LOTUS_3D)
-#include "../modules/3d/include/lotus_3d.h"
-#endif
-
-#if defined(LOTUS_NEXT)
+#include "../modules/3D/include/lotus_3D.h"
+#elif defined(LOTUS_NEXT)
 #include "../modules/lotus_next/include/lotus_plug.h"
 #endif

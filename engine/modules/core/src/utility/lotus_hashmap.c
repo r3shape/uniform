@@ -12,21 +12,22 @@ _LOTUS_PRIVATE int lotus_string_hash(const char* buffer) {
 }
 
 _LOTUS_PRIVATE ubyte lotus_probe_hashmap_f(Lotus_Hashmap* m, int* kHash, const char* key) {
-    ubyte match = 0;
+    if (!m || !kHash || !key) return LOTUS_FALSE;
+    ubyte match = LOTUS_FALSE;
     Lotus_Key_Value* kvp = m->map[*kHash];
     
     for (int i = *kHash+1; i < m->max; i++) {
         kvp = m->map[i];
         if (key == NULL) {
             if (!kvp) {
-                match = 1;
+                match = LOTUS_TRUE;
                 *kHash = i;
                 break;
             } else continue;
         } else {
             if (kvp && !strcmp(key, kvp->k)) {
                 *kHash = i;
-                match = 1;
+                match = LOTUS_TRUE;
                 break;
             } else continue;
         }
@@ -34,21 +35,22 @@ _LOTUS_PRIVATE ubyte lotus_probe_hashmap_f(Lotus_Hashmap* m, int* kHash, const c
 }
 
 _LOTUS_PRIVATE ubyte lotus_probe_hashmap_r(Lotus_Hashmap* m, int* kHash, const char* key) {
-    ubyte match = 0;
+    if (!m || !kHash || !key) return LOTUS_FALSE;
+    ubyte match = LOTUS_FALSE;
     Lotus_Key_Value* kvp = m->map[*kHash];
     
     for (int i = *kHash-1; i > 0; i--) {
         kvp = m->map[i];
         if (key == NULL) {
             if (!kvp) {
-                match = 1;
+                match = LOTUS_TRUE;
                 *kHash = i;
                 break;
             } else continue;
         } else {
             if (kvp && !strcmp(key, kvp->k)) {
                 match = 1;
-                *kHash = i;
+                *kHash = LOTUS_TRUE;
                 break;
             } else continue;
         }
@@ -95,7 +97,7 @@ void* lotus_get_hashmap(Lotus_Hashmap* m, const char* key) {
     Lotus_Key_Value* kvp = m->map[kHash];
 
     if (kvp && strcmp(key, kvp->k)) {
-        ubyte match = 0;
+        ubyte match = LOTUS_FALSE;
 
         // forward probing
         match = lotus_probe_hashmap_f(m, &kHash, key);
@@ -111,7 +113,7 @@ void* lotus_get_hashmap(Lotus_Hashmap* m, const char* key) {
         }
         
         kvp = m->map[kHash];
-    }; return kvp->v;
+    }; return (kvp) ? kvp->v : NULL;
 }
 
 ubyte lotus_set_hashmap(Lotus_Hashmap* m, const char* key, void* value) {
@@ -127,7 +129,7 @@ ubyte lotus_set_hashmap(Lotus_Hashmap* m, const char* key, void* value) {
             return LOTUS_FALSE;        
         }
 
-        ubyte set = 0;
+        ubyte set = LOTUS_FALSE;
         
         // forward probing
         set = lotus_probe_hashmap_f(m, &kHash, NULL);
@@ -156,7 +158,7 @@ ubyte lotus_rem_hashmap(Lotus_Hashmap* m, const char* key) {
     Lotus_Key_Value* kvp = m->map[kHash];
 
     if (kvp && strcmp(key, kvp->k)) {
-        ubyte match = 0;
+        ubyte match = LOTUS_FALSE;
 
         // forward probing
         match = lotus_probe_hashmap_f(m, &kHash, key);
