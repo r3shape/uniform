@@ -1,4 +1,4 @@
-![Lotus Logo](engine/assets/logo.png)
+![Lotus Logo](lotus/assets/logo.png)
 
 [![GitHub Stars](https://img.shields.io/github/stars/d34d0s/Lotus?style=flat&label=stars)](https://github.com/d34d0s/Lotus/stargazers)  
 [![License](https://img.shields.io/badge/license-apache%2Flibpng-green.svg)](LICENSE)  
