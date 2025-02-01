@@ -16,8 +16,9 @@ This is the **nightly** branch of Lotus, where developers build and explore **ex
 
 ### 🌌 Relevant Links 🌌
 
-[Official Wiki](https://github.com/d34d0s/Lotus/wiki) | [API Documentation](https://github.com/d34d0s/Lotus/wiki/Lotus-API-Docs) | [Lotus Examples](https://github.com/d34d0s/Lotus/tree/nightshade/examples) | [CBuild](https://github.com/d34d0s/CBuild)  
-[Official Discord](https://discord.gg/kreGBCVsQQ) | [Official Reddit](https://www.reddit.com/r/LotusEngine/) | [Lotus Discussions](https://github.com/d34d0s/Lotus/discussions) | [Lotus FAQ](https://github.com/d34d0s/Lotus/wiki/Lotus-FAQ)
+| [Lotus Nightshade](https://github.com/d34d0s/Lotus/tree/nightshade) |  
+| [Official Wiki](https://github.com/d34d0s/Lotus/wiki) | [API Documentation](https://github.com/d34d0s/Lotus/wiki/Lotus-API-Docs) | [Lotus Examples](https://github.com/d34d0s/Lotus/tree/nightshade/examples) | [CBuild](https://github.com/d34d0s/CBuild) |  
+| [Official Discord](https://discord.gg/kreGBCVsQQ) | [Official Reddit](https://www.reddit.com/r/LotusEngine/) | [Lotus Discussions](https://github.com/d34d0s/Lotus/discussions) | [Lotus FAQ](https://github.com/d34d0s/Lotus/wiki/Lotus-FAQ) |  
 
 
 ## 🌌 Building the Engine Source 🌌  
