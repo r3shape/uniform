@@ -13,7 +13,7 @@
 ## Building the Engine Source 🛠️
 (**NOTE**): Using the `CBuild` CLI build-tool requires you to have python installed! More info can be found on the [CBuild Repository](https://github.com/d34d0s/CBuild)
 
-Lotus now includes pre-configured `.cbuild` files for easy setup and compilation! Users are encouraged to use the **[CBuild](https://github.com/d34d0s/CBuild)** CLI tool, which is lightweight and tailored for projects like Lotus Core.
+Lotus now includes pre-configured `.cbuild` files for easy setup and compilation! Users are encouraged to use the **[CBuild](https://github.com/d34d0s/CBuild)** CLI tool, which is lightweight and tailored for projects like Lotus.
 
 
 ### Option 1: Build with CBuild (Recommended)
