@@ -1,7 +1,7 @@
 {
     "compiler": "MinGW",
     "project": "Hello_Triangle",
-    "include_dirs": ["engine/include"],
+    "include_dirs": ["lotus/include"],
     "source_files": ["examples/hello_triangle/main.c"],
     "libraries": {
         "Lotus": "build"

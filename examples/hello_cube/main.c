@@ -1,7 +1,7 @@
 /* Now fully ECS-driven! */
 
 #define LOTUS_3D
-#include "../../engine/include/lotus.h"
+#include "../../lotus/include/lotus.h"
 
 int main() {
     lotus_init_3D();
@@ -18,8 +18,8 @@ int main() {
     );
 
     Lotus_Shader shader = lotus_graphics_api->create_shader(
-        lotus_read_file("engine/assets/shaders/default001/vertex.glsl"),
-        lotus_read_file("engine/assets/shaders/default001/fragment.glsl")
+        lotus_read_file("lotus/assets/shaders/default001/vertex.glsl"),
+        lotus_read_file("lotus/assets/shaders/default001/fragment.glsl")
     );
     lotus_graphics_api->set_shader(&shader);
 

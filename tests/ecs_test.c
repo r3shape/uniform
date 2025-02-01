@@ -1,5 +1,5 @@
-#include "../engine/include/lotus.h"
-#include "../engine/modules/ecs/include/lotus_ecs.h"
+#include "../lotus/include/lotus.h"
+#include "../lotus/modules/ecs/include/lotus_ecs.h"
 
 #include <stdio.h>
 

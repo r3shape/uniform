@@ -1,7 +1,7 @@
 {
     "compiler": "MinGW",
     "project": "simple_plugin",
-    "include_dirs": ["engine/include"],
+    "include_dirs": ["lotus/include"],
     "source_files": ["examples/simple_plugin/simple_plugin.c"],
     "libraries": {
         "Lotus": "build"

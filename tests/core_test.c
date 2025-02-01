@@ -1,5 +1,5 @@
 #define LOTUS_2D
-#include "../../engine/include/lotus.h"
+#include "../../lotus/include/lotus.h"
 #include <stdio.h>
 
 int list_test() {
@@ -106,8 +106,8 @@ int graphics_test() {
     lotus_init_graphics();
 
     Lotus_Shader shader = lotus_graphics_api->create_shader(
-        lotus_read_file("engine/assets/shaders/default001/vertex.glsl"),
-        lotus_read_file("engine/assets/shaders/default001/fragment.glsl")
+        lotus_read_file("lotus/assets/shaders/default001/vertex.glsl"),
+        lotus_read_file("lotus/assets/shaders/default001/fragment.glsl")
     );
     lotus_graphics_api->set_shader(&shader);
     

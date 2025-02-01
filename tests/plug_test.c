@@ -1,5 +1,5 @@
 #define LOTUS_NEXT
-#include "../engine/include/lotus.h"
+#include "../lotus/include/lotus.h"
 
 #include <stdio.h>
 

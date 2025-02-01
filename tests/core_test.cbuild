@@ -1,7 +1,7 @@
 {
     "compiler": "MinGW",
     "project": "core_test",
-    "include_dirs": ["engine/include"],
+    "include_dirs": ["lotus/include"],
     "source_files": ["tests/core_test.c"],
     "libraries": {
         "Lotus": "build"

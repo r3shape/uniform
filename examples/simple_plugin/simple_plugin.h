@@ -1,7 +1,7 @@
 #pragma once
 
 #define LOTUS_NEXT
-#include "../../engine/include/lotus.h"
+#include "../../lotus/include/lotus.h"
 
 LOTUS_PLUG_API(Simple_Plugin,
     LOTUS_PLUG_API_FUNC(void, hello_plugin, void);
