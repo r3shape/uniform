@@ -78,9 +78,9 @@ void lotus_mouse_get_last_position(sbyte2* x, sbyte2* y) {
     }; *x = internal_input_state.previous.mouse[0]; *y = internal_input_state.previous.mouse[1];
 }
 
-void lotus_process_mouse_wheel_input(sbyte z_delotus_a) {
+void lotus_process_mouse_wheel_input(sbyte z_delta) {
     Lotus_Event event;
-    event.sbyte[0] = z_delotus_a;
+    event.sbyte[0] = z_delta;
     lotus_event_api->push_event(event, LOTUS_EVENT_MOUSE_WHEEL);
 }
 

@@ -148,7 +148,7 @@ Lotus_Input_State* lotus_init_input(void);
 void lotus_shutdown_input(void);
 
 void lotus_process_key_input(Lotus_Keyboard_Key key, ubyte pressed);
-void lotus_process_mouse_wheel_input(sbyte z_delotus_a);
+void lotus_process_mouse_wheel_input(sbyte z_delta);
 void lotus_process_mouse_move_input(sbyte2 x, sbyte2 y);
 void lotus_process_mouse_button_input(Lotus_Mouse_Button button, ubyte pressed);
 
