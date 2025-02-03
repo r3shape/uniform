@@ -4,6 +4,9 @@ on:
   workflow_dispatch:  # allow manual runs from actions UI
   schedule:
     - cron: "0 0 * * MON-FRI"  # runs every night monday-friday at midnight EST
+  push:   # run on push to the nightshade branch
+    branches:
+      - nightshade
 
 jobs:
   build:
