@@ -20,7 +20,7 @@ Lotus includes **pre-configured `.cbuild` files** for easy setup and compilation
 
 ---
 
-### 🪷 Option 1: Build with **CBuild** (Recommended for Advanced Users)
+### 🪷 Option 1: Build with **CBuild** (Recommended)
 
 1. **Install CBuild**:  
    Install via **PyPI**:  
@@ -44,9 +44,9 @@ Lotus includes **pre-configured `.cbuild` files** for easy setup and compilation
 
 ---
 
-### 🪷 Option 2: Manual Compilation (For the Brave)
+### 🪷 Option 2: Manual Compilation
 
-For those who wish to **wield the tools** themselves:
+For those who wish to **wield the source** themselves:
 
 1. **Clone the Repository**:  
    ```bash
