@@ -22,10 +22,10 @@
 #define LOTUS_ACTIVE_ATTRIBUTES          0x8B89
 #define LOTUS_SHADING_LANGUAGE_VERSION   0x8B8C
 
-#define LOTUS_TEXTURE0                   0x84C0
-#define LOTUS_TEXTURE1                   0x84C1
-#define LOTUS_TEXTURE2                   0x84C2
-#define LOTUS_TEXTURE3                   0x84C3
+#define LOTUS_TEXT_UNIT0                 0x84C0
+#define LOTUS_TEXT_UNIT1                 0x84C1
+#define LOTUS_TEXT_UNIT2                 0x84C2
+#define LOTUS_TEXT_UNIT3                 0x84C3
 #define LOTUS_ACTIVE_TEXTURE             0x84E0
 #define LOTUS_MAX_TEXTURE_UNITS          0x84E2
 
@@ -45,15 +45,29 @@ typedef enum Lotus_Uniform_Type {
 } Lotus_Uniform_Type;
 
 typedef struct Lotus_Shader {
-    sbyte4 program;
+    ubyte4 program;
     Lotus_Hashmap* uniforms;
 } Lotus_Shader;
 
 typedef struct Lotus_Uniform {
-    sbyte4 location;
+    ubyte4 location;
     void* value;
     const char* name;
 } Lotus_Uniform;
+
+typedef enum Lotus_Texture_Format {
+    LOTUS_RGB = 0x1907,
+    LOTUS_RGBA = 0x1908
+} Lotus_Texture_Format;
+
+typedef struct Lotus_Texture2D {
+    ubyte4 id;
+    ubyte4 width;
+    ubyte4 height;
+    ubyte4 channels;
+    char* path;
+    ubyte* raw;
+} Lotus_Texture2D;
 
 // GL equivalents
 typedef enum Lotus_Draw_Mode {
@@ -104,6 +118,9 @@ typedef struct Lotus_Graphics_API {
     ubyte (*set_uniform)(Lotus_Shader* shader, const char* name, void* value);
     Lotus_Uniform (*get_uniform)(Lotus_Shader* shader, const char* name);
     void (*send_uniform)(Lotus_Shader* shader, Lotus_Uniform_Type type, const char* name);
+
+    Lotus_Texture2D (*create_texture2D)(char* path, Lotus_Texture_Format format);
+    void (*destroy_texture2D)(Lotus_Texture2D* texture);
 
     void (*set_color)(Lotus_Vec4 color4);
     void (*set_mode)(Lotus_Draw_Mode mode);
@@ -158,17 +175,15 @@ typedef struct Lotus_Graphics_API {
         void (*uniform4fv)(ubyte4 location, ubyte4 count, const f32* value);
         void (*uniform_matrix4fv)(ubyte4 location, ubyte4 count, ubyte4 transpose, const f32* value);
         
-        // FRAMEBUFFER FUNCTIONS        
         void (*gen_textures)(sbyte4 count, ubyte4 *textures);
         void (*bind_texture)(ubyte4 target, ubyte4 texture);
         void (*tex_parameteri)(ubyte4 target, ubyte4 pname, ubyte4 param);
-        void (*tex_image2d)(ubyte4 target, ubyte4 level, ubyte4 internalFormat, sbyte4 width, sbyte4 height, ubyte4 border, ubyte4 format, ubyte4 type, const void *data);
+        void (*tex_image2D)(ubyte4 target, ubyte4 level, ubyte4 internalFormat, sbyte4 width, sbyte4 height, ubyte4 border, ubyte4 format, ubyte4 type, const void *data);
         void (*active_texture)(ubyte4 texture);
         void (*delete_textures)(sbyte4 count, const ubyte4 *textures);
         void (*generate_mipmap)(ubyte4 target);
         void (*generate_texture_mipmap)(ubyte4 texture);
         
-        // DRAWING FUNCTIONS        
         void (*gen_framebuffers)(sbyte4 count, ubyte4 *framebuffers);
         void (*bind_framebuffer)(ubyte4 target, ubyte4 framebuffer);
         void (*framebuffer_texture2d)(ubyte4 target, ubyte4 attachment, ubyte4 textarget, ubyte4 texture, ubyte4 level);

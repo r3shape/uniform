@@ -62,7 +62,12 @@ void _render_system_2D(ubyte2 entity_id) {
     Lotus_Mesh2D* mesh = lotus_ecs_api->get_component(entity_id, LOTUS_MESH2D);
     Lotus_Transform2D* transform = lotus_ecs_api->get_component(entity_id, LOTUS_TRANSFORM2D);
     if (!mesh || !transform) return;
-    
+
+    Lotus_Texture2D* texture = lotus_ecs_api->get_component(entity_id, LOTUS_TEXTURE2D);
+    if (texture) {
+        lotus_graphics_api->GL_API.bind_texture(GL_TEXTURE_2D, texture->id);
+    }
+
     lotus_graphics_api->set_uniform(lotus_graphics_api->get_state()->shader, "u_model", &transform->model);
     lotus_graphics_api->draw_data(mesh->vertexData);
 }
@@ -93,6 +98,8 @@ ubyte lotus_init_2D(void) {
 
     lotus_ecs_api->register_component(sizeof(Lotus_Transform2D), LOTUS_TRANSFORM2D);
     lotus_ecs_api->register_system(LOTUS_TRANSFORM2D, _transform_system_2D);
+
+    lotus_ecs_api->register_component(sizeof(Lotus_Texture2D), LOTUS_TEXTURE2D);
 
     return LOTUS_TRUE;
 }

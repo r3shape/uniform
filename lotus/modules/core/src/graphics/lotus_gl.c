@@ -176,14 +176,14 @@ ubyte _graphics_set_uniform_impl(Lotus_Shader *shader, const char *name, void *v
 }
 
 Lotus_Uniform _graphics_get_uniform_impl(Lotus_Shader *shader, const char *name) {
-    sbyte4 location = lotus_graphics_api->GL_API.get_uniform_location(shader->program, name);
+    ubyte4 location = lotus_graphics_api->GL_API.get_uniform_location(shader->program, name);
     if (location < 0) {
-        return (Lotus_Uniform){ .location = -1, .value = NULL, .name = NULL };
+        return (Lotus_Uniform){ .location = 0, .value = NULL, .name = NULL };
     }
     
     void *value = lotus_get_hashmap(shader->uniforms, name);
     if (!value) {
-        return (Lotus_Uniform){ .location = -1, .value = NULL, .name = NULL };
+        return (Lotus_Uniform){ .location = 0, .value = NULL, .name = NULL };
     }
     
     return (Lotus_Uniform){.location = location, .value = value, .name = name};
@@ -207,6 +207,45 @@ void _graphics_send_uniform_impl(Lotus_Shader *shader, Lotus_Uniform_Type type, 
     }
 }
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "../../include/graphics/stb_image.h"
+
+Lotus_Texture2D _create_texture2D_impl(char* path, Lotus_Texture_Format format) {
+    Lotus_Texture2D texture = { .id = 0, .width = 0, .height = 0, .channels = 0, .path = NULL, .raw = NULL };
+    if (!path) return texture;
+
+    texture.path = path;
+    stbi_set_flip_vertically_on_load(LOTUS_TRUE);
+    texture.raw = stbi_load(path, &texture.width, &texture.height, &texture.channels, 0);
+    if (!texture.raw) return texture;    // error: failed to allocate raw data buffer!
+
+    lotus_graphics_api->GL_API.gen_textures(1, &texture.id);
+    lotus_graphics_api->GL_API.bind_texture(GL_TEXTURE_2D, texture.id);
+
+    // set texture wrapping options
+    lotus_graphics_api->GL_API.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // x axis
+    lotus_graphics_api->GL_API.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // y axis
+
+    // set texture filtering options (scaling up/down)
+    lotus_graphics_api->GL_API.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    lotus_graphics_api->GL_API.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // generate the texture
+    lotus_graphics_api->GL_API.tex_image2D(GL_TEXTURE_2D, 0, format, texture.width, texture.height, 0, format, GL_UNSIGNED_BYTE, texture.raw);
+    lotus_graphics_api->GL_API.generate_mipmap(GL_TEXTURE_2D);
+
+    return texture;
+}
+
+void _destroy_texture2D_impl(Lotus_Texture2D* texture) {
+    texture->width = 0;
+    texture->height = 0;
+    texture->channels = 0;
+    texture ->path = NULL;
+    lotus_graphics_api->GL_API.delete_textures(1, &texture->id);
+    stbi_image_free(texture->raw);
+    texture->id = 0;
+}
 
 void _graphics_set_color_impl(Lotus_Vec4 color4) {
     internal_graphics_state.clearColor = color4;
@@ -219,7 +258,7 @@ void _graphics_set_mode_impl(Lotus_Draw_Mode mode) {
 }
 
 void _graphics_set_shader_impl(Lotus_Shader *shader) {
-    internal_graphics_state.shader = (shader->program < 0) ? NULL : shader;
+    internal_graphics_state.shader = (shader->program == 0) ? NULL : shader;
     lotus_graphics_api->set_uniform(internal_graphics_state.shader, "u_projection", &internal_graphics_state.projection);
 }
 
@@ -236,7 +275,7 @@ void _graphics_draw_data_impl(Lotus_Vertex_Data vertexData) {
         return; // error: invalid vertex data for draw call
     };
 
-    if (internal_graphics_state.shader && internal_graphics_state.shader->program >= 0) {
+    if (internal_graphics_state.shader && internal_graphics_state.shader->program > 0) {
         lotus_graphics_api->GL_API.use_program(internal_graphics_state.shader->program);
         lotus_graphics_api->send_uniform(internal_graphics_state.shader, LOTUS_UNIFORM_MAT4, "u_model");
         lotus_graphics_api->send_uniform(internal_graphics_state.shader, LOTUS_UNIFORM_MAT4, "u_view");
@@ -328,7 +367,7 @@ void _load_gl_functions(void) {
         {(void**)&lotus_graphics_api->GL_API.gen_textures, "glGenTextures"},
         {(void**)&lotus_graphics_api->GL_API.bind_texture, "glBindTexture"},
         {(void**)&lotus_graphics_api->GL_API.tex_parameteri, "glTexParameteri"},
-        {(void**)&lotus_graphics_api->GL_API.tex_image2d, "glTexImage2D"},
+        {(void**)&lotus_graphics_api->GL_API.tex_image2D, "glTexImage2D"},
         {(void**)&lotus_graphics_api->GL_API.active_texture, "glActiveTexture"},
         {(void**)&lotus_graphics_api->GL_API.delete_textures, "glDeleteTextures"},
         {(void**)&lotus_graphics_api->GL_API.generate_mipmap, "glGenerateMipmap"},
@@ -389,7 +428,10 @@ ubyte lotus_init_graphics(void) {
     lotus_graphics_api->set_uniform = _graphics_set_uniform_impl;
     lotus_graphics_api->get_uniform = _graphics_get_uniform_impl;
     lotus_graphics_api->send_uniform = _graphics_send_uniform_impl;
-    
+
+    lotus_graphics_api->create_texture2D = _create_texture2D_impl;
+    lotus_graphics_api->destroy_texture2D = _destroy_texture2D_impl;
+
     lotus_graphics_api->set_color = _graphics_set_color_impl;
     lotus_graphics_api->set_mode = _graphics_set_mode_impl;
     lotus_graphics_api->set_shader = _graphics_set_shader_impl;

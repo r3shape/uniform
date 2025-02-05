@@ -3,9 +3,11 @@
 #define LOTUS_2D
 #include "../../lotus/include/lotus.h"
 
+#include <stdio.h>
+
 int main() {
     lotus_init_2D();
-    
+
     Lotus_Window* window = lotus_platform_api->create_window("Hello Triangle", 1280, 720);
     lotus_platform_api->create_gl_context(window);
 
@@ -32,14 +34,17 @@ int main() {
     ubyte2 entity = lotus_ecs_api->create_entity();
     Lotus_Mesh2D* mesh = lotus_ecs_api->add_component(entity, LOTUS_MESH2D);
     Lotus_Transform2D* transform = lotus_ecs_api->add_component(entity, LOTUS_TRANSFORM2D);
+    Lotus_Texture2D* texture = lotus_ecs_api->add_component(entity, LOTUS_TEXTURE2D);
 
-    mesh->size = lotus_new_vec2(64, 64);
+    mesh->size = lotus_new_vec2(320, 320);
     mesh->color = LOTUS_COLOR3(85, 42, 115);
     mesh->vertexData = lotus_2D->create_triangle2D(mesh->size, mesh->color);
 
     transform->speed = 5.0;
     transform->scale = lotus_new_vec2(1.0, 1.0);
     transform->location = lotus_new_vec2(640, 360);
+
+    *texture = lotus_graphics_api->create_texture2D("lotus/assets/textures/chip.png", LOTUS_RGBA);
 
     ubyte running = 1;
     while (running) {

@@ -7,6 +7,7 @@
 typedef enum Lotus_Component2D {
     LOTUS_MESH2D = 0,
     LOTUS_TRANSFORM2D,
+    LOTUS_TEXTURE2D,
     LOTUS_2D_COMPONENTS
 } Lotus_Component2D;
 
