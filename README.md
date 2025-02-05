@@ -7,7 +7,7 @@
 
 ### 🪷 Relevant Links 🪷
 
-|[CBuild](https://github.com/d34d0s/CBuild) |  
+| [CBuild](https://github.com/d34d0s/CBuild) |  
 | [Module Reference](https://github.com/d34d0s/Lotus/blob/main/docs/module_ref/module_ref.md) | [API Reference](https://github.com/d34d0s/Lotus/blob/main/docs/api_ref/api_ref.md) | [Example Guides](https://github.com/d34d0s/Lotus/blob/main/docs/examples/examples.md) |  [Example Code](https://github.com/d34d0s/Lotus/tree/main/examples) |   
 | [Official Discord](https://discord.gg/kreGBCVsQQ) | [Official Reddit](https://www.reddit.com/r/LotusEngine/) | [Lotus Discussions](https://github.com/d34d0s/Lotus/discussions) | [Lotus FAQ](https://github.com/d34d0s/Lotus/wiki/Lotus-FAQ) |  
 
