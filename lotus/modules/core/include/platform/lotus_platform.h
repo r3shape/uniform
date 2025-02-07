@@ -32,21 +32,35 @@ typedef struct Lotus_Window{
     void *internal_data;   // Pointer to platform-specific window data
 } Lotus_Window;
 
+typedef struct Lotus_Clock {
+    f64 frequency;
+    f64 start_time;
+    f64 current_time;
+    f64 frame_time;
+    f64 delta_time;
+    f64 target_fps;
+    f64 current_fps;
+} Lotus_Clock;
+
 typedef struct Lotus_Platform_State {
-    Lotus_Window *window;
-    f64 clock_frequency;
+    Lotus_Clock clock;
+    Lotus_Window* window;
     Lotus_Platform_Tag platform;
-    Lotus_Input_State *input_state;
+    Lotus_Input_State* input_state;
 } Lotus_Platform_State;
 
 typedef struct Lotus_Platform_API {
-    Lotus_Platform_State *(*get_state)(void);
+    Lotus_Platform_State* (*get_state)(void);
     void (*cleanup)(void);
+    
+    // clock + time management
     f64 (*get_time)(void);
+    void (*update_clock)(void);
     void (*sleep)(f64 seconds);
+    void (*set_clock)(f64 target_fps);
     
     Lotus_DyLib (*load_library)(const char *path, char *name);
-    void *(*get_library_symbol)(Lotus_DyLib *library, const char *symbol_name);
+    void* (*get_library_symbol)(Lotus_DyLib *library, const char *symbol_name);
     ubyte (*unload_library)(Lotus_DyLib *library);
     
     ubyte (*poll_events)(void);
@@ -63,11 +77,11 @@ typedef struct Lotus_Platform_API {
     ubyte (*center_cursor)(Lotus_Window *window);
     ubyte (*decenter_cursor)(Lotus_Window *window);
     
-    Lotus_Window *(*create_window)(const char *title, int width, int height);
+    Lotus_Window* (*create_window)(const char *title, int width, int height);
     void (*destroy_window)(Lotus_Window *window);
 
     ubyte (*create_gl_context)(Lotus_Window *window);
-    void *(*get_gl_context)(Lotus_Window *window);
+    void* (*get_gl_context)(Lotus_Window *window);
     void (*swap_buffers)(Lotus_Window *window);
     void (*destroy_gl_context)(Lotus_Window *window);
 } Lotus_Platform_API;

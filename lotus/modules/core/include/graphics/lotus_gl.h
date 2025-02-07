@@ -3,6 +3,9 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 
+#define WGL_WGLEXT_PROTOTYPES
+#include <GL/wglext.h>
+
 #include "../lotus_core_defines.h"
 
 #include "../utility/lotus_math.h"
@@ -131,7 +134,8 @@ typedef struct Lotus_Graphics_API {
     void (*draw_data)(Lotus_Vertex_Data vertexData);
 
     // graphics state setters/toggles
-    void (*wireframe_mode)(ubyte toggle);
+    void (*toggle_vsync)(ubyte toggle);
+    void (*toggle_wireframe)(ubyte toggle);
 
     struct GL_API {
         // BUFFER FUNCTIONS

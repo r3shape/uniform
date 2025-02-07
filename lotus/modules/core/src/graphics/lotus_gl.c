@@ -300,13 +300,26 @@ void _graphics_draw_clear_impl(void) {
 
 
 /* Graphics State Setters/Toggles */
-void _graphics_wireframe_mode_impl(ubyte toggle) {
+void _graphics_toggle_wireframe_impl(ubyte toggle) {
     if (toggle) {
         lotus_graphics_api->GL_API.polygon_mode(GL_FRONT_AND_BACK, GL_LINE);
     } else {
         lotus_graphics_api->GL_API.polygon_mode(GL_FRONT_AND_BACK, GL_FILL);
     }
 }
+
+#if defined(LOTUS_PLATFORM_WINDOWS)
+void _graphics_toggle_vsync_impl(ubyte toggle) {
+    typedef BOOL(APIENTRY* PFNWGLSWAPINTERVALPROC)(int);
+    PFNWGLSWAPINTERVALPROC wglSwapIntervalEXT = 0;
+
+    const ubyte* extensions = lotus_graphics_api->GL_API.get_string(GL_EXTENSIONS);
+    wglSwapIntervalEXT = (PFNWGLSWAPINTERVALPROC)wglGetProcAddress("wglSwapIntervalEXT");
+
+    if (wglSwapIntervalEXT) wglSwapIntervalEXT(toggle);
+}
+#endif
+
 /* GRAPHICS API IMPLEMENTATION */
 
 #if defined(LOTUS_PLATFORM_WINDOWS)
@@ -318,6 +331,7 @@ static void *_get_gl_fn(const char *name) {
         proc = (void*)GetProcAddress(LoadLibrary("opengl32.dll"), name);
     }; return proc;
 }
+#endif
 
 void _load_gl_functions(void) {
     struct gl_func {
@@ -408,7 +422,6 @@ void _load_gl_functions(void) {
         }
     }
 }
-#endif
 
 ubyte lotus_init_graphics(void) {
     lotus_graphics_api = (Lotus_Graphics_API*)lotus_memory_api->alloc(sizeof(Lotus_Graphics_API), 16);
@@ -440,7 +453,8 @@ ubyte lotus_init_graphics(void) {
     lotus_graphics_api->draw_clear = _graphics_draw_clear_impl;
     lotus_graphics_api->draw_data = _graphics_draw_data_impl;
 
-    lotus_graphics_api->wireframe_mode = _graphics_wireframe_mode_impl;
+    lotus_graphics_api->toggle_vsync = _graphics_toggle_vsync_impl;
+    lotus_graphics_api->toggle_wireframe = _graphics_toggle_wireframe_impl;
 
     internal_graphics_state.draws = 0;
     internal_graphics_state.mode = LOTUS_TRIANGLE_MODE;
@@ -448,7 +462,9 @@ ubyte lotus_init_graphics(void) {
     internal_graphics_state.projection = lotus_identity();
     internal_graphics_state.clearColor = LOTUS_COLOR4(133, 161, 172, 255);
 
-    // OpenGL State Config
+    // Initial Graphics State Config
+    lotus_graphics_api->toggle_vsync(LOTUS_TRUE);
+    
     lotus_graphics_api->GL_API.enable(GL_DEPTH_TEST);
     lotus_graphics_api->GL_API.enable(GL_BLEND);
     lotus_graphics_api->GL_API.blend_func(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

@@ -26,7 +26,6 @@ void _windows_cleanup_impl(void) {
     lotus_shutdown_events();
     
     internal_platform_state.input_state = NULL;
-    internal_platform_state.clock_frequency = 0.0;
     internal_platform_state.platform = LOTUS_PLATFORM_TAGS;
 }
 
@@ -368,21 +367,50 @@ void _windows_destroy_gl_context_impl(Lotus_Window *window) {
 }
 
 
-double _windows_get_time_impl() {
+f64 _windows_get_time_impl(void) {
     LARGE_INTEGER counter;
     QueryPerformanceCounter(&counter);
-    return (double)counter.QuadPart / internal_platform_state.clock_frequency;
+    return (f64)counter.QuadPart * internal_platform_state.clock.frequency; // seconds = ticks * seconds per tick
 }
 
 void _windows_sleep_impl(f64 seconds) {
     Sleep((DWORD)(seconds  *1000.0));
 }
 
-void _windows_swap_buffers_impl(Lotus_Window *window) {
-    if (!window || !window->internal_data) return;
+void _set_clock_impl(f64 target_fps) {
+    internal_platform_state.clock.start_time = lotus_platform_api->get_time();
+    internal_platform_state.clock.current_time = internal_platform_state.clock.start_time;
+    internal_platform_state.clock.frame_time = 0.0f;
+    internal_platform_state.clock.delta_time = 0.0f;
+    internal_platform_state.clock.target_fps = target_fps;
+    internal_platform_state.clock.current_fps = 0.0f;
+}
 
-    Platform_Window_Data *data = (Platform_Window_Data*)window->internal_data;
-    SwapBuffers(data->device_context);
+void _update_clock_impl(void) {
+    f64 new_time = lotus_platform_api->get_time();
+    internal_platform_state.clock.delta_time = new_time - internal_platform_state.clock.current_time;
+    internal_platform_state.clock.frame_time = internal_platform_state.clock.delta_time;
+    internal_platform_state.clock.current_time = new_time;
+
+    // calculate FPS
+    if (internal_platform_state.clock.delta_time > 0.0) {
+        internal_platform_state.clock.current_fps = 1.0 / internal_platform_state.clock.delta_time;
+    } else {
+        internal_platform_state.clock.current_fps = internal_platform_state.clock.target_fps;
+    }
+
+    // frame cap logic
+    f64 target_frame_time = 1.0 / internal_platform_state.clock.target_fps;
+    f64 sleep_time = target_frame_time - internal_platform_state.clock.delta_time;
+
+    if (sleep_time > 0.002) {  
+        lotus_platform_api->sleep(sleep_time - 0.001); // sleep to avoid overshooting frame time
+    }
+
+    // recalculate time after sleep
+    while ((lotus_platform_api->get_time() - internal_platform_state.clock.current_time) < target_frame_time) {
+        SwitchToThread();  // yield CPU during busy-wait
+    }
 }
 
 
@@ -409,6 +437,14 @@ void *_windows_get_gl_context_impl(Lotus_Window *window) {
     Platform_Window_Data *data = (Platform_Window_Data*)window->internal_data;
     return (void*)data->gl_context;
 }
+
+void _windows_swap_buffers_impl(Lotus_Window *window) {
+    if (!window || !window->internal_data) return;
+
+    Platform_Window_Data *data = (Platform_Window_Data*)window->internal_data;
+    SwapBuffers(data->device_context);
+}
+
 
 Lotus_Platform_State *_windows_get_state_impl(void) { return &internal_platform_state; }
 
@@ -460,17 +496,20 @@ ubyte lotus_init_platform(void) {
     internal_platform_state.input_state = lotus_init_input();
     if (!internal_platform_state.input_state) return LOTUS_FALSE;   // error: failed to init input layer!
 
-    LARGE_INTEGER frequency;
-    QueryPerformanceFrequency(&frequency);
-    internal_platform_state.clock_frequency = 1.0 / (f64)frequency.QuadPart;
-
     lotus_platform_api = lotus_memory_api->alloc(sizeof(Lotus_Platform_API), 16);
     if (!lotus_platform_api) return LOTUS_FALSE;    // error: out of memory!
 
+    LARGE_INTEGER frequency;
+    QueryPerformanceFrequency(&frequency);
+    internal_platform_state.clock.frequency = 1.0 / (f64)frequency.QuadPart;    // store seconds per tick
+
     lotus_platform_api->get_state = _windows_get_state_impl;
     lotus_platform_api->cleanup = _windows_cleanup_impl;
-    lotus_platform_api->get_time = _windows_get_time_impl;
+    
+    lotus_platform_api->set_clock = _set_clock_impl;
     lotus_platform_api->sleep = _windows_sleep_impl;
+    lotus_platform_api->get_time = _windows_get_time_impl;
+    lotus_platform_api->update_clock = _update_clock_impl;
     
     lotus_platform_api->load_library = _windows_load_library_impl;
     lotus_platform_api->get_library_symbol = _windows_get_library_symbol_impl;

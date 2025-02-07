@@ -3,6 +3,8 @@
 #define LOTUS_3D
 #include "../../lotus/include/lotus.h"
 
+#include <stdio.h>
+
 int main() {
     lotus_init_3D();
     
@@ -45,11 +47,15 @@ int main() {
     lotus_platform_api->hide_cursor(window);
     lotus_platform_api->center_cursor(window);
 
+    lotus_graphics_api->toggle_vsync(0);
+    lotus_platform_api->set_clock(144.0);
+    
     ubyte running = 1;
     while (running) {
+        lotus_platform_api->poll_inputs();
         lotus_platform_api->poll_events();
         lotus_graphics_api->draw_clear();
-
+        
         if (lotus_key_is_down(LOTUS_KEY_ESCAPE)) running = 0;
         
         if (lotus_key_is_down(LOTUS_KEY_W)) lotus_translate_camera(&camera, 0, 0, 1);
@@ -57,18 +63,18 @@ int main() {
         
         if (lotus_key_is_down(LOTUS_KEY_D)) lotus_translate_camera(&camera, 1, 0, 0);
         if (lotus_key_is_down(LOTUS_KEY_A)) lotus_translate_camera(&camera, -1, 0, 0);
-
+        
         if (lotus_key_is_down(LOTUS_KEY_SPACE)) lotus_translate_camera(&camera, 0, 1, 0);
         if (lotus_key_is_down(LOTUS_KEY_SHIFT)) lotus_translate_camera(&camera, 0, -1, 0);
         
         lotus_ecs_api->run_system(LOTUS_TRANSFORM3D);
         lotus_ecs_api->run_system(LOTUS_MESH3D);
-
+        
         lotus_freelook_camera(&camera);
         lotus_update_camera(&camera);
-
-        lotus_platform_api->poll_inputs();
+        
         lotus_platform_api->swap_buffers(window);
+        lotus_platform_api->update_clock();
     }
 
     lotus_graphics_api->destroy_shader(&shader);
@@ -78,4 +84,3 @@ int main() {
     lotus_shutdown_3D();
     return 0;
 }
-
