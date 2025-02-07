@@ -40,12 +40,14 @@ int main() {
     mesh->color = LOTUS_COLOR3(85, 42, 115);
     mesh->vertexData = lotus_2D->create_triangle2D(mesh->size, mesh->color);
 
-    transform->speed = 5.0;
+    transform->speed = 120.0;
     transform->scale = lotus_new_vec2(1.0, 1.0);
     transform->location = lotus_new_vec2(640, 360);
 
     *texture = lotus_graphics_api->create_texture2D("lotus/assets/logo.png", LOTUS_RGBA);
 
+    lotus_graphics_api->toggle_vsync(0);
+    lotus_platform_api->set_clock(60.0);
     ubyte running = 1;
     while (running) {
         lotus_platform_api->poll_inputs();
@@ -67,6 +69,7 @@ int main() {
 
         lotus_update_camera(&cam);
         lotus_platform_api->swap_buffers(window);
+        lotus_platform_api->update_clock();
     }
 
     lotus_graphics_api->destroy_shader(&shader);

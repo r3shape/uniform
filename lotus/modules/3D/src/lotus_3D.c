@@ -56,7 +56,8 @@ void _transform_system_3D(ubyte2 entity_id) {
     Lotus_Transform3D* transform = lotus_ecs_api->get_component(entity_id, LOTUS_TRANSFORM3D);
     if (!transform) return;
 
-    transform->location = lotus_add_vec3(transform->location, transform->velocity);
+    f64 delta_time = lotus_platform_api->get_state()->clock.delta_time;
+    transform->location = lotus_add_vec3(transform->location, lotus_scale_vec3(transform->velocity, delta_time));
     transform->model = lotus_mul_mat4(lotus_identity(), lotus_rotx_mat4(transform->rotation.x));
     transform->model = lotus_mul_mat4(transform->model, lotus_roty_mat4(transform->rotation.y));
     transform->model = lotus_mul_mat4(transform->model, lotus_rotz_mat4(transform->rotation.z));

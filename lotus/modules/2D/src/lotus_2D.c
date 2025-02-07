@@ -2,6 +2,8 @@
 #include "../include/lotus_shapes2D.h"
 #include "../../core/include/memory/lotus_memory.h"
 
+#include <stdio.h>
+
 Lotus_2D_API* lotus_2D = NULL;
 
 /* LOTUS2D COMPONENT UTILITIES */
@@ -52,7 +54,8 @@ void _transform_system_2D(ubyte2 entity_id) {
     Lotus_Transform2D* transform = lotus_ecs_api->get_component(entity_id, LOTUS_TRANSFORM2D);
     if (!transform) return;
 
-    transform->location = lotus_add_vec2(transform->location, transform->velocity);
+    f64 delta_time = lotus_platform_api->get_state()->clock.delta_time;
+    transform->location = lotus_add_vec2(transform->location, lotus_scale_vec2(transform->velocity, delta_time));
     transform->model = lotus_mul_mat4(lotus_identity(), lotus_rot_mat4(0, 0, 1, transform->rotation));
     transform->model = lotus_mul_mat4(transform->model, lotus_scale_mat4(transform->scale.x, transform->scale.y, 1.0));
     transform->model = lotus_mul_mat4(transform->model, lotus_trans_mat4(transform->location.x, transform->location.y, 0.0));

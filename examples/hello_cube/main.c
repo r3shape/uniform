@@ -48,8 +48,7 @@ int main() {
     lotus_platform_api->center_cursor(window);
 
     lotus_graphics_api->toggle_vsync(0);
-    lotus_platform_api->set_clock(144.0);
-    
+    lotus_platform_api->set_clock(60.0);
     ubyte running = 1;
     while (running) {
         lotus_platform_api->poll_inputs();
