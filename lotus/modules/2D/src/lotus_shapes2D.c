@@ -19,7 +19,7 @@ Lotus_Vertex_Data _create_triangle2D_impl(Lotus_Vec2 size, Lotus_Vec3 color) {
     );
 }
 
-Lotus_Vertex_Data _create_rectangle2D_impl(Lotus_Vec2 size, Lotus_Vec3 color) {
+Lotus_Vertex_Data _create_quad2D_impl(Lotus_Vec2 size, Lotus_Vec3 color) {
     f32 half_width =    size.x / 2.0f;
     f32 half_height =   size.y / 2.0f;
 

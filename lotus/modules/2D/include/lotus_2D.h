@@ -36,9 +36,9 @@ typedef struct Lotus_2D_API {
     void (*set_velocity2D)(ubyte2 entity_id, Lotus_Vec2 velocity);
     void (*set_location2D)(ubyte2 entity_id, Lotus_Vec2 location);
     
+    Lotus_Vertex_Data (*create_quad2D)(Lotus_Vec2 size, Lotus_Vec3 color);
     Lotus_Vertex_Data (*create_circle2D)(Lotus_Vec2 size, Lotus_Vec3 color);
     Lotus_Vertex_Data (*create_triangle2D)(Lotus_Vec2 size, Lotus_Vec3 color);
-    Lotus_Vertex_Data (*create_rectangle2D)(Lotus_Vec2 size, Lotus_Vec3 color);
 } Lotus_2D_API;
 
 extern Lotus_2D_API* lotus_2D;

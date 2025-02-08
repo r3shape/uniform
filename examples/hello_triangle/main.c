@@ -44,7 +44,7 @@ int main() {
     transform->scale = lotus_new_vec2(1.0, 1.0);
     transform->location = lotus_new_vec2(640, 360);
 
-    *texture = lotus_graphics_api->create_texture2D("lotus/assets/logo.png", LOTUS_RGBA);
+    *texture = lotus_graphics_api->create_texture2D("lotus/assets/textures/chip.png", LOTUS_RGBA);
 
     lotus_graphics_api->toggle_vsync(0);
     lotus_platform_api->set_clock(60.0);

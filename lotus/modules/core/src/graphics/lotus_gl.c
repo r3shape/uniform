@@ -285,7 +285,7 @@ void _graphics_draw_data_impl(Lotus_Vertex_Data vertexData) {
     lotus_graphics_api->GL_API.bind_vertex_array(vertexData.vao);
     if (vertexData.indices && vertexData.indexCount > 0) lotus_graphics_api->GL_API.draw_elements(internal_graphics_state.mode, vertexData.indexCount, GL_UNSIGNED_INT, NULL);
     else lotus_graphics_api->GL_API.draw_arrays(internal_graphics_state.mode, 0, vertexData.vertexCount);
-    
+
     lotus_graphics_api->GL_API.bind_vertex_array(0);
 }
 

@@ -92,9 +92,9 @@ ubyte lotus_init_2D(void) {
     lotus_2D->set_rotation2D = _set_rotation2D_impl;
     lotus_2D->set_location2D = _set_location2D_impl;
 
+    lotus_2D->create_quad2D = _create_quad2D_impl;
     lotus_2D->create_circle2D = _create_circle2D_impl;
     lotus_2D->create_triangle2D = _create_triangle2D_impl;
-    lotus_2D->create_rectangle2D = _create_rectangle2D_impl;
 
     lotus_ecs_api->register_component(sizeof(Lotus_Mesh2D), LOTUS_MESH2D);
     lotus_ecs_api->register_system(LOTUS_MESH2D, _render_system_2D);

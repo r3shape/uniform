@@ -70,9 +70,15 @@ void _render_system_3D(ubyte2 entity_id) {
     Lotus_Transform3D* transform = lotus_ecs_api->get_component(entity_id, LOTUS_TRANSFORM3D);
     if (!mesh || !transform) return;
 
+    Lotus_Texture2D* texture = lotus_ecs_api->get_component(entity_id, LOTUS_TEXTURE2D);
+    if (texture) {
+        lotus_graphics_api->GL_API.bind_texture(GL_TEXTURE_2D, texture->id);
+    }
+
     lotus_graphics_api->set_uniform(lotus_graphics_api->get_state()->shader, "u_model", &transform->model);
     lotus_graphics_api->draw_data(mesh->vertexData);
 }
+
 
 ubyte lotus_init_3D(void) {
     lotus_init_core();
@@ -90,6 +96,7 @@ ubyte lotus_init_3D(void) {
     lotus_3D->set_rotation3D = _set_rotation3D_impl;
     lotus_3D->set_location3D = _set_location3D_impl;
     
+    lotus_3D->create_quad3D = _create_quad3D_impl;
     lotus_3D->create_cube3D = _create_cube3D_impl;
 
     lotus_ecs_api->register_component(sizeof(Lotus_Mesh3D), LOTUS_MESH3D);
@@ -97,6 +104,8 @@ ubyte lotus_init_3D(void) {
 
     lotus_ecs_api->register_component(sizeof(Lotus_Transform3D), LOTUS_TRANSFORM3D);
     lotus_ecs_api->register_system(LOTUS_TRANSFORM3D, _transform_system_3D);
+
+    lotus_ecs_api->register_component(sizeof(Lotus_Texture2D), LOTUS_TEXTURE2D);
 
     return LOTUS_TRUE;
 }

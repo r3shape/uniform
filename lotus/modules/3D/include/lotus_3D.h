@@ -8,6 +8,7 @@
 typedef enum Lotus_Component3D {
     LOTUS_MESH3D = 0,
     LOTUS_TRANSFORM3D,
+    LOTUS_TEXTURE2D,
     LOTUS_3D_COMPONENTS
 } Lotus_Component3D;
 
@@ -37,6 +38,7 @@ typedef struct Lotus_3D_API {
     void (*set_location3D)(ubyte2 entity_id, Lotus_Vec3 location);
 
     Lotus_Vertex_Data (*create_cube3D)(Lotus_Vec3 size, Lotus_Vec3 color);
+    Lotus_Vertex_Data (*create_quad3D)(Lotus_Vec3 size, Lotus_Vec3 color);
 } Lotus_3D_API;
 
 extern Lotus_3D_API* lotus_3D;
