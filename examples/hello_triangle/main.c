@@ -14,10 +14,7 @@ int main() {
     lotus_init_graphics();
     lotus_graphics_api->GL_API.viewport(0,0, window->size[0], window->size[1]);
 
-    Lotus_Camera cam = lotus_init_camera(
-        lotus_new_vec3(0, 0, 1.0),
-        lotus_new_vec3(0, 0, 0)
-    );
+    Lotus_Camera camera = lotus_init_camera(lotus_new_vec3(0, 0, 1.0));
 
     Lotus_Shader shader = lotus_graphics_api->create_shader(
         lotus_read_file("lotus/assets/shaders/default001/vertex.glsl"),
@@ -67,7 +64,7 @@ int main() {
         lotus_ecs_api->run_system(LOTUS_TRANSFORM2D);
         lotus_ecs_api->run_system(LOTUS_MESH2D);
 
-        lotus_update_camera(&cam);
+        lotus_update_camera(&camera);
         lotus_platform_api->swap_buffers(window);
         lotus_platform_api->update_clock();
     }

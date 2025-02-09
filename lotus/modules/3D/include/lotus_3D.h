@@ -1,9 +1,8 @@
 #pragma once
 
+#include "../../ecs/include/lotus_ecs.h"
 #include "../../core/include/lotus_core.h"
 #include "../../core/include/lotus_core_defines.h"
-
-#include "../../ecs/include/lotus_ecs.h"
 
 typedef enum Lotus_Component3D {
     LOTUS_MESH3D = 0,
