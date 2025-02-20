@@ -1,0 +1,17 @@
+{
+    "c-instance": "GCC",
+    "inc-dirs": ["r3engine/include"],
+    "src-dirs": ["examples/simple_plugin"],
+    "lib-links": {
+        "r3engine": "bin"
+    },
+    "out-dir": "bin/plugins",
+    "out-type": "dll",
+    "out-name": "Simple-Plugin",
+
+    "r3make": {
+        "post-build": {
+            "nofiles": null
+        }
+    }
+}

@@ -1,0 +1,34 @@
+{
+    "c-instance": "GCC",
+    "c-defines": [
+        "R3_DLL_EXPORT"
+    ],
+    "src-dirs": [
+        "r3engine/modules/core/src",
+        "r3engine/modules/ecs/src",
+        "r3engine/modules/2D/src",
+        "r3engine/modules/3D/src",
+        "r3engine/modules/next/src"
+    ],
+    "inc-dirs": [
+        "r3engine/include",
+        "r3engine/modules/core/include",
+        "r3engine/modules/ecs/include",
+        "r3engine/modules/2D/include",
+        "r3engine/modules/3D/include",
+        "r3engine/modules/next/include"
+    ],
+    "lib-links": {
+        "gdi32": null,
+        "opengl32": null
+    },
+    "out-type": "dll",
+    "out-dir": "bin",
+    "out-name": "r3engine",
+
+    "r3make": {
+        "post-build": {
+            "nofiles": null
+        }
+    }
+}

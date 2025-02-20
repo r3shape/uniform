@@ -1,0 +1,17 @@
+{
+    "c-instance": "GCC",
+    "inc-dirs": ["r3engine/include"],
+    "src-dirs": ["tests/ecs"],
+    "lib-links": {
+        "r3engine": "bin"
+    },
+    "out-dir": "bin",
+    "out-type": "exe",
+    "out-name": "ECS-Test",
+
+    "r3make": {
+        "post-build": {
+            "nofiles": null
+        }
+    }
+}
