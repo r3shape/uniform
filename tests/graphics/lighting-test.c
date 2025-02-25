@@ -98,18 +98,16 @@ int main() {
         R3_Vec3 ambient;
         R3_Vec3 diffuse;
         R3_Vec3 specular;
-    } light;
-
-    light.ambient = r3_new_vec3(10.0, 10.0, 10.0);
-    light.diffuse = r3_new_vec3(0.5, 0.5, 0.5);
-    light.specular = r3_new_vec3(1.0, 1.0, 1.0);
+    } light = {
+        .ambient = r3_new_vec3(1.0, 1.0, 1.0),
+        .diffuse = r3_new_vec3(0.5, 0.5, 0.5),
+        .specular = r3_new_vec3(1.0, 1.0, 1.0)
+    };
     R3_Transform3D* light_transform = r3_ecs_api->get_component(100, R3_TRANSFORM3D);
     r3_graphics_api->set_uniform(&object_shader, "u_light.ambient", &light.ambient);
     r3_graphics_api->set_uniform(&object_shader, "u_light.diffuse", &light.diffuse);
     r3_graphics_api->set_uniform(&object_shader, "u_light.specular", &light.specular);
     r3_graphics_api->set_uniform(&object_shader, "u_light.location", &light_transform->location);
-
-    r3_graphics_api->set_uniform(&object_shader, "u_cam_location", &camera->location);
 
     ubyte running = 1;
     while (running) {
@@ -131,16 +129,12 @@ int main() {
         if (r3_key_is_down(R3_KEY_SPACE)) r3_translate_camera(0, 1, 0);
         if (r3_key_is_down(R3_KEY_SHIFT)) r3_translate_camera(0, -1, 0);
 
-        if (r3_key_is_down(R3_KEY_UP)) light_transform->velocity.y = light_transform->speed;
-        if (r3_key_is_down(R3_KEY_DOWN)) light_transform->velocity.y = -light_transform->speed;
         if (r3_key_is_down(R3_KEY_LEFT)) light_transform->velocity.x = -light_transform->speed;
-        if (r3_key_is_down(R3_KEY_RIGHT)) light_transform->velocity.x = light_transform->speed;
-
-        r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.ambient");
-        r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.diffuse");
-        r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.specular");
-        r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.location");
-        r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_cam_location");
+        else if (r3_key_is_down(R3_KEY_RIGHT)) light_transform->velocity.x = light_transform->speed;
+        else light_transform->velocity.x = 0;
+        if (r3_key_is_down(R3_KEY_UP)) light_transform->velocity.y = light_transform->speed;
+        else if (r3_key_is_down(R3_KEY_DOWN)) light_transform->velocity.y = -light_transform->speed;
+        else light_transform->velocity.y = 0;
 
         r3_update_camera();
         r3_ecs_api->run_system(R3_TRANSFORM3D);

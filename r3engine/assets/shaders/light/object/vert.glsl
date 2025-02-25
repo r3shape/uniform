@@ -17,5 +17,5 @@ void main() {
     frag_location = vec3(u_model * vec4(a_Location, 1.0));
 
     // TODO: move the calculation of the normal-matrix to the CPU and pass via uniform
-    normal = vec3(transpose(inverse(u_model)) * vec4(a_normal, 0.0));
+    normal = mat3(transpose(inverse(u_model))) * a_normal;
 }

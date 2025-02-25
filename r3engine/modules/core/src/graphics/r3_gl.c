@@ -310,6 +310,13 @@ void _draw_data_impl(R3_Vertex_Data vertexData) {
         r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_VEC3, "u_material.ambient");
         r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_VEC3, "u_material.diffuse");
         r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_VEC3, "u_material.specular");
+        
+        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_VEC3, "u_light.ambient");
+        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_VEC3, "u_light.diffuse");
+        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_VEC3, "u_light.specular");
+        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_VEC3, "u_light.location");
+
+        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_VEC3, "u_cam_location");
     }
 
     r3_graphics_api->GL_API.bind_vertex_array(vertexData.vao);
