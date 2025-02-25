@@ -95,5 +95,5 @@ void r3_update_camera(void) {
     internal_camera.up = r3_norm_vec3(r3_cross_vec3(internal_camera.direction, internal_camera.right));
     
     internal_camera.view = r3_look_at(internal_camera.location, r3_add_vec3(internal_camera.location, internal_camera.direction), internal_camera.up);
-    r3_graphics_api->set_uniform(r3_graphics_api->get_state()->shader, "u_view", &internal_camera.view);
+    r3_graphics_api->set_uniform(r3_graphics_api->get_state()->shader, R3_UNIFORM_MAT4, "u_view", &internal_camera.view);
 }

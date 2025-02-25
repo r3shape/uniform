@@ -170,9 +170,11 @@ void _destroy_shader_impl(R3_Shader *shader) {
 }
 
 
-ubyte _set_uniform_impl(R3_Shader *shader, const char *name, void *value) {
+ubyte _set_uniform_impl(R3_Shader *shader,  R3_Uniform_Type type, const char *name, void *value) {
     if (!shader || !name) return R3_FALSE;   // error: value error!
-    return r3_set_hashmap(shader->uniforms, name, value);
+    ubyte result = r3_set_hashmap(shader->uniforms, name, value);
+    r3_graphics_api->send_uniform(shader, type, name);
+    return result;
 }
 
 R3_Uniform _get_uniform_impl(R3_Shader *shader, const char *name) {
@@ -199,6 +201,7 @@ void _send_uniform_impl(R3_Shader *shader, R3_Uniform_Type type, const char *nam
     switch (type) {
         case R3_UNIFORM_NONE: break;
         case R3_UNIFORM_TYPES: break;
+        case R3_UNIFORM_FLOAT: r3_graphics_api->GL_API.uniform1f(uniform.location, uniform.value); break;
         case R3_UNIFORM_VEC2: r3_graphics_api->GL_API.uniform2fv(uniform.location, 1, uniform.value); break;
         case R3_UNIFORM_VEC3: r3_graphics_api->GL_API.uniform3fv(uniform.location, 1, uniform.value); break;
         case R3_UNIFORM_VEC4: r3_graphics_api->GL_API.uniform4fv(uniform.location, 1, uniform.value); break;
@@ -249,35 +252,22 @@ void _destroy_texture2D_impl(R3_Texture2D* texture) {
 
 
 R3_Material _create_material_impl(R3_Shader* shader) {
-    R3_Material mat = {NULL};
-    if (!shader || !shader->program) return mat;
-
-    mat.uniforms = r3_create_hashmap(16);
-    if (!mat.uniforms) return mat;  // error: failed to create material uniform hashmap!
-
-    mat.shader = shader;
-    return mat;
+    if (!shader || !shader->program) return (R3_Material) { .shader = NULL };
+    return (R3_Material) {
+        .shine = 32.0,
+        .ambient = (R3_Vec3){1.0, 0.5, 0.3},
+        .diffuse = (R3_Vec3){1.0, 0.5, 0.3},
+        .specular = (R3_Vec3){0.5, 0.5, 0.5},
+        .shader = shader
+    };
 }
 
 void _destroy_material_impl(R3_Material* material) {
-    r3_destroy_hashmap(material->uniforms);
-    material->uniforms = NULL;
     material->shader = NULL;
-}
-
-ubyte _set_material_uniform_impl(R3_Material* material, const char *name, void *value) {
-    if (!material || !material->shader || !material->shader->program) return R3_FALSE;
-    return r3_graphics_api->set_uniform(material->shader, name, value);
-}
-
-R3_Uniform _get_material_uniform_impl(R3_Material* material, const char *name) {
-    if (!material || !material->shader || !material->shader->program) return (R3_Uniform){ .location = 0, .value = NULL, .name = NULL };
-    return r3_graphics_api->get_uniform(material->shader, name);
-}
-
-void _send_material_uniform_impl(R3_Material* material, R3_Uniform_Type type, const char *name) {
-    if (!material || !material->shader || !material->shader->program) return;
-    r3_graphics_api->send_uniform(material->shader, type, name);
+    material->shine = 0.0;
+    material->ambient = (R3_Vec3){0.0, 0.0, 0.0};
+    material->diffuse = (R3_Vec3){0.0, 0.0, 0.0};
+    material->specular = (R3_Vec3){0.0, 0.0, 0.0};
 }
 
 
@@ -293,7 +283,7 @@ void _set_mode_impl(R3_Draw_Mode mode) {
 
 void _set_shader_impl(R3_Shader *shader) {
     internal_graphics_state.shader = (shader->program == 0) ? NULL : shader;
-    r3_graphics_api->set_uniform(internal_graphics_state.shader, "u_projection", &internal_graphics_state.projection);
+    r3_graphics_api->set_uniform(internal_graphics_state.shader, R3_UNIFORM_MAT4, "u_projection", &internal_graphics_state.projection);
 }
 
 
@@ -311,18 +301,14 @@ void _draw_data_impl(R3_Vertex_Data vertexData) {
 
     // error: cannot draw without an active shader!
     if (!internal_graphics_state.shader) return;
-
-    if (internal_graphics_state.shader->program > 0) {
-        r3_graphics_api->GL_API.use_program(internal_graphics_state.shader->program);
-        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_MAT4, "u_model");
-        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_MAT4, "u_view");
-        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_MAT4, "u_projection");
-    }
+    r3_graphics_api->GL_API.use_program(internal_graphics_state.shader->program);
 
     r3_graphics_api->GL_API.bind_vertex_array(vertexData.vao);
-    if (vertexData.indices && vertexData.indexCount > 0) r3_graphics_api->GL_API.draw_elements(internal_graphics_state.mode, vertexData.indexCount, GL_UNSIGNED_INT, NULL);
-    else r3_graphics_api->GL_API.draw_arrays(internal_graphics_state.mode, 0, vertexData.vertexCount);
-
+    if (vertexData.indices && vertexData.indexCount > 0) {
+        r3_graphics_api->GL_API.draw_elements(internal_graphics_state.mode, vertexData.indexCount, GL_UNSIGNED_INT, NULL);
+    } else {
+        r3_graphics_api->GL_API.draw_arrays(internal_graphics_state.mode, 0, vertexData.vertexCount);
+    }
     r3_graphics_api->GL_API.bind_vertex_array(0);
 }
 
@@ -409,6 +395,8 @@ void _load_gl_functions(void) {
         {(void**)&r3_graphics_api->GL_API.get_programiv, "glGetProgramiv"},
         {(void**)&r3_graphics_api->GL_API.get_program_info_log, "glGetProgramInfoLog"},
         {(void**)&r3_graphics_api->GL_API.get_uniform_location, "glGetUniformLocation"},
+        
+        {(void**)&r3_graphics_api->GL_API.uniform1f, "glUniform1f"},
         {(void**)&r3_graphics_api->GL_API.uniform2fv, "glUniform2fv"},
         {(void**)&r3_graphics_api->GL_API.uniform3fv, "glUniform3fv"},
         {(void**)&r3_graphics_api->GL_API.uniform4fv, "glUniform4fv"},
@@ -484,9 +472,6 @@ ubyte r3_init_graphics(void) {
     
     r3_graphics_api->create_material = _create_material_impl;
     r3_graphics_api->destroy_material = _destroy_material_impl;
-    r3_graphics_api->set_material_uniform = _set_material_uniform_impl;
-    r3_graphics_api->get_material_uniform = _get_material_uniform_impl;
-    r3_graphics_api->send_material_uniform = _send_material_uniform_impl;
 
     r3_graphics_api->set_color = _set_color_impl;
     r3_graphics_api->set_mode = _set_mode_impl;

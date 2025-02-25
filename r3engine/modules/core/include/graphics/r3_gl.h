@@ -40,6 +40,7 @@
 
 typedef enum R3_Uniform_Type {
     R3_UNIFORM_NONE=0,
+    R3_UNIFORM_FLOAT,
     R3_UNIFORM_VEC2,
     R3_UNIFORM_VEC3,
     R3_UNIFORM_VEC4,
@@ -73,8 +74,11 @@ typedef struct R3_Texture2D {
 } R3_Texture2D;
 
 typedef struct R3_Material {
+    f32 shine;
+    R3_Vec3 ambient;
+    R3_Vec3 diffuse;
+    R3_Vec3 specular;
     R3_Shader* shader;
-    R3_Hashmap* uniforms;
 } R3_Material;
 
 // GL equivalents
@@ -123,7 +127,7 @@ typedef struct R3_Graphics_API {
     R3_Shader (*create_shader)(const char* vertex_shader, const char* fragment_shader);
     void (*destroy_shader)(R3_Shader* shader);
 
-    ubyte (*set_uniform)(R3_Shader* shader, const char* name, void* value);
+    ubyte (*set_uniform)(R3_Shader *shader,  R3_Uniform_Type type, const char *name, void *value);
     R3_Uniform (*get_uniform)(R3_Shader* shader, const char* name);
     void (*send_uniform)(R3_Shader* shader, R3_Uniform_Type type, const char* name);
 
@@ -132,10 +136,6 @@ typedef struct R3_Graphics_API {
 
     R3_Material (*create_material)(R3_Shader* shader);
     void (*destroy_material)(R3_Material* material);
-
-    ubyte (*set_material_uniform)(R3_Material* material, const char* name, void* value);
-    R3_Uniform (*get_material_uniform)(R3_Material* material, const char* name);
-    void (*send_material_uniform)(R3_Material* material, R3_Uniform_Type type, const char* name);
 
     void (*set_color)(R3_Vec4 color4);
     void (*set_mode)(R3_Draw_Mode mode);
@@ -175,17 +175,21 @@ typedef struct R3_Graphics_API {
         void (*use_program)(ubyte4 program);
         void (*link_program)(ubyte4 program);
         void (*delete_program)(ubyte4 program);
+        
         ubyte4 (*create_shader)(ubyte4 type);
         void (*compile_shader)(ubyte4 shader);
         void (*attach_shader)(ubyte4 program, ubyte4 shader);
         void (*detach_shader)(ubyte4 program, ubyte4 shader);
         void (*delete_shader)(ubyte4 shader);
         void (*shader_source)(ubyte4 shader, sbyte4 count, const char **strings, const int *lengths);
+        
         void (*get_shaderiv)(ubyte4 shader, ubyte4 pname, ubyte4 *params);
         void (*get_shader_info_log)(ubyte4 shader, sbyte4 maxLength, sbyte4 *length, char *infoLog);
         void (*get_programiv)(ubyte4 program, ubyte4 pname, ubyte4 *params);
         void (*get_program_info_log)(ubyte4 program, sbyte4 maxLength, sbyte4 *length, char *infoLog);
         ubyte4 (*get_uniform_location)(ubyte4 program, const char* name);
+        
+        void (*uniform1f)(ubyte4 location, const f32* value);
         void (*uniform2fv)(ubyte4 location, ubyte4 count, const f32* value);
         void (*uniform3fv)(ubyte4 location, ubyte4 count, const f32* value);
         void (*uniform4fv)(ubyte4 location, ubyte4 count, const f32* value);

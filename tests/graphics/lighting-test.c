@@ -55,7 +55,6 @@ void configure_entities(R3_Shader* light_shader, R3_Shader* object_shader) {
         }
     }
     
-    
     ubyte2 light = r3_ecs_api->create_entity();
     R3_Mesh3D* mesh = r3_ecs_api->add_component(light, R3_MESH3D);
     R3_Transform3D* transform = r3_ecs_api->add_component(light, R3_TRANSFORM3D);
@@ -75,7 +74,6 @@ void configure_entities(R3_Shader* light_shader, R3_Shader* object_shader) {
 
 int main() {
     r3_init_3D();
-    
     R3_Window* window = r3_platform_api->create_window("Phong Lighting", 1280, 720);
     r3_platform_api->create_gl_context(window);
 
@@ -83,7 +81,7 @@ int main() {
     r3_event_api->register_callback(R3_EVENT_RESIZE, resize_callback);
 
     R3_Camera* camera = r3_init_camera(r3_new_vec3(0, 0, 3.0), R3_FLY_CAMERA);
-    
+
     R3_Shader light_shader = r3_graphics_api->create_shader(
         r3_read_file("r3engine/assets/shaders/light/source/vert.glsl"),
         r3_read_file("r3engine/assets/shaders/light/source/frag.glsl")
@@ -92,58 +90,63 @@ int main() {
         r3_read_file("r3engine/assets/shaders/light/object/vert.glsl"),
         r3_read_file("r3engine/assets/shaders/light/object/frag.glsl")
     );
-    
+
     configure_entities(&light_shader, &object_shader);
     configure_state(window);
-    
-    R3_Vec3 light_color = (R3_Vec3){1.0, 1.0, 1.0};
-    R3_Vec3 object_color = (R3_Vec3){1.0, 0.5, 0.3};
-    r3_graphics_api->set_uniform(&object_shader, "u_light_color", &light_color);
-    r3_graphics_api->set_uniform(&object_shader, "u_object_color", &object_color);
-    r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light_color");
-    r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_object_color");
-    
+
+    struct Light {
+        R3_Vec3 ambient;
+        R3_Vec3 diffuse;
+        R3_Vec3 specular;
+    } light;
+
+    light.ambient = r3_new_vec3(10.0, 10.0, 10.0);
+    light.diffuse = r3_new_vec3(0.5, 0.5, 0.5);
+    light.specular = r3_new_vec3(1.0, 1.0, 1.0);
     R3_Transform3D* light_transform = r3_ecs_api->get_component(100, R3_TRANSFORM3D);
-    r3_graphics_api->set_uniform(&object_shader, "u_light_location", &light_transform->location);
-    r3_graphics_api->set_uniform(&object_shader, "u_cam_location", &camera->location);
-    
+    r3_graphics_api->set_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.ambient", &light.ambient);
+    r3_graphics_api->set_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.diffuse", &light.diffuse);
+    r3_graphics_api->set_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.specular", &light.specular);
+    r3_graphics_api->set_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.location", &light_transform->location);
+
+    r3_graphics_api->set_uniform(&object_shader, R3_UNIFORM_VEC3, "u_cam_location", &camera->location);
+
     ubyte running = 1;
     while (running) {
         r3_graphics_api->draw_clear();
         r3_platform_api->poll_inputs();
         r3_platform_api->poll_events();
-        
+
         if (r3_key_is_down(R3_KEY_ESCAPE)) running = 0;
-        
+
         if (r3_key_is_down(R3_KEY_F1)) r3_graphics_api->toggle_wireframe(1);
         else r3_graphics_api->toggle_wireframe(0);
-        
+
         if (r3_key_is_down(R3_KEY_W)) r3_translate_camera(0, 0, 1);
         if (r3_key_is_down(R3_KEY_S)) r3_translate_camera(0, 0, -1);
-        
+
         if (r3_key_is_down(R3_KEY_D)) r3_translate_camera(1, 0, 0);
         if (r3_key_is_down(R3_KEY_A)) r3_translate_camera(-1, 0, 0);
-        
+
         if (r3_key_is_down(R3_KEY_SPACE)) r3_translate_camera(0, 1, 0);
         if (r3_key_is_down(R3_KEY_SHIFT)) r3_translate_camera(0, -1, 0);
-        
 
         if (r3_key_is_down(R3_KEY_UP)) light_transform->velocity.y = light_transform->speed;
         if (r3_key_is_down(R3_KEY_DOWN)) light_transform->velocity.y = -light_transform->speed;
         if (r3_key_is_down(R3_KEY_LEFT)) light_transform->velocity.x = -light_transform->speed;
         if (r3_key_is_down(R3_KEY_RIGHT)) light_transform->velocity.x = light_transform->speed;
-        
-        r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light_location");
+
+        r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.location");
         r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_cam_location");
 
         r3_update_camera();
         r3_ecs_api->run_system(R3_TRANSFORM3D);
         r3_ecs_api->run_system(R3_MESH3D);
-        
+
         r3_platform_api->swap_buffers(window);
         r3_platform_api->update_clock();
     }
-    
+
     r3_graphics_api->destroy_shader(&object_shader);
     r3_graphics_api->destroy_shader(&light_shader);
     cleanup_entities();

@@ -79,12 +79,16 @@ void _render_system_3D(ubyte2 entity_id) {
     
     R3_Material* material = r3_ecs_api->get_component(entity_id, R3_MATERIAL);
     if (material && material->shader) {
-        r3_graphics_api->set_shader(material->shader);  // u_projection is set to hashmap
+        r3_graphics_api->set_shader(material->shader);
+        r3_graphics_api->set_uniform(material->shader, R3_UNIFORM_FLOAT, "u_material.shine", &material->shine);
+        r3_graphics_api->set_uniform(material->shader, R3_UNIFORM_VEC3, "u_material.ambient", &material->ambient);
+        r3_graphics_api->set_uniform(material->shader, R3_UNIFORM_VEC3, "u_material.diffuse", &material->diffuse);
+        r3_graphics_api->set_uniform(material->shader, R3_UNIFORM_VEC3, "u_material.specular", &material->specular);
     }
     
-    r3_graphics_api->set_uniform(r3_graphics_api->get_state()->shader, "u_view", &r3_get_camera()->view);   // u_view is set to hashmap
-    r3_graphics_api->set_uniform(r3_graphics_api->get_state()->shader, "u_model", &transform->model);   // u_model is set to hashmap
-    r3_graphics_api->draw_data(mesh->vertexData);   // u_model, u_view, u_projection are sent to GPU
+    r3_graphics_api->set_uniform(r3_graphics_api->get_state()->shader, R3_UNIFORM_MAT4, "u_view", &r3_get_camera()->view);
+    r3_graphics_api->set_uniform(r3_graphics_api->get_state()->shader, R3_UNIFORM_MAT4, "u_model", &transform->model);
+    r3_graphics_api->draw_data(mesh->vertexData);
 }
 
 
