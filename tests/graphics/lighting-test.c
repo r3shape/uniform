@@ -104,12 +104,12 @@ int main() {
     light.diffuse = r3_new_vec3(0.5, 0.5, 0.5);
     light.specular = r3_new_vec3(1.0, 1.0, 1.0);
     R3_Transform3D* light_transform = r3_ecs_api->get_component(100, R3_TRANSFORM3D);
-    r3_graphics_api->set_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.ambient", &light.ambient);
-    r3_graphics_api->set_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.diffuse", &light.diffuse);
-    r3_graphics_api->set_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.specular", &light.specular);
-    r3_graphics_api->set_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.location", &light_transform->location);
+    r3_graphics_api->set_uniform(&object_shader, "u_light.ambient", &light.ambient);
+    r3_graphics_api->set_uniform(&object_shader, "u_light.diffuse", &light.diffuse);
+    r3_graphics_api->set_uniform(&object_shader, "u_light.specular", &light.specular);
+    r3_graphics_api->set_uniform(&object_shader, "u_light.location", &light_transform->location);
 
-    r3_graphics_api->set_uniform(&object_shader, R3_UNIFORM_VEC3, "u_cam_location", &camera->location);
+    r3_graphics_api->set_uniform(&object_shader, "u_cam_location", &camera->location);
 
     ubyte running = 1;
     while (running) {
@@ -136,6 +136,9 @@ int main() {
         if (r3_key_is_down(R3_KEY_LEFT)) light_transform->velocity.x = -light_transform->speed;
         if (r3_key_is_down(R3_KEY_RIGHT)) light_transform->velocity.x = light_transform->speed;
 
+        r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.ambient");
+        r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.diffuse");
+        r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.specular");
         r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_light.location");
         r3_graphics_api->send_uniform(&object_shader, R3_UNIFORM_VEC3, "u_cam_location");
 

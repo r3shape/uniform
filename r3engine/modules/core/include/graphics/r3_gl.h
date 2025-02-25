@@ -127,7 +127,7 @@ typedef struct R3_Graphics_API {
     R3_Shader (*create_shader)(const char* vertex_shader, const char* fragment_shader);
     void (*destroy_shader)(R3_Shader* shader);
 
-    ubyte (*set_uniform)(R3_Shader *shader,  R3_Uniform_Type type, const char *name, void *value);
+    ubyte (*set_uniform)(R3_Shader *shader, const char *name, void *value);
     R3_Uniform (*get_uniform)(R3_Shader* shader, const char* name);
     void (*send_uniform)(R3_Shader* shader, R3_Uniform_Type type, const char* name);
 

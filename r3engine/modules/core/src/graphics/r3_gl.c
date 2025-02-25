@@ -170,11 +170,9 @@ void _destroy_shader_impl(R3_Shader *shader) {
 }
 
 
-ubyte _set_uniform_impl(R3_Shader *shader,  R3_Uniform_Type type, const char *name, void *value) {
+ubyte _set_uniform_impl(R3_Shader *shader, const char *name, void *value) {
     if (!shader || !name) return R3_FALSE;   // error: value error!
-    ubyte result = r3_set_hashmap(shader->uniforms, name, value);
-    r3_graphics_api->send_uniform(shader, type, name);
-    return result;
+    return r3_set_hashmap(shader->uniforms, name, value);
 }
 
 R3_Uniform _get_uniform_impl(R3_Shader *shader, const char *name) {
@@ -283,7 +281,7 @@ void _set_mode_impl(R3_Draw_Mode mode) {
 
 void _set_shader_impl(R3_Shader *shader) {
     internal_graphics_state.shader = (shader->program == 0) ? NULL : shader;
-    r3_graphics_api->set_uniform(internal_graphics_state.shader, R3_UNIFORM_MAT4, "u_projection", &internal_graphics_state.projection);
+    r3_graphics_api->set_uniform(internal_graphics_state.shader, "u_projection", &internal_graphics_state.projection);
 }
 
 
@@ -301,14 +299,23 @@ void _draw_data_impl(R3_Vertex_Data vertexData) {
 
     // error: cannot draw without an active shader!
     if (!internal_graphics_state.shader) return;
-    r3_graphics_api->GL_API.use_program(internal_graphics_state.shader->program);
+
+    if (internal_graphics_state.shader->program > 0) {
+        r3_graphics_api->GL_API.use_program(internal_graphics_state.shader->program);
+        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_MAT4, "u_model");
+        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_MAT4, "u_view");
+        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_MAT4, "u_projection");
+
+        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_FLOAT, "u_material.shine");
+        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_VEC3, "u_material.ambient");
+        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_VEC3, "u_material.diffuse");
+        r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_VEC3, "u_material.specular");
+    }
 
     r3_graphics_api->GL_API.bind_vertex_array(vertexData.vao);
-    if (vertexData.indices && vertexData.indexCount > 0) {
-        r3_graphics_api->GL_API.draw_elements(internal_graphics_state.mode, vertexData.indexCount, GL_UNSIGNED_INT, NULL);
-    } else {
-        r3_graphics_api->GL_API.draw_arrays(internal_graphics_state.mode, 0, vertexData.vertexCount);
-    }
+    if (vertexData.indices && vertexData.indexCount > 0) r3_graphics_api->GL_API.draw_elements(internal_graphics_state.mode, vertexData.indexCount, GL_UNSIGNED_INT, NULL);
+    else r3_graphics_api->GL_API.draw_arrays(internal_graphics_state.mode, 0, vertexData.vertexCount);
+
     r3_graphics_api->GL_API.bind_vertex_array(0);
 }
 
