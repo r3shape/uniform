@@ -29,41 +29,41 @@ R3_Vertex_Data _create_cube3D_impl(R3_Vec3 size, R3_Vec3 color) {
     float half_depth  = (size.z / 100.0) / 2.0f;
 
     float vertices[] = {
-        // Back face
-        -half_width, -half_height, -half_depth,  color.x, color.y, color.z,  0.0f, 0.0f,
-         half_width, -half_height, -half_depth,  color.x, color.y, color.z,  1.0f, 0.0f,
-         half_width,  half_height, -half_depth,  color.x, color.y, color.z,  1.0f, 1.0f,
-        -half_width,  half_height, -half_depth,  color.x, color.y, color.z,  0.0f, 1.0f,
+        // Back face (-Z normal)
+        -half_width, -half_height, -half_depth,  color.x, color.y, color.z,  0.0f, 0.0f,  0.0f,  0.0f, -1.0f,
+         half_width, -half_height, -half_depth,  color.x, color.y, color.z,  1.0f, 0.0f,  0.0f,  0.0f, -1.0f,
+         half_width,  half_height, -half_depth,  color.x, color.y, color.z,  1.0f, 1.0f,  0.0f,  0.0f, -1.0f,
+        -half_width,  half_height, -half_depth,  color.x, color.y, color.z,  0.0f, 1.0f,  0.0f,  0.0f, -1.0f,
     
-        // Front face
-        -half_width, -half_height,  half_depth,  color.x, color.y, color.z,  0.0f, 0.0f,
-         half_width, -half_height,  half_depth,  color.x, color.y, color.z,  1.0f, 0.0f,
-         half_width,  half_height,  half_depth,  color.x, color.y, color.z,  1.0f, 1.0f,
-        -half_width,  half_height,  half_depth,  color.x, color.y, color.z,  0.0f, 1.0f,
+        // Front face (+Z normal)
+        -half_width, -half_height,  half_depth,  color.x, color.y, color.z,  0.0f, 0.0f,  0.0f,  0.0f,  1.0f,
+         half_width, -half_height,  half_depth,  color.x, color.y, color.z,  1.0f, 0.0f,  0.0f,  0.0f,  1.0f,
+         half_width,  half_height,  half_depth,  color.x, color.y, color.z,  1.0f, 1.0f,  0.0f,  0.0f,  1.0f,
+        -half_width,  half_height,  half_depth,  color.x, color.y, color.z,  0.0f, 1.0f,  0.0f,  0.0f,  1.0f,
     
-        // Left face
-        -half_width, -half_height,  half_depth,  color.x, color.y, color.z,  1.0f, 0.0f,
-        -half_width, -half_height, -half_depth,  color.x, color.y, color.z,  0.0f, 0.0f,
-        -half_width,  half_height, -half_depth,  color.x, color.y, color.z,  0.0f, 1.0f,
-        -half_width,  half_height,  half_depth,  color.x, color.y, color.z,  1.0f, 1.0f,
+        // Left face (-X normal)
+        -half_width, -half_height,  half_depth,  color.x, color.y, color.z,  1.0f, 0.0f, -1.0f,  0.0f,  0.0f,
+        -half_width, -half_height, -half_depth,  color.x, color.y, color.z,  0.0f, 0.0f, -1.0f,  0.0f,  0.0f,
+        -half_width,  half_height, -half_depth,  color.x, color.y, color.z,  0.0f, 1.0f, -1.0f,  0.0f,  0.0f,
+        -half_width,  half_height,  half_depth,  color.x, color.y, color.z,  1.0f, 1.0f, -1.0f,  0.0f,  0.0f,
     
-        // Right face
-         half_width, -half_height,  half_depth,  color.x, color.y, color.z,  0.0f, 0.0f,
-         half_width, -half_height, -half_depth,  color.x, color.y, color.z,  1.0f, 0.0f,
-         half_width,  half_height, -half_depth,  color.x, color.y, color.z,  1.0f, 1.0f,
-         half_width,  half_height,  half_depth,  color.x, color.y, color.z,  0.0f, 1.0f,
+        // Right face (+X normal)
+         half_width, -half_height,  half_depth,  color.x, color.y, color.z,  0.0f, 0.0f,  1.0f,  0.0f,  0.0f,
+         half_width, -half_height, -half_depth,  color.x, color.y, color.z,  1.0f, 0.0f,  1.0f,  0.0f,  0.0f,
+         half_width,  half_height, -half_depth,  color.x, color.y, color.z,  1.0f, 1.0f,  1.0f,  0.0f,  0.0f,
+         half_width,  half_height,  half_depth,  color.x, color.y, color.z,  0.0f, 1.0f,  1.0f,  0.0f,  0.0f,
     
-        // Bottom face
-        -half_width, -half_height, -half_depth,  color.x, color.y, color.z,  0.0f, 1.0f,
-         half_width, -half_height, -half_depth,  color.x, color.y, color.z,  1.0f, 1.0f,
-         half_width, -half_height,  half_depth,  color.x, color.y, color.z,  1.0f, 0.0f,
-        -half_width, -half_height,  half_depth,  color.x, color.y, color.z,  0.0f, 0.0f,
+        // Bottom face (-Y normal)
+        -half_width, -half_height, -half_depth,  color.x, color.y, color.z,  0.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+         half_width, -half_height, -half_depth,  color.x, color.y, color.z,  1.0f, 1.0f,  0.0f, -1.0f,  0.0f,
+         half_width, -half_height,  half_depth,  color.x, color.y, color.z,  1.0f, 0.0f,  0.0f, -1.0f,  0.0f,
+        -half_width, -half_height,  half_depth,  color.x, color.y, color.z,  0.0f, 0.0f,  0.0f, -1.0f,  0.0f,
     
-        // Top face
-        -half_width,  half_height, -half_depth,  color.x, color.y, color.z,  0.0f, 1.0f,
-         half_width,  half_height, -half_depth,  color.x, color.y, color.z,  1.0f, 1.0f,
-         half_width,  half_height,  half_depth,  color.x, color.y, color.z,  1.0f, 0.0f,
-        -half_width,  half_height,  half_depth,  color.x, color.y, color.z,  0.0f, 0.0f,
+        // Top face (+Y normal)
+        -half_width,  half_height, -half_depth,  color.x, color.y, color.z,  0.0f, 1.0f,  0.0f,  1.0f,  0.0f,
+         half_width,  half_height, -half_depth,  color.x, color.y, color.z,  1.0f, 1.0f,  0.0f,  1.0f,  0.0f,
+         half_width,  half_height,  half_depth,  color.x, color.y, color.z,  1.0f, 0.0f,  0.0f,  1.0f,  0.0f,
+        -half_width,  half_height,  half_depth,  color.x, color.y, color.z,  0.0f, 0.0f,  0.0f,  1.0f,  0.0f,
     };
 
     unsigned int indices[] = {
@@ -84,6 +84,6 @@ R3_Vertex_Data _create_cube3D_impl(R3_Vec3 size, R3_Vec3 color) {
     return r3_graphics_api->create_vertex_data(
         vertices, 24,
         indices, 36,
-        R3_LOCATION_ATTR | R3_COLOR_ATTR | R3_TCOORD_ATTR
+        R3_LOCATION_ATTR | R3_COLOR_ATTR | R3_TCOORD_ATTR | R3_NORMAL_ATTR
     );
 }

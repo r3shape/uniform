@@ -35,7 +35,7 @@ R3_Vertex_Data _make_vertex_data_impl(f32 *vertices, ubyte4 vertexCount, ubyte4 
         3, // R3_LOCATION_ATTR:  vec3
         3, // R3_COLOR_ATTR:     vec3
         2, // R3_TCOORD_ATTR:    vec2
-        2  // R3_NORMAL_ATTR:    vec2
+        3  // R3_NORMAL_ATTR:    vec3
     };
 
     for (int i = 0; i < R3_VERTEX_ATTRIBS; i++) {
