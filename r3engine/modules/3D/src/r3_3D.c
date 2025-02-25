@@ -2,6 +2,8 @@
 #include "../include/r3_shapes3D.h"
 #include "../../core/include/memory/r3_memory.h"
 
+#include <stdio.h>
+
 R3_3D_API* r3_3D = NULL;
 
 /* R33D COMPONENT UTILITIES */
@@ -69,14 +71,20 @@ void _render_system_3D(ubyte2 entity_id) {
     R3_Mesh3D* mesh = r3_ecs_api->get_component(entity_id, R3_MESH3D);
     R3_Transform3D* transform = r3_ecs_api->get_component(entity_id, R3_TRANSFORM3D);
     if (!mesh || !transform) return;
-
+    
     R3_Texture2D* texture = r3_ecs_api->get_component(entity_id, R3_TEXTURE2D);
     if (texture) {
         r3_graphics_api->GL_API.bind_texture(GL_TEXTURE_2D, texture->id);
     }
-
-    r3_graphics_api->set_uniform(r3_graphics_api->get_state()->shader, "u_model", &transform->model);
-    r3_graphics_api->draw_data(mesh->vertexData);
+    
+    R3_Material* material = r3_ecs_api->get_component(entity_id, R3_MATERIAL);
+    if (material && material->shader) {
+        r3_graphics_api->set_shader(material->shader);  // u_projection is set to hashmap
+    }
+    
+    r3_graphics_api->set_uniform(r3_graphics_api->get_state()->shader, "u_view", &r3_get_camera()->view);   // u_view is set to hashmap
+    r3_graphics_api->set_uniform(r3_graphics_api->get_state()->shader, "u_model", &transform->model);   // u_model is set to hashmap
+    r3_graphics_api->draw_data(mesh->vertexData);   // u_model, u_view, u_projection are sent to GPU
 }
 
 
@@ -101,11 +109,13 @@ ubyte r3_init_3D(void) {
 
     r3_ecs_api->register_component(sizeof(R3_Mesh3D), R3_MESH3D);
     r3_ecs_api->register_system(R3_MESH3D, _render_system_3D);
+    
+    r3_ecs_api->register_component(sizeof(R3_Material), R3_MATERIAL);
+    
+    r3_ecs_api->register_component(sizeof(R3_Texture2D), R3_TEXTURE2D);
 
     r3_ecs_api->register_component(sizeof(R3_Transform3D), R3_TRANSFORM3D);
     r3_ecs_api->register_system(R3_TRANSFORM3D, _transform_system_3D);
-
-    r3_ecs_api->register_component(sizeof(R3_Texture2D), R3_TEXTURE2D);
 
     return R3_TRUE;
 }

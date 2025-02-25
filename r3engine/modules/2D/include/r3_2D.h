@@ -5,9 +5,10 @@
 #include "../../core/include/r3_core_defines.h"
 
 typedef enum R3_Component2D {
-    R3_MESH2D = 0,
-    R3_TRANSFORM2D,
+    R3_MESH2D,
+    R3_MATERIAL,
     R3_TEXTURE2D,
+    R3_TRANSFORM2D,
     R3_2D_COMPONENTS
 } R3_Component2D;
 

@@ -27,8 +27,9 @@ typedef struct R3_Camera {
     R3_Camera_Mode mode;
 } R3_Camera;
 
-R3_API R3_Camera r3_init_camera(R3_Vec3 location, R3_Camera_Mode mode);
-R3_API void r3_update_camera(R3_Camera *camera);
+R3_API R3_Camera* r3_init_camera(R3_Vec3 location, R3_Camera_Mode mode);
+R3_API R3_Camera* r3_get_camera(void);
+R3_API void r3_update_camera();
 
-R3_API void r3_rotate_camera(R3_Camera *camera, f32 deltaX, f32 deltaY);
-R3_API void r3_translate_camera(R3_Camera *camera, sbyte x, sbyte y, sbyte z);
+R3_API void r3_rotate_camera(f32 deltaX, f32 deltaY);
+R3_API void r3_translate_camera(sbyte x, sbyte y, sbyte z);

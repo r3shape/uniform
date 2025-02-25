@@ -72,6 +72,11 @@ typedef struct R3_Texture2D {
     ubyte* raw;
 } R3_Texture2D;
 
+typedef struct R3_Material {
+    R3_Shader* shader;
+    R3_Hashmap* uniforms;
+} R3_Material;
+
 // GL equivalents
 typedef enum R3_Draw_Mode {
     R3_POINT_MODE = 0x0000,
@@ -124,6 +129,13 @@ typedef struct R3_Graphics_API {
 
     R3_Texture2D (*create_texture2D)(char* path, R3_Texture_Format format);
     void (*destroy_texture2D)(R3_Texture2D* texture);
+
+    R3_Material (*create_material)(R3_Shader* shader);
+    void (*destroy_material)(R3_Material* material);
+
+    ubyte (*set_material_uniform)(R3_Material* material, const char* name, void* value);
+    R3_Uniform (*get_material_uniform)(R3_Material* material, const char* name);
+    void (*send_material_uniform)(R3_Material* material, R3_Uniform_Type type, const char* name);
 
     void (*set_color)(R3_Vec4 color4);
     void (*set_mode)(R3_Draw_Mode mode);

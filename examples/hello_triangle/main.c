@@ -14,7 +14,7 @@ int main() {
     r3_init_graphics();
     r3_graphics_api->GL_API.viewport(0,0, window->size[0], window->size[1]);
 
-    R3_Camera camera = r3_init_camera(r3_new_vec3(0, 0, 1.0), -1);
+    R3_Camera* camera = r3_init_camera(r3_new_vec3(0, 0, 1.0), -1);
 
     R3_Shader shader = r3_graphics_api->create_shader(
         r3_read_file("r3engine/assets/shaders/default001/vertex.glsl"),

@@ -7,9 +7,9 @@ R3_Graphics_API *r3_graphics_api = NULL;
 static R3_Graphics_State internal_graphics_state = {0};
 
 /* GRAPHICS API IMPLEMENTATION */
-R3_Graphics_State *_graphics_get_state_impl(void) { return &internal_graphics_state; }
+R3_Graphics_State* _get_state_impl(void) { return &internal_graphics_state; }
 
-void _graphics_cleanup_impl(void) {
+void _cleanup_impl(void) {
     internal_graphics_state.draws = 0;
     internal_graphics_state.mode = R3_DRAW_MODES;
     internal_graphics_state.shader = NULL;
@@ -21,7 +21,7 @@ void _graphics_cleanup_impl(void) {
 }
 
 
-R3_Vertex_Data _graphics_make_vertex_data_impl(f32 *vertices, ubyte4 vertexCount, ubyte4 *indices, ubyte4 indexCount, ubyte attrs) {
+R3_Vertex_Data _make_vertex_data_impl(f32 *vertices, ubyte4 vertexCount, ubyte4 *indices, ubyte4 indexCount, ubyte attrs) {
     if ((attrs & ~((1 << R3_VERTEX_ATTRIBS) - 1)) != 0 || !vertices) {
         return (R3_Vertex_Data){0};
     }
@@ -97,7 +97,7 @@ R3_Vertex_Data _graphics_make_vertex_data_impl(f32 *vertices, ubyte4 vertexCount
     return vertexData;
 }
 
-void _graphics_destroy_vertex_data_impl(R3_Vertex_Data *vertexData) {
+void _destroy_vertex_data_impl(R3_Vertex_Data *vertexData) {
     vertexData->attrs = 0;
     
     r3_graphics_api->GL_API.delete_buffers(1, &vertexData->vbo);
@@ -116,7 +116,7 @@ void _graphics_destroy_vertex_data_impl(R3_Vertex_Data *vertexData) {
 }
 
 
-R3_Shader _graphics_create_shader_impl(const char *vertex_shader, const char *fragment_shader) {
+R3_Shader _create_shader_impl(const char *vertex_shader, const char *fragment_shader) {
     ubyte4 link = 0;
     ubyte4 compile = 0;
 
@@ -164,18 +164,18 @@ R3_Shader _graphics_create_shader_impl(const char *vertex_shader, const char *fr
 
 }
 
-void _graphics_destroy_shader_impl(R3_Shader *shader) {
+void _destroy_shader_impl(R3_Shader *shader) {
     r3_destroy_hashmap(shader->uniforms);
     r3_graphics_api->GL_API.delete_program(shader->program);
 }
 
 
-ubyte _graphics_set_uniform_impl(R3_Shader *shader, const char *name, void *value) {
+ubyte _set_uniform_impl(R3_Shader *shader, const char *name, void *value) {
     if (!shader || !name) return R3_FALSE;   // error: value error!
     return r3_set_hashmap(shader->uniforms, name, value);
 }
 
-R3_Uniform _graphics_get_uniform_impl(R3_Shader *shader, const char *name) {
+R3_Uniform _get_uniform_impl(R3_Shader *shader, const char *name) {
     ubyte4 location = r3_graphics_api->GL_API.get_uniform_location(shader->program, name);
     if (location < 0) {
         return (R3_Uniform){ .location = 0, .value = NULL, .name = NULL };
@@ -189,7 +189,7 @@ R3_Uniform _graphics_get_uniform_impl(R3_Shader *shader, const char *name) {
     return (R3_Uniform){.location = location, .value = value, .name = name};
 }
 
-void _graphics_send_uniform_impl(R3_Shader *shader, R3_Uniform_Type type, const char *name) {
+void _send_uniform_impl(R3_Shader *shader, R3_Uniform_Type type, const char *name) {
     R3_Uniform uniform = r3_graphics_api->get_uniform(shader, name);
     if (uniform.location < 0 || !uniform.value) {
         return;
@@ -247,35 +247,72 @@ void _destroy_texture2D_impl(R3_Texture2D* texture) {
     texture->id = 0;
 }
 
-void _graphics_set_color_impl(R3_Vec4 color4) {
+
+R3_Material _create_material_impl(R3_Shader* shader) {
+    R3_Material mat = {NULL};
+    if (!shader || !shader->program) return mat;
+
+    mat.uniforms = r3_create_hashmap(16);
+    if (!mat.uniforms) return mat;  // error: failed to create material uniform hashmap!
+
+    mat.shader = shader;
+    return mat;
+}
+
+void _destroy_material_impl(R3_Material* material) {
+    r3_destroy_hashmap(material->uniforms);
+    material->uniforms = NULL;
+    material->shader = NULL;
+}
+
+ubyte _set_material_uniform_impl(R3_Material* material, const char *name, void *value) {
+    if (!material || !material->shader || !material->shader->program) return R3_FALSE;
+    return r3_graphics_api->set_uniform(material->shader, name, value);
+}
+
+R3_Uniform _get_material_uniform_impl(R3_Material* material, const char *name) {
+    if (!material || !material->shader || !material->shader->program) return (R3_Uniform){ .location = 0, .value = NULL, .name = NULL };
+    return r3_graphics_api->get_uniform(material->shader, name);
+}
+
+void _send_material_uniform_impl(R3_Material* material, R3_Uniform_Type type, const char *name) {
+    if (!material || !material->shader || !material->shader->program) return;
+    r3_graphics_api->send_uniform(material->shader, type, name);
+}
+
+
+void _set_color_impl(R3_Vec4 color4) {
     internal_graphics_state.clearColor = color4;
 }
 
-void _graphics_set_mode_impl(R3_Draw_Mode mode) {
+void _set_mode_impl(R3_Draw_Mode mode) {
     if (internal_graphics_state.mode != mode) {
         internal_graphics_state.mode = mode;
     }
 }
 
-void _graphics_set_shader_impl(R3_Shader *shader) {
+void _set_shader_impl(R3_Shader *shader) {
     internal_graphics_state.shader = (shader->program == 0) ? NULL : shader;
     r3_graphics_api->set_uniform(internal_graphics_state.shader, "u_projection", &internal_graphics_state.projection);
 }
 
 
-void _graphics_draw_begin_impl(R3_Draw_Mode mode, R3_Vec4 color4, R3_Mat4 projection) {
+void _draw_begin_impl(R3_Draw_Mode mode, R3_Vec4 color4, R3_Mat4 projection) {
     internal_graphics_state.draws = 0;
     internal_graphics_state.mode = mode;
     internal_graphics_state.projection = projection;
     internal_graphics_state.clearColor = color4;
 }
 
-void _graphics_draw_data_impl(R3_Vertex_Data vertexData) {
+void _draw_data_impl(R3_Vertex_Data vertexData) {
     if (vertexData.vertexCount <= 0 || !vertexData.vertices || vertexData.vao < 0) {
         return; // error: invalid vertex data for draw call
     };
 
-    if (internal_graphics_state.shader && internal_graphics_state.shader->program > 0) {
+    // error: cannot draw without an active shader!
+    if (!internal_graphics_state.shader) return;
+
+    if (internal_graphics_state.shader->program > 0) {
         r3_graphics_api->GL_API.use_program(internal_graphics_state.shader->program);
         r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_MAT4, "u_model");
         r3_graphics_api->send_uniform(internal_graphics_state.shader, R3_UNIFORM_MAT4, "u_view");
@@ -289,7 +326,7 @@ void _graphics_draw_data_impl(R3_Vertex_Data vertexData) {
     r3_graphics_api->GL_API.bind_vertex_array(0);
 }
 
-void _graphics_draw_clear_impl(void) {
+void _draw_clear_impl(void) {
     r3_graphics_api->GL_API.clear_color(
         internal_graphics_state.clearColor.x,
         internal_graphics_state.clearColor.y,
@@ -300,7 +337,7 @@ void _graphics_draw_clear_impl(void) {
 
 
 /* Graphics State Setters/Toggles */
-void _graphics_toggle_wireframe_impl(ubyte toggle) {
+void _toggle_wireframe_impl(ubyte toggle) {
     if (toggle) {
         r3_graphics_api->GL_API.polygon_mode(GL_FRONT_AND_BACK, GL_LINE);
     } else {
@@ -309,7 +346,7 @@ void _graphics_toggle_wireframe_impl(ubyte toggle) {
 }
 
 #if defined(R3_PLATFORM_WINDOWS)
-void _graphics_toggle_vsync_impl(ubyte toggle) {
+void _toggle_vsync_impl(ubyte toggle) {
     typedef BOOL(APIENTRY* PFNWGLSWAPINTERVALPROC)(int);
     PFNWGLSWAPINTERVALPROC wglSwapIntervalEXT = 0;
 
@@ -429,32 +466,38 @@ ubyte r3_init_graphics(void) {
     
     _load_gl_functions();
 
-    r3_graphics_api->get_state = _graphics_get_state_impl;
-    r3_graphics_api->cleanup = _graphics_cleanup_impl;
+    r3_graphics_api->get_state = _get_state_impl;
+    r3_graphics_api->cleanup = _cleanup_impl;
     
-    r3_graphics_api->create_vertex_data = _graphics_make_vertex_data_impl;
-    r3_graphics_api->destroy_vertex_data = _graphics_destroy_vertex_data_impl;
+    r3_graphics_api->create_vertex_data = _make_vertex_data_impl;
+    r3_graphics_api->destroy_vertex_data = _destroy_vertex_data_impl;
 
-    r3_graphics_api->create_shader = _graphics_create_shader_impl;
-    r3_graphics_api->destroy_shader = _graphics_destroy_shader_impl;
+    r3_graphics_api->create_shader = _create_shader_impl;
+    r3_graphics_api->destroy_shader = _destroy_shader_impl;
     
-    r3_graphics_api->set_uniform = _graphics_set_uniform_impl;
-    r3_graphics_api->get_uniform = _graphics_get_uniform_impl;
-    r3_graphics_api->send_uniform = _graphics_send_uniform_impl;
+    r3_graphics_api->set_uniform = _set_uniform_impl;
+    r3_graphics_api->get_uniform = _get_uniform_impl;
+    r3_graphics_api->send_uniform = _send_uniform_impl;
 
     r3_graphics_api->create_texture2D = _create_texture2D_impl;
     r3_graphics_api->destroy_texture2D = _destroy_texture2D_impl;
-
-    r3_graphics_api->set_color = _graphics_set_color_impl;
-    r3_graphics_api->set_mode = _graphics_set_mode_impl;
-    r3_graphics_api->set_shader = _graphics_set_shader_impl;
     
-    r3_graphics_api->draw_begin = _graphics_draw_begin_impl;
-    r3_graphics_api->draw_clear = _graphics_draw_clear_impl;
-    r3_graphics_api->draw_data = _graphics_draw_data_impl;
+    r3_graphics_api->create_material = _create_material_impl;
+    r3_graphics_api->destroy_material = _destroy_material_impl;
+    r3_graphics_api->set_material_uniform = _set_material_uniform_impl;
+    r3_graphics_api->get_material_uniform = _get_material_uniform_impl;
+    r3_graphics_api->send_material_uniform = _send_material_uniform_impl;
 
-    r3_graphics_api->toggle_vsync = _graphics_toggle_vsync_impl;
-    r3_graphics_api->toggle_wireframe = _graphics_toggle_wireframe_impl;
+    r3_graphics_api->set_color = _set_color_impl;
+    r3_graphics_api->set_mode = _set_mode_impl;
+    r3_graphics_api->set_shader = _set_shader_impl;
+    
+    r3_graphics_api->draw_begin = _draw_begin_impl;
+    r3_graphics_api->draw_clear = _draw_clear_impl;
+    r3_graphics_api->draw_data = _draw_data_impl;
+
+    r3_graphics_api->toggle_vsync = _toggle_vsync_impl;
+    r3_graphics_api->toggle_wireframe = _toggle_wireframe_impl;
 
     internal_graphics_state.draws = 0;
     internal_graphics_state.mode = R3_TRIANGLE_MODE;

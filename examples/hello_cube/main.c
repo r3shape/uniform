@@ -14,7 +14,7 @@ int main() {
     r3_init_graphics();
     r3_graphics_api->GL_API.viewport(0,0, window->size[0], window->size[1]);
 
-    R3_Camera camera = r3_init_camera(
+    R3_Camera* camera = r3_init_camera(
         r3_new_vec3(0, 0, 1.0),
         R3_FLY_CAMERA
     );
@@ -63,19 +63,18 @@ int main() {
         
         if (r3_key_is_down(R3_KEY_F1)) r3_graphics_api->toggle_wireframe(1);
 
-        if (r3_key_is_down(R3_KEY_W)) r3_translate_camera(&camera, 0, 0, 1);
-        if (r3_key_is_down(R3_KEY_S)) r3_translate_camera(&camera, 0, 0, -1);
+        if (r3_key_is_down(R3_KEY_W)) r3_translate_camera(0, 0, 1);
+        if (r3_key_is_down(R3_KEY_S)) r3_translate_camera(0, 0, -1);
         
-        if (r3_key_is_down(R3_KEY_D)) r3_translate_camera(&camera, 1, 0, 0);
-        if (r3_key_is_down(R3_KEY_A)) r3_translate_camera(&camera, -1, 0, 0);
+        if (r3_key_is_down(R3_KEY_D)) r3_translate_camera(1, 0, 0);
+        if (r3_key_is_down(R3_KEY_A)) r3_translate_camera(-1, 0, 0);
         
-        if (r3_key_is_down(R3_KEY_SPACE)) r3_translate_camera(&camera, 0, 1, 0);
-        if (r3_key_is_down(R3_KEY_SHIFT)) r3_translate_camera(&camera, 0, -1, 0);
-        
-        r3_ecs_api->run_system(R3_TRANSFORM3D);
-        r3_ecs_api->run_system(R3_MESH3D);
+        if (r3_key_is_down(R3_KEY_SPACE)) r3_translate_camera(0, 1, 0);
+        if (r3_key_is_down(R3_KEY_SHIFT)) r3_translate_camera(0, -1, 0);
         
         r3_update_camera(&camera);
+        r3_ecs_api->run_system(R3_TRANSFORM3D);
+        r3_ecs_api->run_system(R3_MESH3D);
         
         r3_platform_api->swap_buffers(window);
         r3_platform_api->update_clock();
