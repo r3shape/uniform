@@ -1,7 +1,7 @@
 ![r3engine](r3engine/assets/r3-sticker.png)
 
-![GitHub Stars](https://img.shields.io/github/stars/r3shape/r3engine?style=flat&label=stars)
-![License](https://img.shields.io/badge/license-apache%2Flibpng-green.svg)
+![GitHub Stars](https://img.shields.io/github/stars/r3shape/r3engine?style=for-the-badge&label=stars&labelColor=black&color=white)
+![License](https://img.shields.io/badge/mit-badge?style=for-the-badge&logo=mit&logoColor=white&label=License&labelColor=black&color=white)
 
 ---
 
@@ -90,4 +90,4 @@ For those who wish to **wield the source** themselves:
 
 ## License
 
-r3engine is licensed under the **Apache 2.0 License**.
+r3engine is licensed under the **MIT License**.
