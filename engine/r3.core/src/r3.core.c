@@ -6,6 +6,7 @@ u8 r3_init_core(void) {
     if (!libx_init_memory()) return LIBX_FALSE;   // error: failed to init memory api!
     if (!libx_init_structs()) return LIBX_FALSE;   // error: failed to init structs api!
     if (!libx_init_math()) return LIBX_FALSE;   // error: failed to init math api!
+    if (!libx_init_fileio()) return LIBX_FALSE;   // error: failed to init fileio api!
     
     r3_core = memory_api->alloc(sizeof(_r3_core_api), 16);
     if (!r3_core) return LIBX_FALSE;    // error: out of memory!
@@ -26,6 +27,9 @@ u8 r3_cleanup_core(void) {
 
     memory_api->dealloc(r3_core);
 
+    libx_cleanup_fileio();
+    libx_cleanup_math();
+    libx_cleanup_structs();
     libx_cleanup_memory();
     return result;
 }

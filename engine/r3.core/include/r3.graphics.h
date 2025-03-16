@@ -26,6 +26,21 @@
 #define R3_LINE                       0x1B01
 #define R3_FRONT_AND_BACK             0x0408
 
+typedef enum R3_Uniform_Type {
+    R3_UNIFORM_NONE=0,
+    R3_UNIFORM_FLOAT,
+    R3_UNIFORM_VEC2,
+    R3_UNIFORM_VEC3,
+    R3_UNIFORM_VEC4,
+    R3_UNIFORM_MAT4,
+    R3_UNIFORM_TYPES
+} R3_Uniform_Type;
+
+typedef struct R3_Shader {
+    Hash_Array* uniforms;
+    u32 program;
+} R3_Shader;
+
 typedef enum R3_Vertex_Attribute {
     R3_LOCATION_ATTR = 1 << 0, // 1 (0b0001)
     R3_COLOR_ATTR    = 1 << 1, // 2 (0b0010)
@@ -54,21 +69,18 @@ typedef enum R3_Render_Mode {
 } R3_Render_Mode;
 
 typedef struct R3_Render_Call {
+    R3_Shader* shader;
+    u32 vao;
     u32 mode;
-    u32 shader;
     u32 indices;
     u32 vertices;
-    union bind {
-        u32 vao;
-        u32 ebo;
-    } bind;
 } R3_Render_Call;
 
 typedef struct _r3_graphics_api {
     struct renderer {
         u32 mode;
         u32 shader;
-        void* projection;
+        Matrix4 projection;
         Vector clear_color;
         R3_Render_Call* calls;
     } renderer;
@@ -76,11 +88,17 @@ typedef struct _r3_graphics_api {
     void (*set_color)(Vector vec4);
     void (*set_mode)(R3_Render_Mode mode);
     
+    R3_Shader (*create_shader)(cstr vertex, cstr fragment);
+    void (*destroy_shader)(R3_Shader* shader);
+
+    u8 (*set_uniform)(R3_Shader* shader, str name, void* value);
+    u8 (*send_uniform)(R3_Shader* shader, R3_Uniform_Type type, str name);
+
     R3_Vertex_Data (*create_vertex_data)(f32 *vertices, u32 vertexCount, u32 *indices, u32 indexCount, u8 attrs);
     void (*destroy_vertex_data)(R3_Vertex_Data *vertexData);
 
-    void (*render_begin)(u32 mode, Vector clear_color, void* projection);
-    void (*render_call)(u32 mode, u32 shader, u32 vertices, u32 indices, u32 buffer_object);
+    void (*render_begin)(u32 mode, Vector clear_color, Matrix4 projection);
+    void (*render_call)(u32 mode, R3_Shader* shader, u32 vertices, u32 indices, u32 vao);
     void (*render_clear)(void);
     void (*render_end)(void);
 

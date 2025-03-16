@@ -3,6 +3,89 @@
 _r3_graphics_api* internal_api_ptr = NULL;
 
 
+R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
+    u32 link = 0;
+    u32 compile = 0;
+
+    R3_Shader shader = {.uniforms=structs_api->create_hash_array(16)};
+    if (!shader.uniforms) {
+        // error: failed to allocate uniform hashmap!
+        return (R3_Shader){0};
+    }
+
+    shader.program = internal_api_ptr->gl.create_program();
+    i32 v_Shader = internal_api_ptr->gl.create_shader(R3_VERTEX_SHADER);
+    i32 f_Shader = internal_api_ptr->gl.create_shader(R3_FRAGMENT_SHADER);
+
+    internal_api_ptr->gl.shader_source(v_Shader, 1, &vertex, NULL);
+    internal_api_ptr->gl.compile_shader(v_Shader);
+    internal_api_ptr->gl.get_shaderiv(v_Shader, R3_COMPILE_STATUS, &compile);
+    if (!compile) {
+        // error: failed to compile vertex-shader!
+        printf("failed to compile vertex shader!\n");
+        structs_api->destroy_hash_array(shader.uniforms);
+        return (R3_Shader){0};
+    }
+    
+    internal_api_ptr->gl.shader_source(f_Shader, 1, &fragment, NULL);
+    internal_api_ptr->gl.compile_shader(f_Shader);
+    internal_api_ptr->gl.get_shaderiv(f_Shader, R3_COMPILE_STATUS, &compile);
+    if (!compile) {
+        // error: failed to compile fragment-shader!
+        printf("failed to compile fragment shader!\n");
+        structs_api->destroy_hash_array(shader.uniforms);
+        return (R3_Shader){0};
+    }
+    
+    internal_api_ptr->gl.attach_shader(shader.program, v_Shader);
+    internal_api_ptr->gl.attach_shader(shader.program, f_Shader);
+    internal_api_ptr->gl.link_program(shader.program);
+    internal_api_ptr->gl.get_programiv(shader.program, R3_LINK_STATUS, &link);
+    if (!link) {
+        // error: failed to link shader program!
+        printf("failed to link shader!\n");
+        structs_api->destroy_hash_array(shader.uniforms);
+        return (R3_Shader){0};
+    }
+
+    internal_api_ptr->gl.delete_shader(v_Shader);
+    internal_api_ptr->gl.delete_shader(f_Shader);
+    return shader;
+}
+
+void _destroy_shader_impl(R3_Shader* shader) {
+    structs_api->destroy_hash_array(shader->uniforms);
+    internal_api_ptr->gl.delete_program(shader->program);
+}
+
+u8 _set_uniform_impl(R3_Shader* shader, str name, void* value) {
+    if (!shader || !name || !value) return LIBX_FALSE;  // error: null ptr!
+    return structs_api->put_hash_array(shader->uniforms, name, value);
+}
+
+u8 _send_uniform_impl(R3_Shader* shader, R3_Uniform_Type type, str name) {
+    if (!shader || !name) return LIBX_FALSE;    // error: null ptr!
+    
+    void* value = structs_api->get_hash_array(shader->uniforms, name);
+    if (!value) return LIBX_FALSE;  // error: failed to find uniform in hashmap!
+
+    u32 location = internal_api_ptr->gl.get_uniform_location(shader->program, (cstr)name);
+
+    internal_api_ptr->gl.use_program(shader->program);
+    switch (type) {
+        case R3_UNIFORM_NONE: break;
+        case R3_UNIFORM_TYPES: break;
+        case R3_UNIFORM_FLOAT: internal_api_ptr->gl.uniform1f(location, value); break;
+        case R3_UNIFORM_VEC2: internal_api_ptr->gl.uniform2fv(location, 1, value); break;
+        case R3_UNIFORM_VEC3: internal_api_ptr->gl.uniform3fv(location, 1, value); break;
+        case R3_UNIFORM_VEC4: internal_api_ptr->gl.uniform4fv(location, 1, value); break;
+        case R3_UNIFORM_MAT4: internal_api_ptr->gl.uniform_matrix4fv(location, 1, 0, value); break;
+        defaule: break;
+    }
+    return LIBX_TRUE;
+}
+
+
 R3_Vertex_Data _create_vertex_data_impl(f32 *vertices, u32 vertexCount, u32 *indices, u32 indexCount, u8 attrs) {
     if (!internal_api_ptr || !internal_api_ptr->gl.init) return (R3_Vertex_Data){0}; // error: null ptr!
 
@@ -102,7 +185,7 @@ void _destroy_vertex_data_impl(R3_Vertex_Data *vertexData) {
 }
 
 
-void _render_begin_impl(u32 mode, Vector clear_color, void* projection) {
+void _render_begin_impl(u32 mode, Vector clear_color, Matrix4 projection) {
     if (!internal_api_ptr) return;  // error: null ptr!
     internal_api_ptr->renderer.mode = mode;
     internal_api_ptr->renderer.projection = projection;
@@ -119,14 +202,13 @@ void _render_clear_impl(void) {
     ); internal_api_ptr->gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void _render_call_impl(u32 mode, u32 shader, u32 vertices, u32 indices, u32 buffer_object) {
-    if (!internal_api_ptr) return;  // error: null ptr!
+void _render_call_impl(u32 mode, R3_Shader* shader, u32 vertices, u32 indices, u32 vao) {
+    if (!internal_api_ptr || !shader) return;  // error: null ptr!
     
     structs_api->push_array(internal_api_ptr->renderer.calls, &(R3_Render_Call){
         .mode = mode, .shader = shader,
         .indices = indices, .vertices = vertices,
-        .bind.vao = (vertices > 0) ? buffer_object : 0,
-        .bind.ebo = (indices > 0) ? buffer_object : 0
+        .vao = vao,
     });
 }
 
@@ -136,7 +218,16 @@ void _render_end_impl(void) {
     LIBX_FORI(0, head.count, 1) {
         R3_Render_Call call;
         structs_api->pull_array(internal_api_ptr->renderer.calls, 0, &call);
-        printf("Call %d with %d vertices and %d indices, using mode %d and shader %d\n", i, call.vertices, call.indices, call.mode, call.shader);
+        
+        internal_api_ptr->gl.use_program(call.shader->program);
+        
+        internal_api_ptr->set_uniform(call.shader, "u_projection", &internal_api_ptr->renderer.projection.mat);
+        internal_api_ptr->send_uniform(call.shader, R3_UNIFORM_MAT4, "u_projection");
+        
+        internal_api_ptr->gl.bind_vertex_array(call.vao);
+        if (call.indices > 0) internal_api_ptr->gl.draw_elements(call.mode, call.indices, GL_UNSIGNED_INT, NULL);
+        else internal_api_ptr->gl.draw_arrays(call.mode, 0, call.vertices);
+        internal_api_ptr->gl.bind_vertex_array(0);
     }
 }
 
@@ -155,7 +246,6 @@ void _set_color_impl(Vector vec4) {
         vec4.vec.vec4[3] / 255.0
     });
 }
-
 
 
 #if defined(R3_PLATFORM_WINDOWS)
@@ -272,7 +362,7 @@ u8 _r3_init_graphics(_r3_graphics_api* api) {
 
     api->renderer.mode = 0;
     api->renderer.shader = 0;
-    api->renderer.projection = NULL;
+    api->renderer.projection = math_api->identity_matrix4();
 
     api->renderer.clear_color = math_api->create_vector(LIBX_VEC4, (f32[4]){123/255.0, 161/255.0, 172/255.0, 255/255.0});
     
@@ -281,6 +371,12 @@ u8 _r3_init_graphics(_r3_graphics_api* api) {
 
     api->set_mode = _set_mode_impl;
     api->set_color = _set_color_impl;
+    
+    api->create_shader = _create_shader_impl;
+    api->destroy_shader = _destroy_shader_impl;
+
+    api->set_uniform = _set_uniform_impl;
+    api->send_uniform = _send_uniform_impl;
     
     api->create_vertex_data = _create_vertex_data_impl;
     api->destroy_vertex_data = _destroy_vertex_data_impl;
@@ -302,12 +398,21 @@ u8 _r3_cleanup_graphics(_r3_graphics_api* api) {
     
     api->renderer.mode = 0;
     api->renderer.shader = 0;
-    api->renderer.projection = NULL;
+    api->renderer.projection = math_api->identity_matrix4();
     api->renderer.clear_color = math_api->create_vector(LIBX_VEC4, (f32[4]){0.0, 0.0, 0.0, 0.0});
     structs_api->destroy_array(api->renderer.calls);
     
     api->set_mode = NULL;
     api->set_color = NULL;
+    
+    api->create_shader = NULL;
+    api->destroy_shader = NULL;
+
+    api->set_uniform = NULL;
+    api->send_uniform = NULL;
+
+    api->create_vertex_data = NULL;
+    api->destroy_vertex_data = NULL;
     
     api->render_begin = NULL;
     api->render_clear = NULL;
@@ -319,4 +424,3 @@ u8 _r3_cleanup_graphics(_r3_graphics_api* api) {
     internal_api_ptr = NULL;
     return LIBX_TRUE;
 }
-
