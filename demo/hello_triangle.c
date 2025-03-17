@@ -2,26 +2,32 @@
 #include "../engine/include/r3.h"
 
 u8 running = 1;
-u8 quit_callback1(u16 event_code, R3_Event data) {
+u8 quit_callback2(u16 event_code, R3_Event data) {
     u16 key = data.u16[0];
     if (key == R3_KEY_ESCAPE) running = 0;
     return LIBX_TRUE;
 }
 
-u8 quit_callback2(u16 event_code, R3_Event data) {
+u8 quit_callback1(u16 event_code, R3_Event data) {
     if (event_code == R3_EVENT_QUIT) running = 0;
+    return LIBX_TRUE;
+}
+
+u8 resize_callback(u16 event_code, R3_Event data) {
+    if (event_code == R3_EVENT_RESIZE) r3_core->graphics.gl.viewport(0, 0, data.u16[0], data.u16[1]);
     return LIBX_TRUE;
 }
 
 int main() {
     r3_init_core();
     
-    R3_Window window = r3_core->platform.create_window("Hello Triangle", 800, 600);
+    R3_Window* window = r3_core->platform.create_window("Hello Triangle", 800, 600);
     r3_core->platform.create_gl_context();
     r3_core->graphics.init_gl(&r3_core->graphics);
     
-    r3_core->events.register_callback(R3_EVENT_QUIT, quit_callback2);
-    r3_core->events.register_callback(R3_EVENT_KEY_PRESSED, quit_callback1);
+    r3_core->events.register_callback(R3_EVENT_QUIT, quit_callback1);
+    r3_core->events.register_callback(R3_EVENT_RESIZE, resize_callback);
+    r3_core->events.register_callback(R3_EVENT_KEY_PRESSED, quit_callback2);
     
     r3_core->graphics.render_begin(R3_TRIANGLE_MODE, math_api->create_vector(LIBX_VEC4, (f32[4]){60/255.0, 120/255.0, 210/255.0, 255/255.0}), math_api->identity_matrix4());
     
@@ -31,11 +37,13 @@ int main() {
 
     R3_Vertex_Data vertex_data = r3_core->graphics.create_vertex_data(
         (f32[]){
-            -0.5, -0.5, 0.5,    1.0, 0.0, 0.0,
-             0.5, -0.5, 0.5,    0.0, 1.0, 0.0,
-             0.0,  0.5, 0.5,    0.0, 0.0, 1.0
-        }, 3, NULL, 0, R3_LOCATION_ATTR | R3_COLOR_ATTR
+            -0.5, -0.5, 0.5,    1.0, 0.0, 0.0,    0.0, 0.0,
+             0.5, -0.5, 0.5,    0.0, 1.0, 0.0,    1.0, 0.0,
+             0.0,  0.5, 0.5,    0.0, 0.0, 1.0,    0.5, 1.0
+        }, 3, NULL, 0, R3_LOCATION_ATTR | R3_COLOR_ATTR | R3_TCOORD_ATTR
     );
+
+    R3_Texture2D texture = r3_core->graphics.create_texture2D("../engine/assets/textures/logo.png", R3_RGBA_FORMAT);
     
     Matrix4 u_model = math_api->identity_matrix4();
     Matrix4 u_view = math_api->identity_matrix4();
@@ -51,16 +59,18 @@ int main() {
 
         r3_core->graphics.send_uniform(&shader, R3_UNIFORM_MAT4, "u_model");
         r3_core->graphics.send_uniform(&shader, R3_UNIFORM_MAT4, "u_view");
+        r3_core->graphics.gl.bind_texture(GL_TEXTURE_2D, texture.id);
         r3_core->graphics.render_end();
         
         r3_core->platform.swap_buffers();
     }
     
-    r3_core->events.unregister_callback(R3_EVENT_QUIT, quit_callback2);
-    r3_core->events.unregister_callback(R3_EVENT_KEY_PRESSED, quit_callback1);
+    r3_core->events.unregister_callback(R3_EVENT_QUIT, quit_callback1);
+    r3_core->events.unregister_callback(R3_EVENT_RESIZE, resize_callback);
+    r3_core->events.unregister_callback(R3_EVENT_KEY_PRESSED, quit_callback2);
     
     r3_core->platform.destroy_gl_context();
-    r3_core->platform.destroy_window(&window);
+    r3_core->platform.destroy_window(window);
 
     r3_cleanup_core();
     return 0;

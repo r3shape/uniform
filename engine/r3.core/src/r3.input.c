@@ -4,7 +4,7 @@ static struct internal_input_state {
     struct devices {
         u8 keyboard[256];
         i16 mouse_delta[2];
-        u8 mouse_buttons[R3_MBUTTON_MAX_BUTTONS];
+        u8 mouse_buttons[R3_MOUSE_MAX_BUTTONS];
     } devices[2];
     _r3_events_api* events_api;
 } internal_input_state = {0};
@@ -16,6 +16,20 @@ void _update_impl(void) {
     // reset current rawinput mouse deltas
     internal_input_state.devices[1].mouse_delta[0] = 0.0;
     internal_input_state.devices[1].mouse_delta[1] = 0.0;
+}
+
+void _reset_impl(void) {
+    LIBX_FORJ(0, 2, 1) {
+        internal_input_state.devices[j].mouse_delta[0] = 0;
+        internal_input_state.devices[j].mouse_delta[1] = 0;
+    }
+    
+    LIBX_FORJ(0, 2, 1)
+        LIBX_FORI(0, 256, 1)
+            internal_input_state.devices[j].keyboard[i] = 0;
+    LIBX_FORJ(0, 2, 1)
+        LIBX_FORI(0, R3_MOUSE_MAX_BUTTONS, 1)
+            internal_input_state.devices[j].mouse_buttons[i] = 0;
 }
 
 u8 _key_is_up_impl(R3_Keyboard_Key key) {
@@ -112,6 +126,7 @@ u8 _r3_init_input(_r3_events_api* events_api, _r3_input_api* api) {
     
     internal_input_state.events_api = events_api;
 
+    api->reset = _reset_impl;
     api->update = _update_impl;
     api->key_is_up = _key_is_up_impl;
     api->key_was_up = _key_was_up_impl;

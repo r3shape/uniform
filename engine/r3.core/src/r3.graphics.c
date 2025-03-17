@@ -185,6 +185,47 @@ void _destroy_vertex_data_impl(R3_Vertex_Data *vertexData) {
 }
 
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "../../../external/stb/include/stb_image.h"
+
+R3_Texture2D _create_texture2D_impl(char* path, R3_Texture_Format format) {
+    R3_Texture2D texture = { .id = 0, .width = 0, .height = 0, .channels = 0, .path = NULL, .raw = NULL };
+    if (!path) return texture;
+
+    texture.path = path;
+    stbi_set_flip_vertically_on_load(LIBX_TRUE);
+    texture.raw = stbi_load(path, &texture.width, &texture.height, &texture.channels, 0);
+    if (!texture.raw) return texture;    // error: failed to allocate raw data buffer!
+
+    internal_api_ptr->gl.gen_textures(1, &texture.id);
+    internal_api_ptr->gl.bind_texture(GL_TEXTURE_2D, texture.id);
+
+    // set texture wrapping options
+    internal_api_ptr->gl.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // x axis
+    internal_api_ptr->gl.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // y axis
+
+    // set texture filtering options (scaling up/down)
+    internal_api_ptr->gl.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    internal_api_ptr->gl.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // generate the texture
+    internal_api_ptr->gl.tex_image2D(GL_TEXTURE_2D, 0, format, texture.width, texture.height, 0, format, GL_UNSIGNED_BYTE, texture.raw);
+    internal_api_ptr->gl.generate_mipmap(GL_TEXTURE_2D);
+
+    return texture;
+}
+
+void _destroy_texture2D_impl(R3_Texture2D* texture) {
+    texture->width = 0;
+    texture->height = 0;
+    texture->channels = 0;
+    texture ->path = NULL;
+    internal_api_ptr->gl.delete_textures(1, &texture->id);
+    stbi_image_free(texture->raw);
+    texture->id = 0;
+}
+
+
 void _render_begin_impl(u32 mode, Vector clear_color, Matrix4 projection) {
     if (!internal_api_ptr) return;  // error: null ptr!
     internal_api_ptr->renderer.mode = mode;
@@ -381,6 +422,9 @@ u8 _r3_init_graphics(_r3_graphics_api* api) {
     api->create_vertex_data = _create_vertex_data_impl;
     api->destroy_vertex_data = _destroy_vertex_data_impl;
 
+    api->create_texture2D = _create_texture2D_impl;
+    api->destroy_texture2D = _destroy_texture2D_impl;
+
     api->render_begin = _render_begin_impl;
     api->render_clear = _render_clear_impl;
     api->render_call = _render_call_impl;
@@ -414,6 +458,9 @@ u8 _r3_cleanup_graphics(_r3_graphics_api* api) {
     api->create_vertex_data = NULL;
     api->destroy_vertex_data = NULL;
     
+    api->create_texture2D = NULL;
+    api->destroy_texture2D = NULL;
+
     api->render_begin = NULL;
     api->render_clear = NULL;
     api->render_call = NULL;

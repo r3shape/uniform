@@ -12,20 +12,20 @@ static struct internal_platform_state {
     HINSTANCE instance;
     RAWINPUTDEVICE rid;
     
-    R3_Window* window;
+    R3_Window window;
     
     _r3_input_api* input_api;
     _r3_events_api* events_api;
 } internal_platform_state = {0};
 
 LRESULT CALLBACK _window_proc(HWND handle, u32 msg, WPARAM wParam, LPARAM lParam) {
-    if (!internal_platform_state.window) return DefWindowProcA(handle, msg, wParam, lParam);    // error: how did you get here?
+    if (!handle) return DefWindowProcA(handle, msg, wParam, lParam);    // error: how did you get here?
 
     RECT window_rect;
     GetWindowRect(internal_platform_state.handle, &window_rect);
 
     // only handle window flags during focus
-    // if (internal_platform_state.window->focused) {
+    // if (internal_platform_state.window.focused) {
         // ShowCursor(r3_platform_api->get_window_flag(window, R3_SHOW_CURSOR));
         // if (r3_platform_api->get_window_flag(window, R3_BIND_CURSOR))
         //     ClipCursor(&window_rect);
@@ -46,30 +46,30 @@ LRESULT CALLBACK _window_proc(HWND handle, u32 msg, WPARAM wParam, LPARAM lParam
         case WM_EXITSIZEMOVE: {
             RECT newRect = {0};
             GetWindowRect(handle, &newRect);
-            // internal_platform_state.window->size[0] = newRect.right;
-            // internal_platform_state.window->size[1] = newRect.bottom;
-            // internal_platform_state.window->location[1] = newRect.top;
-            // internal_platform_state.window->location[0] = newRect.left;
+            internal_platform_state.window.size[0] = newRect.right;
+            internal_platform_state.window.size[1] = newRect.bottom;
+            internal_platform_state.window.location[1] = newRect.top;
+            internal_platform_state.window.location[0] = newRect.left;
             
-            if ((internal_platform_state.window->flags & R3_BIND_CURSOR) == R3_BIND_CURSOR) ClipCursor(&newRect);
+            if ((internal_platform_state.window.flags & R3_BIND_CURSOR) == R3_BIND_CURSOR) ClipCursor(&newRect);
             
             u16 width = newRect.right - newRect.left;
             u16 height = newRect.bottom - newRect.top;
-            internal_platform_state.events_api->push_event(R3_EVENT_RESIZE, (R3_Event){.u16[0]=0, .u16[1]=0});
+            internal_platform_state.events_api->push_event(R3_EVENT_RESIZE, (R3_Event){.u16[0]=width, .u16[1]=height});
         } break;
         case WM_KILLFOCUS: {
-            internal_platform_state.window->focused = LIBX_FALSE;
+            internal_platform_state.window.focused = LIBX_FALSE;
             ClipCursor(NULL);
         } break;
         case WM_SETFOCUS: {
-            internal_platform_state.window->focused = LIBX_TRUE;
-            if ((internal_platform_state.window->flags & R3_BIND_CURSOR) == R3_BIND_CURSOR) {
+            internal_platform_state.window.focused = LIBX_TRUE;
+            if ((internal_platform_state.window.flags & R3_BIND_CURSOR) == R3_BIND_CURSOR) {
                 RECT newRect = {0};
                 GetWindowRect(handle, &newRect);
-                internal_platform_state.window->location[0] = newRect.left;
-                internal_platform_state.window->location[1] = newRect.top;
-                internal_platform_state.window->size[0] = newRect.right;
-                internal_platform_state.window->size[1] = newRect.bottom;
+                internal_platform_state.window.location[0] = newRect.left;
+                internal_platform_state.window.location[1] = newRect.top;
+                internal_platform_state.window.size[0] = newRect.right;
+                internal_platform_state.window.size[1] = newRect.bottom;
                 ClipCursor(&newRect);
             }
         } break;
@@ -137,8 +137,9 @@ LRESULT CALLBACK _window_proc(HWND handle, u32 msg, WPARAM wParam, LPARAM lParam
     return DefWindowProcA(handle, msg, wParam, lParam);
 }
 
-R3_Window _create_window_impl(const char *title, int width, int height) {
-    R3_Window win = {0};
+R3_Window* _create_window_impl(const char *title, int width, int height) {
+    internal_platform_state.window = (R3_Window){0};
+    R3_Window* win = &internal_platform_state.window;
 
     // Register window class
     WNDCLASS wc = {0};
@@ -177,17 +178,16 @@ R3_Window _create_window_impl(const char *title, int width, int height) {
     if (!RegisterRawInputDevices(&internal_platform_state.rid, 1, sizeof(internal_platform_state.rid))) return win;    // error: failed to register rawinput devices!
 
     // Initialize the window structure
-    strncpy(win.title, title, sizeof(win.title) - 1);
-    win.focused = LIBX_TRUE;
-    win.flags = 0;
-    win.title[sizeof(win.title) - 1] = '\0';
-    win.location[0] = CW_USEDEFAULT;
-    win.location[1] = CW_USEDEFAULT;
-    win.size[0] = width;
-    win.size[1] = height;
-    win.aspect_ratio = (float)width / height;
+    strncpy(win->title, title, sizeof(title));
+    win->focused = LIBX_TRUE;
+    win->flags = 0;
+    win->title[sizeof(win->title) - 1] = '\0';
+    win->location[0] = CW_USEDEFAULT;
+    win->location[1] = CW_USEDEFAULT;
+    win->size[0] = width;
+    win->size[1] = height;
+    win->aspect_ratio = (float)width / height;
     
-    internal_platform_state.window = &win;
     return win;
 }
 
@@ -199,7 +199,7 @@ void _destroy_window_impl(R3_Window *window) {
 
 
 u8 _create_gl_context_impl(void) {
-    if (!internal_platform_state.window) return LIBX_FALSE;    // error: no window created!
+    if (!internal_platform_state.handle) return LIBX_FALSE;    // error: no window created!
 
     PIXELFORMATDESCRIPTOR pfd = {
         sizeof(PIXELFORMATDESCRIPTOR),
@@ -236,12 +236,12 @@ u8 _create_gl_context_impl(void) {
 }
 
 void _swap_buffers_impl(void) {
-    if (!internal_platform_state.window) return;    // error: no window created!
+    if (!internal_platform_state.handle) return;    // error: no window created!
     SwapBuffers(internal_platform_state.device_context);
 }
 
 void _destroy_gl_context_impl(void) {
-    if (!internal_platform_state.window) return;    // error: no window created!
+    if (!internal_platform_state.handle) return;    // error: no window created!
 
     if (internal_platform_state.gl_context) {
         wglMakeCurrent(NULL, NULL);
@@ -263,6 +263,33 @@ void _poll_inputs_impl(void) {
     internal_platform_state.input_api->update();
 }
 
+
+R3_DLL _load_library_impl(const char *path, char *name) {
+    char full_path[MAX_PATH];
+    snprintf(full_path, sizeof(full_path), "%s/%s.dll", path, name);
+
+    HMODULE handle = LoadLibrary(full_path);
+    if (!handle) return (R3_DLL){.name = NULL, .handle = NULL}; // error: failed to load library!
+
+    R3_DLL lib = {.name = name, .handle = handle};
+    return lib;
+}
+
+void* _get_symbol_impl(R3_DLL* library, str name) {
+    if (!library || !library->handle || !name) return NULL; // error: null ptr!
+    return (void*)GetProcAddress((HMODULE)library->handle, name);
+}
+
+u8 _unload_library_impl(R3_DLL* library) {
+    if (!library || !library->handle) return LIBX_FALSE;    // error: null ptr!
+    if (!FreeLibrary((HMODULE)library->handle)) return LIBX_FALSE;  // error: failed to free library!
+
+    library->name = NULL;
+    library->handle = NULL;
+
+    return LIBX_TRUE;
+}
+
 #endif  // R3_PLATFORM_WINDOWS
 
 u8 _r3_init_platform(_r3_events_api* events_api, _r3_input_api* input_api, _r3_platform_api* api) {
@@ -280,6 +307,10 @@ u8 _r3_init_platform(_r3_events_api* events_api, _r3_input_api* input_api, _r3_p
 
     api->poll_events = _poll_events_impl;
     api->poll_inputs = _poll_inputs_impl;
+    
+    api->load_library = _load_library_impl;
+    api->get_symbol = _get_symbol_impl;
+    api->unload_library = _unload_library_impl;
 
     return LIBX_TRUE;
 }
@@ -298,6 +329,10 @@ u8 _r3_cleanup_platform(_r3_platform_api* api) {
 
     api->poll_events = NULL;
     api->poll_inputs = NULL;
+    
+    api->load_library = NULL;
+    api->get_symbol = NULL;
+    api->unload_library = NULL;
     
     return LIBX_TRUE;
 }

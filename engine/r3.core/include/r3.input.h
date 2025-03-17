@@ -7,7 +7,7 @@ typedef enum R3_Mouse_Button {
     R3_MBUTTON_LEFT,
     R3_MBUTTON_RIGHT,
     R3_MBUTTON_MIDDLE,
-    R3_MBUTTON_MAX_BUTTONS
+    R3_MOUSE_MAX_BUTTONS
 } R3_Mouse_Button;
 
 #define R3_DEFINE_KEY(name, code) \
@@ -137,6 +137,7 @@ typedef struct _r3_input_api {
     void (*_process_key_input)(R3_Keyboard_Key key, u8 pressed);
     void (*_process_mouse_button_input)(R3_Mouse_Button button, u8 pressed);
 
+    void (*reset)(void);
     void (*update)(void);
 
     u8 (*key_is_up)(R3_Keyboard_Key key);

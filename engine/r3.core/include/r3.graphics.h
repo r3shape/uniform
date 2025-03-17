@@ -60,6 +60,20 @@ typedef struct R3_Vertex_Data {
     u32 vertexCount;
 } R3_Vertex_Data;
 
+typedef enum R3_Texture_Format {
+    R3_RGB_FORMAT = 0x1907,
+    R3_RGBA_FORMAT = 0x1908
+} R3_Texture_Format;
+
+typedef struct R3_Texture2D {
+    u8* raw;
+    str path;
+    u32 id;
+    u32 width;
+    u32 height;
+    u32 channels;
+} R3_Texture2D;
+
 typedef enum R3_Render_Mode {
     R3_POINT_MODE = 0x0000,
     R3_LINE_MODE = 0x0001,
@@ -96,6 +110,9 @@ typedef struct _r3_graphics_api {
 
     R3_Vertex_Data (*create_vertex_data)(f32 *vertices, u32 vertexCount, u32 *indices, u32 indexCount, u8 attrs);
     void (*destroy_vertex_data)(R3_Vertex_Data *vertexData);
+
+    R3_Texture2D (*create_texture2D)(str path, R3_Texture_Format format);
+    void (*destroy_texture2D)(R3_Texture2D* texture);
 
     void (*render_begin)(u32 mode, Vector clear_color, Matrix4 projection);
     void (*render_call)(u32 mode, R3_Shader* shader, u32 vertices, u32 indices, u32 vao);

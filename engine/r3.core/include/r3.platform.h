@@ -19,8 +19,13 @@ typedef struct R3_Window {
     float aspect_ratio;     // Aspect ratio (width / height)
 } R3_Window;
 
+typedef struct R3_DLL {
+    void* handle;
+    str name;
+} R3_DLL;
+
 typedef struct _r3_platform_api {
-    R3_Window (*create_window)(const char *title, int width, int height);
+    R3_Window* (*create_window)(const char *title, int width, int height);
     void (*destroy_window)(R3_Window *window);
 
     u8 (*create_gl_context)(void);
@@ -29,6 +34,10 @@ typedef struct _r3_platform_api {
 
     void (*poll_events)(void);
     void (*poll_inputs)(void);
+
+    R3_DLL (*load_library)(const char *path, char *name);
+    void* (*get_symbol)(R3_DLL* library, str name);
+    u8 (*unload_library)(R3_DLL* library);
 } _r3_platform_api;
 
 u8 _r3_init_platform(_r3_events_api* events_api, _r3_input_api* input_api, _r3_platform_api* api);
