@@ -29,8 +29,7 @@
             "src-dirs": ["../demo"],
             "inc-dirs": ["../engine/include"],
             "lib-links": {
-                "r3": "../bin",
-	    	    "libx": "../external/libx/bin"
+                "r3": "../bin"
             },
             "out-type": "exe",
             "out-name": null,

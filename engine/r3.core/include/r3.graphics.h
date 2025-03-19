@@ -94,12 +94,12 @@ typedef struct _r3_graphics_api {
     struct renderer {
         u32 mode;
         u32 shader;
-        Matrix4 projection;
-        Vector clear_color;
+        Mat4 projection;
+        Vec4 clear_color;
         R3_Render_Call* calls;
     } renderer;
 
-    void (*set_color)(Vector vec4);
+    void (*set_color)(Vec4 color);
     void (*set_mode)(R3_Render_Mode mode);
     
     R3_Shader (*create_shader)(cstr vertex, cstr fragment);
@@ -114,7 +114,7 @@ typedef struct _r3_graphics_api {
     R3_Texture2D (*create_texture2D)(str path, R3_Texture_Format format);
     void (*destroy_texture2D)(R3_Texture2D* texture);
 
-    void (*render_begin)(u32 mode, Vector clear_color, Matrix4 projection);
+    void (*render_begin)(u32 mode, Vec4 clear_color, Mat4 projection);
     void (*render_call)(u32 mode, R3_Shader* shader, u32 vertices, u32 indices, u32 vao);
     void (*render_clear)(void);
     void (*render_end)(void);

@@ -79,7 +79,7 @@ u8 _send_uniform_impl(R3_Shader* shader, R3_Uniform_Type type, str name) {
         case R3_UNIFORM_VEC2: internal_api_ptr->gl.uniform2fv(location, 1, value); break;
         case R3_UNIFORM_VEC3: internal_api_ptr->gl.uniform3fv(location, 1, value); break;
         case R3_UNIFORM_VEC4: internal_api_ptr->gl.uniform4fv(location, 1, value); break;
-        case R3_UNIFORM_MAT4: internal_api_ptr->gl.uniform_matrix4fv(location, 1, 0, value); break;
+        case R3_UNIFORM_MAT4: internal_api_ptr->gl.uniform_matrix4fv(location, 1, 1, value); break; // libx matrices are row-major
         defaule: break;
     }
     return LIBX_TRUE;
@@ -226,7 +226,7 @@ void _destroy_texture2D_impl(R3_Texture2D* texture) {
 }
 
 
-void _render_begin_impl(u32 mode, Vector clear_color, Matrix4 projection) {
+void _render_begin_impl(u32 mode, Vec4 clear_color, Mat4 projection) {
     if (!internal_api_ptr) return;  // error: null ptr!
     internal_api_ptr->renderer.mode = mode;
     internal_api_ptr->renderer.projection = projection;
@@ -236,10 +236,10 @@ void _render_begin_impl(u32 mode, Vector clear_color, Matrix4 projection) {
 void _render_clear_impl(void) {
     if (!internal_api_ptr || !internal_api_ptr->gl.init) return;  // error: null ptr!
     internal_api_ptr->gl.clear_color(
-        internal_api_ptr->renderer.clear_color.vec.vec4[0],
-        internal_api_ptr->renderer.clear_color.vec.vec4[1],
-        internal_api_ptr->renderer.clear_color.vec.vec4[2],
-        internal_api_ptr->renderer.clear_color.vec.vec4[3]
+        internal_api_ptr->renderer.clear_color.x,
+        internal_api_ptr->renderer.clear_color.y,
+        internal_api_ptr->renderer.clear_color.z,
+        internal_api_ptr->renderer.clear_color.w
     ); internal_api_ptr->gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -262,7 +262,7 @@ void _render_end_impl(void) {
         
         internal_api_ptr->gl.use_program(call.shader->program);
         
-        internal_api_ptr->set_uniform(call.shader, "u_projection", &internal_api_ptr->renderer.projection.mat);
+        internal_api_ptr->set_uniform(call.shader, "u_projection", &internal_api_ptr->renderer.projection.m);
         internal_api_ptr->send_uniform(call.shader, R3_UNIFORM_MAT4, "u_projection");
         
         internal_api_ptr->gl.bind_vertex_array(call.vao);
@@ -278,14 +278,14 @@ void _set_mode_impl(R3_Render_Mode mode) {
     (internal_api_ptr->renderer.mode != mode) ? mode : internal_api_ptr->renderer.mode;
 }
 
-void _set_color_impl(Vector vec4) {
+void _set_color_impl(Vec4 color) {
     if (!internal_api_ptr) return;  // error: null ptr!
-    internal_api_ptr->renderer.clear_color = math_api->create_vector(LIBX_VEC4, (f32[4]){
-        vec4.vec.vec4[0] / 255.0,
-        vec4.vec.vec4[1] / 255.0,
-        vec4.vec.vec4[2] / 255.0,
-        vec4.vec.vec4[3] / 255.0
-    });
+    internal_api_ptr->renderer.clear_color = math_api->new_vec4(
+        color.x / 255.0,
+        color.y / 255.0,
+        color.z / 255.0,
+        color.w / 255.0
+    );
 }
 
 
@@ -403,9 +403,9 @@ u8 _r3_init_graphics(_r3_graphics_api* api) {
 
     api->renderer.mode = 0;
     api->renderer.shader = 0;
-    api->renderer.projection = math_api->identity_matrix4();
+    api->renderer.projection = math_api->identity();
 
-    api->renderer.clear_color = math_api->create_vector(LIBX_VEC4, (f32[4]){123/255.0, 161/255.0, 172/255.0, 255/255.0});
+    api->renderer.clear_color = math_api->new_vec4(123/255.0, 161/255.0, 172/255.0, 255/255.0);
     
     api->renderer.calls = structs_api->create_array(sizeof(R3_Render_Call), 1024);
     if (!api->renderer.calls) return LIBX_FALSE;    // error: out of memory!
@@ -442,8 +442,8 @@ u8 _r3_cleanup_graphics(_r3_graphics_api* api) {
     
     api->renderer.mode = 0;
     api->renderer.shader = 0;
-    api->renderer.projection = math_api->identity_matrix4();
-    api->renderer.clear_color = math_api->create_vector(LIBX_VEC4, (f32[4]){0.0, 0.0, 0.0, 0.0});
+    api->renderer.projection = math_api->identity();
+    api->renderer.clear_color = math_api->new_vec4(0.0, 0.0, 0.0, 0.0);
     structs_api->destroy_array(api->renderer.calls);
     
     api->set_mode = NULL;
