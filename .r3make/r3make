@@ -1,0 +1,39 @@
+{
+    "c-instance": "GCC",
+    "c-targets": {
+        "r3": {
+            "r3make": {
+                "post-build": {
+                    "nofiles": null
+                }
+            },
+            "c-defines": ["DLL_EXPORT"],
+	    "src-dirs": ["../engine/r3.core/src"],
+            "inc-dirs": ["../engine/include"],
+            "lib-links": {
+                "gdi32": null,
+                "opengl32": null,
+	    	    "libx": "../external/libx/bin"
+	    },
+            "out-type": "dll",
+            "out-name": "r3",
+            "out-dir": "../bin"
+        },
+        "demo": {
+            "r3make": {
+                "flags": ["buildeach"],
+                "post-build": {
+                    "nofiles": null
+                }
+            },
+            "src-dirs": ["../demo"],
+            "inc-dirs": ["../engine/include"],
+            "lib-links": {
+                "r3": "../bin"
+            },
+            "out-type": "exe",
+            "out-name": null,
+            "out-dir": "../bin"
+        }
+    }
+}
