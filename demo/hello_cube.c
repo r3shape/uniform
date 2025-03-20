@@ -38,7 +38,7 @@ int main() {
     f32 speed = 0.02;
     f32 rotation = 0.0;
     Mat4 u_model = mathx->mat.identity4();
-    Vec2 location = mathx->vec.vec2(12, 8);
+    Vec3 location = mathx->vec.vec3(0, 0, 0);
     R3_Vertex_Data vertex_data = r3_core->graphics.create_vertex_data(
         (f32[]){
             -0.5, -0.5, 0.5,    1.0, 0.0, 0.0,    0.0, 0.0,
@@ -50,11 +50,11 @@ int main() {
     r3_core->graphics.render_begin(
         R3_TRIANGLE_MODE,
         mathx->vec.vec4(60/255.0, 120/255.0, 210/255.0, 255/255.0),
-        mathx->mat.ortho(0, window->size[0], 0, window->size[1], 0, 100)
+        mathx->mat.perspective(90.0, 800/600, 0, 1000)
     );
     
     Mat4 u_view = mathx->mat.lookat(
-        mathx->vec.vec3(0, 0, 1),
+        mathx->vec.vec3(0, 0, 3),
         mathx->vec.vec3(0, 0, 0),
         mathx->vec.vec3(0, 1, 0)
     );
@@ -66,18 +66,21 @@ int main() {
         r3_core->platform.poll_events();
         r3_core->platform.poll_inputs();
         r3_core->graphics.render_clear();
-        
+                
         if (r3_core->input.key_is_down(R3_KEY_A)) location.x -= speed;
         if (r3_core->input.key_is_down(R3_KEY_D)) location.x += speed;
         if (r3_core->input.key_is_down(R3_KEY_W)) location.y += speed;
         if (r3_core->input.key_is_down(R3_KEY_S)) location.y -= speed;
+        if (r3_core->input.key_is_down(R3_KEY_Q)) location.z += speed;
+        if (r3_core->input.key_is_down(R3_KEY_E)) location.z -= speed;
         
         u_model = mathx->mat.identity4();
-        u_model = mathx->mat.mult4(u_model, mathx->mat.scale4(32, 32, 1));
-        u_model = mathx->mat.mult4(u_model, mathx->mat.trans4(location.x, location.y, 0));
+        u_model = mathx->mat.mult4(u_model, mathx->mat.trans4(location.x, location.y, location.z));
         
         rotation += 1;
         rotation = fmod(rotation, 360);
+        u_model = mathx->mat.mult4(u_model, mathx->mat.rotx4(rotation));
+        u_model = mathx->mat.mult4(u_model, mathx->mat.roty4(rotation));
         u_model = mathx->mat.mult4(u_model, mathx->mat.rotz4(rotation));
         
         r3_core->graphics.send_uniform(&shader, R3_UNIFORM_MAT4, "u_model");

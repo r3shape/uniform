@@ -11,7 +11,7 @@ u8 _register_event_impl(u16 event_code) {
         return LIBX_FALSE;
 
     internal_event_state.events[event_code] = LIBX_TRUE;
-    internal_event_state.callbacks[event_code] = structs_api->create_array(sizeof(R3_Event_Callback), R3_CALLBACK_MAX);
+    internal_event_state.callbacks[event_code] = structx->create_array(sizeof(R3_Event_Callback), R3_CALLBACK_MAX);
 
     internal_event_state.event_count++;
     return LIBX_TRUE;
@@ -24,7 +24,7 @@ u8 _unregister_event_impl(u16 event_code) {
     internal_event_state.events[event_code] = LIBX_FALSE;
     
     if (internal_event_state.callbacks[event_code]) {
-        structs_api->destroy_array(internal_event_state.callbacks[event_code]);
+        structx->destroy_array(internal_event_state.callbacks[event_code]);
         internal_event_state.callbacks[event_code] = NULL;
     }
 
@@ -39,7 +39,7 @@ u8 _push_event_impl(u16 event_code, R3_Event data) {
     if (!internal_event_state.callbacks[event_code]) return LIBX_FALSE;
 
     u8 result = LIBX_FALSE;
-    Array_Head head = structs_api->get_array_head(internal_event_state.callbacks[event_code]);
+    Array_Head head = structx->get_array_head(internal_event_state.callbacks[event_code]);
     LIBX_FORI(0, head.count, 1) {
         result = internal_event_state.callbacks[event_code][i](event_code, data);
     }
@@ -54,7 +54,7 @@ u8 _register_callback_impl(u16 event_code, R3_Event_Callback callback) {
     if (!internal_event_state.callbacks[event_code]) 
         return LIBX_FALSE;
 
-    structs_api->push_array(internal_event_state.callbacks[event_code], &callback);
+    structx->push_array(internal_event_state.callbacks[event_code], &callback);
     return LIBX_TRUE;
 }
 
@@ -62,13 +62,13 @@ u8 _unregister_callback_impl(u16 event_code, R3_Event_Callback callback) {
     if (event_code >= R3_EVENT_CODE_MAX || !internal_event_state.events[event_code]) 
         return LIBX_FALSE;
 
-    Array_Head head = structs_api->get_array_head(internal_event_state.callbacks[event_code]);
+    Array_Head head = structx->get_array_head(internal_event_state.callbacks[event_code]);
     if (head.count == 0) return LIBX_FALSE;
 
     LIBX_FORI(0, head.count, 1) {
         if (internal_event_state.callbacks[event_code][i] == callback) {
             R3_Event_Callback callback;
-            structs_api->pull_array(internal_event_state.callbacks[event_code], i, &callback);
+            structx->pull_array(internal_event_state.callbacks[event_code], i, &callback);
             return LIBX_TRUE;
         }
     }

@@ -46,7 +46,7 @@ typedef struct _libx_memory_api {
     void (*destroy_arena_allocator)(Arena_Allocator* allocator);
     void (*collapse_arena_allocator)(Arena_Allocator* allocator);
 } _libx_memory_api;
-extern _libx_memory_api* memory_api;
+extern _libx_memory_api* memx;
 
 LIBX_API u8 libx_init_memory(void);
 LIBX_API void libx_cleanup_memory(void);

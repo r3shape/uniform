@@ -8,7 +8,7 @@ u8 r3_init_core(void) {
     if (!libx_init_math()) return LIBX_FALSE;   // error: failed to init math api!
     if (!libx_init_fileio()) return LIBX_FALSE;   // error: failed to init fileio api!
     
-    r3_core = memory_api->alloc(sizeof(_r3_core_api), 16);
+    r3_core = memx->alloc(sizeof(_r3_core_api), 16);
     if (!r3_core) return LIBX_FALSE;    // error: out of memory!
     
     if (!_r3_init_events(&r3_core->events)) return LIBX_FALSE;   // error: failed to init events api!
@@ -25,7 +25,7 @@ u8 r3_cleanup_core(void) {
     result = _r3_cleanup_input(&r3_core->input);
     result = _r3_cleanup_events(&r3_core->events);
 
-    memory_api->dealloc(r3_core);
+    memx->dealloc(r3_core);
 
     libx_cleanup_fileio();
     libx_cleanup_math();

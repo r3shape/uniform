@@ -27,6 +27,8 @@ typedef unsigned long long 	u64;
 #define LIBX_TRUE   1
 #define LIBX_FALSE  0
 
+#define LIBX_SWAP(t, a, b) { t temp = a; (a) = (b); (b) = temp; }
+
 #define LIBX_HEAP_ARR(t, a) t* n
 #define LIBX_STACK_ARR(t, a, m) t* a[m]
 

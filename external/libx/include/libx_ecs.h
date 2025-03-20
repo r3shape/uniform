@@ -34,7 +34,7 @@ typedef struct _stdlibx_ecs_api {
      * The `get_entities` function returns an array of all entities that have the specified component attached.
      * `get_entities` iterates over all active entities (n), thus the size of the returned array is: `n * sizeof(u32)`.
      * Any entities that do not have this component will be pushed onto the returned array as the value expanded from the `ENTITY_MAX` directive.
-     * Note: The caller of `get_entities` must call `structs_api->destroy_array()` on the return value to ensure no memory is leaked.
+     * Note: The caller of `get_entities` must call `structx->destroy_array()` on the return value to ensure no memory is leaked.
      */
     u32* (*get_entities)(u8 id);
     u8 (*add_component)(u8 id, u32 entity);
@@ -42,7 +42,7 @@ typedef struct _stdlibx_ecs_api {
     u8 (*get_component)(u8 id, u32 entity, void* component);
     
 } _stdlibx_ecs_api;
-extern _stdlibx_ecs_api* ecs_api;
+extern _stdlibx_ecs_api* ecsx;
 
 LIBX_API u8 libx_init_ecs(void);
 LIBX_API void libx_cleanup_ecs(void);

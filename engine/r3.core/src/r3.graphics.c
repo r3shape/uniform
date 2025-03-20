@@ -7,7 +7,7 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
     u32 link = 0;
     u32 compile = 0;
 
-    R3_Shader shader = {.uniforms=structs_api->create_hash_array(16)};
+    R3_Shader shader = {.uniforms=structx->create_hash_array(16)};
     if (!shader.uniforms) {
         // error: failed to allocate uniform hashmap!
         return (R3_Shader){0};
@@ -23,7 +23,7 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
     if (!compile) {
         // error: failed to compile vertex-shader!
         printf("failed to compile vertex shader!\n");
-        structs_api->destroy_hash_array(shader.uniforms);
+        structx->destroy_hash_array(shader.uniforms);
         return (R3_Shader){0};
     }
     
@@ -33,7 +33,7 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
     if (!compile) {
         // error: failed to compile fragment-shader!
         printf("failed to compile fragment shader!\n");
-        structs_api->destroy_hash_array(shader.uniforms);
+        structx->destroy_hash_array(shader.uniforms);
         return (R3_Shader){0};
     }
     
@@ -44,7 +44,7 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
     if (!link) {
         // error: failed to link shader program!
         printf("failed to link shader!\n");
-        structs_api->destroy_hash_array(shader.uniforms);
+        structx->destroy_hash_array(shader.uniforms);
         return (R3_Shader){0};
     }
 
@@ -54,19 +54,19 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
 }
 
 void _destroy_shader_impl(R3_Shader* shader) {
-    structs_api->destroy_hash_array(shader->uniforms);
+    structx->destroy_hash_array(shader->uniforms);
     internal_api_ptr->gl.delete_program(shader->program);
 }
 
 u8 _set_uniform_impl(R3_Shader* shader, str name, void* value) {
     if (!shader || !name || !value) return LIBX_FALSE;  // error: null ptr!
-    return structs_api->put_hash_array(shader->uniforms, name, value);
+    return structx->put_hash_array(shader->uniforms, name, value);
 }
 
 u8 _send_uniform_impl(R3_Shader* shader, R3_Uniform_Type type, str name) {
     if (!shader || !name) return LIBX_FALSE;    // error: null ptr!
     
-    void* value = structs_api->get_hash_array(shader->uniforms, name);
+    void* value = structx->get_hash_array(shader->uniforms, name);
     if (!value) return LIBX_FALSE;  // error: failed to find uniform in hashmap!
 
     u32 location = internal_api_ptr->gl.get_uniform_location(shader->program, (cstr)name);
@@ -246,7 +246,7 @@ void _render_clear_impl(void) {
 void _render_call_impl(u32 mode, R3_Shader* shader, u32 vertices, u32 indices, u32 vao) {
     if (!internal_api_ptr || !shader) return;  // error: null ptr!
     
-    structs_api->push_array(internal_api_ptr->renderer.calls, &(R3_Render_Call){
+    structx->push_array(internal_api_ptr->renderer.calls, &(R3_Render_Call){
         .mode = mode, .shader = shader,
         .indices = indices, .vertices = vertices,
         .vao = vao,
@@ -255,10 +255,10 @@ void _render_call_impl(u32 mode, R3_Shader* shader, u32 vertices, u32 indices, u
 
 void _render_end_impl(void) {
     if (!internal_api_ptr || !internal_api_ptr->gl.init) return;  // error: null ptr!
-    Array_Head head = structs_api->get_array_head(internal_api_ptr->renderer.calls);
+    Array_Head head = structx->get_array_head(internal_api_ptr->renderer.calls);
     LIBX_FORI(0, head.count, 1) {
         R3_Render_Call call;
-        structs_api->pull_array(internal_api_ptr->renderer.calls, 0, &call);
+        structx->pull_array(internal_api_ptr->renderer.calls, 0, &call);
         
         internal_api_ptr->gl.use_program(call.shader->program);
         
@@ -280,7 +280,7 @@ void _set_mode_impl(R3_Render_Mode mode) {
 
 void _set_color_impl(Vec4 color) {
     if (!internal_api_ptr) return;  // error: null ptr!
-    internal_api_ptr->renderer.clear_color = math_api->new_vec4(
+    internal_api_ptr->renderer.clear_color = mathx->vec.vec4(
         color.x / 255.0,
         color.y / 255.0,
         color.z / 255.0,
@@ -394,6 +394,7 @@ u8 _init_gl_impl(_r3_graphics_api* api) {
     }
 
     api->gl.init = LIBX_TRUE;
+    api->gl.enable(GL_DEPTH_TEST);
     return LIBX_TRUE;
 }
 
@@ -403,11 +404,11 @@ u8 _r3_init_graphics(_r3_graphics_api* api) {
 
     api->renderer.mode = 0;
     api->renderer.shader = 0;
-    api->renderer.projection = math_api->identity();
+    api->renderer.projection = mathx->mat.identity4();
 
-    api->renderer.clear_color = math_api->new_vec4(123/255.0, 161/255.0, 172/255.0, 255/255.0);
+    api->renderer.clear_color = mathx->vec.vec4(123/255.0, 161/255.0, 172/255.0, 255/255.0);
     
-    api->renderer.calls = structs_api->create_array(sizeof(R3_Render_Call), 1024);
+    api->renderer.calls = structx->create_array(sizeof(R3_Render_Call), 1024);
     if (!api->renderer.calls) return LIBX_FALSE;    // error: out of memory!
 
     api->set_mode = _set_mode_impl;
@@ -442,9 +443,9 @@ u8 _r3_cleanup_graphics(_r3_graphics_api* api) {
     
     api->renderer.mode = 0;
     api->renderer.shader = 0;
-    api->renderer.projection = math_api->identity();
-    api->renderer.clear_color = math_api->new_vec4(0.0, 0.0, 0.0, 0.0);
-    structs_api->destroy_array(api->renderer.calls);
+    api->renderer.projection = mathx->mat.identity4();
+    api->renderer.clear_color = mathx->vec.vec4(0.0, 0.0, 0.0, 0.0);
+    structx->destroy_array(api->renderer.calls);
     
     api->set_mode = NULL;
     api->set_color = NULL;

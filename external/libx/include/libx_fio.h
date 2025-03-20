@@ -16,7 +16,7 @@ typedef struct _libx_fileio_api {
     u8 (*appendb)(cstr path, u64 size, u8 newline, void* ptr);
     u8 (*process)(cstr path, u64 lines, void (*callback)(cstr line));
 } _libx_fileio_api;
-extern _libx_fileio_api* fileio_api;
+extern _libx_fileio_api* filex;
 
 LIBX_API u8 libx_init_fileio(void);
 LIBX_API void libx_cleanup_fileio(void);

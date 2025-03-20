@@ -101,7 +101,7 @@ typedef struct _libx_structs_api {
     u8 (*pull_hash_array)(Hash_Array* array, cstr key, Key_Value* out);
     void (*destroy_hash_array)(Hash_Array* array);
 } _libx_structs_api;
-extern _libx_structs_api* structs_api;
+extern _libx_structs_api* structx;
 
 LIBX_API u8 libx_init_structs(void);
 LIBX_API void libx_cleanup_structs(void);
