@@ -259,8 +259,10 @@ void _flush_pipeline_impl(void) {
             shader = call.shader;
             internal_api_ptr->set_uniform(shader, "u_proj", &internal_api_ptr->pipeline.proj.m);
             internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_proj");
-            internal_api_ptr->set_uniform(shader, "u_view", &internal_api_ptr->pipeline.view.m);
-            internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_view");
+            if (internal_api_ptr->camera.init) {
+                internal_api_ptr->set_uniform(shader, "u_view", &internal_api_ptr->camera.view.m);
+                internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_view");
+            }
         } else {
             internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_proj");
             internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_view");
@@ -284,7 +286,7 @@ void _flush_pipeline_impl(void) {
     }
 }
 
-u8 _init_pipeline_impl(R3_Render_Mode mode, R3_Shader* shader, Mat4 view, Mat4 proj) {
+u8 _init_pipeline_impl(R3_Render_Mode mode, R3_Shader* shader, Mat4 proj) {
     if (internal_api_ptr->pipeline.calls != NULL) {
         printf("render pipeline already initialized.\n");
         return LIBX_TRUE;
@@ -297,14 +299,111 @@ u8 _init_pipeline_impl(R3_Render_Mode mode, R3_Shader* shader, Mat4 view, Mat4 p
 
     internal_api_ptr->pipeline.mode = mode;
     internal_api_ptr->pipeline.proj = proj;
-    internal_api_ptr->pipeline.view = view;
     internal_api_ptr->pipeline.shader = shader;
     internal_api_ptr->pipeline.clear_color = mathx->vec.vec4(60/255.0, 120/255.0, 210/255.0, 255/255.0);
 
     internal_api_ptr->set_uniform(internal_api_ptr->pipeline.shader, "u_proj", &internal_api_ptr->pipeline.proj.m);
-    internal_api_ptr->set_uniform(internal_api_ptr->pipeline.shader, "u_view", &internal_api_ptr->pipeline.view.m);
+    internal_api_ptr->pipeline.init = LIBX_TRUE;
+
     return LIBX_TRUE;
 }
+
+
+// CAMERA API
+u8 _init_camera_impl(Vec3 eye, Vec3 center, Vec3 up) {
+    if (!internal_api_ptr->pipeline.calls) return LIBX_FALSE;
+    
+    internal_api_ptr->camera.sensitivity = 0.1;
+    internal_api_ptr->camera.speed = 0.1;
+    internal_api_ptr->camera.roll = 0.0;
+    internal_api_ptr->camera.yaw = -90.0;
+    internal_api_ptr->camera.pitch = 0.0;
+    internal_api_ptr->camera.eye = eye;
+    internal_api_ptr->camera.center = center;
+    internal_api_ptr->camera.direction = mathx->vec.norm3(mathx->vec.sub3(eye, center));
+    internal_api_ptr->camera.right = mathx->vec.norm3(mathx->vec.cross3(up, internal_api_ptr->camera.direction));
+    internal_api_ptr->camera.up = mathx->vec.cross3(internal_api_ptr->camera.direction, internal_api_ptr->camera.right);
+    
+    // update the view matrix with camera vectors
+    internal_api_ptr->camera.view = mathx->mat.lookat(
+        internal_api_ptr->camera.eye,
+        mathx->vec.add3(internal_api_ptr->camera.eye, internal_api_ptr->camera.direction),
+        internal_api_ptr->camera.up
+    );
+    
+    if (internal_api_ptr->pipeline.init) {
+        internal_api_ptr->set_uniform(internal_api_ptr->pipeline.shader, "u_view", &internal_api_ptr->camera.view.m);
+    }
+
+    internal_api_ptr->camera.init = LIBX_TRUE;
+    return LIBX_TRUE;
+}
+
+void _rotate_camera_impl( f32 dx, f32 dy) {
+    internal_api_ptr->camera.yaw += dx * internal_api_ptr->camera.sensitivity;
+    internal_api_ptr->camera.pitch += dy * internal_api_ptr->camera.sensitivity;
+    
+    internal_api_ptr->camera.yaw = LIBX_WRAPF(internal_api_ptr->camera.yaw, 360.0);
+    internal_api_ptr->camera.pitch = LIBX_CLAMP(internal_api_ptr->camera.pitch, -89.0, 89.0);
+}
+
+void _translate_camera_impl(i8 x, i8 y, i8 z) {
+    if (x > 0) {
+        internal_api_ptr->camera.eye = mathx->vec.add3(internal_api_ptr->camera.eye, mathx->vec.scale3(mathx->vec.norm3(mathx->vec.cross3(
+            internal_api_ptr->camera.direction,
+            internal_api_ptr->camera.up
+        )), internal_api_ptr->camera.speed));
+    }
+    else if (x < 0) {
+        internal_api_ptr->camera.eye = mathx->vec.sub3(internal_api_ptr->camera.eye, mathx->vec.scale3(mathx->vec.norm3(mathx->vec.cross3(
+            internal_api_ptr->camera.direction,
+            internal_api_ptr->camera.up
+        )), internal_api_ptr->camera.speed));
+    }
+
+    if (y > 0) {
+        internal_api_ptr->camera.eye = mathx->vec.add3(
+            internal_api_ptr->camera.eye,
+            mathx->vec.scale3(internal_api_ptr->camera.up, internal_api_ptr->camera.speed)
+        );
+    }
+    else if (y < 0) {
+        internal_api_ptr->camera.eye = mathx->vec.sub3(
+            internal_api_ptr->camera.eye,
+            mathx->vec.scale3(internal_api_ptr->camera.up, internal_api_ptr->camera.speed)
+        );
+    }
+    
+    if (z > 0) {
+        internal_api_ptr->camera.eye = mathx->vec.add3(
+            internal_api_ptr->camera.eye,
+            mathx->vec.scale3(internal_api_ptr->camera.direction, internal_api_ptr->camera.speed)
+        );
+    }
+    else if (z < 0) {
+        internal_api_ptr->camera.eye = mathx->vec.sub3(
+            internal_api_ptr->camera.eye,
+            mathx->vec.scale3(internal_api_ptr->camera.direction, internal_api_ptr->camera.speed)
+        );
+    }
+}
+
+void _update_camera_impl(void) {
+    internal_api_ptr->camera.direction = mathx->vec.norm3(mathx->vec.vec3(
+        cosf(mathx->scalar.to_radians(internal_api_ptr->camera.yaw)) * cosf(mathx->scalar.to_radians(internal_api_ptr->camera.pitch)),
+        sinf(mathx->scalar.to_radians(internal_api_ptr->camera.pitch)),
+        sinf(mathx->scalar.to_radians(internal_api_ptr->camera.yaw)) * cosf(mathx->scalar.to_radians(internal_api_ptr->camera.pitch))
+    ));
+    internal_api_ptr->camera.right = mathx->vec.norm3(mathx->vec.cross3(internal_api_ptr->camera.direction, mathx->vec.vec3(0, 1.0, 0)));
+    internal_api_ptr->camera.up = mathx->vec.norm3(mathx->vec.cross3(internal_api_ptr->camera.right, internal_api_ptr->camera.direction));
+
+    internal_api_ptr->camera.view = mathx->mat.lookat(
+        internal_api_ptr->camera.eye,
+        mathx->vec.add3(internal_api_ptr->camera.eye, internal_api_ptr->camera.direction),
+        internal_api_ptr->camera.up
+    );
+}
+
 
 // API SETUP & CONFIGURATION
 #if defined(R3_PLATFORM_WINDOWS)
@@ -424,6 +523,11 @@ u8 _r3_init_graphics(_r3_graphics_api* api) {
     api->push_pipeline = _push_pipeline_impl;
     api->flush_pipeline = _flush_pipeline_impl;
 
+    api->init_camera = _init_camera_impl;
+    api->rotate_camera = _rotate_camera_impl;
+    api->translate_camera = _translate_camera_impl;
+    api->update_camera = _update_camera_impl;
+
     api->create_shader = _create_shader_impl;
     api->destroy_shader = _destroy_shader_impl;
 
@@ -451,6 +555,11 @@ u8 _r3_cleanup_graphics(_r3_graphics_api* api) {
     api->init_pipeline = NULL;
     api->push_pipeline = NULL;
     api->flush_pipeline = NULL;
+
+    api->init_camera = NULL;
+    api->rotate_camera = NULL;
+    api->translate_camera = NULL;
+    api->update_camera = NULL;
 
     api->create_shader = NULL;
     api->destroy_shader = NULL;

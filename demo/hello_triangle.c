@@ -30,8 +30,8 @@ int main() {
     r3_core->events.register_callback(R3_EVENT_KEY_PRESSED, quit_callback2);
         
     R3_Shader shader = r3_core->graphics.create_shader(
-        filex->read("../engine/assets/shaders/default/default.vert", 0),
-        filex->read("../engine/assets/shaders/default/default.frag", 0));
+        filex->read("../engine/assets/shaders/default/shader.vert", 0),
+        filex->read("../engine/assets/shaders/default/shader.frag", 0));
 
     R3_Texture texture = r3_core->graphics.create_texture2D("../engine/assets/textures/logo.png", R3_RGBA_FORMAT);
     
@@ -54,14 +54,16 @@ int main() {
 
     if (r3_core->graphics.init_pipeline(
         R3_TRIANGLE_MODE, &shader,
-        mathx->mat.lookat(
-            mathx->vec.vec3(0, 0, 1),
-            mathx->vec.vec3(0, 0, 0),
-            mathx->vec.vec3(0, 1, 0)
-        ),
         mathx->mat.ortho(0, window->size[0], 0, window->size[1], 0, 1)
     )) printf("render pipeline initialized\n");
     else printf("render pipeline failed to be initialized!\n");
+
+    if (r3_core->graphics.init_camera(
+        mathx->vec.vec3(0, 0, 1),
+        mathx->vec.vec3(0, 0, -1),
+        mathx->vec.vec3(0, 1, 0)
+    )) printf("camera initialized!\n");
+    else printf("camera failed to be initialized!\n");
     while (running) {
         r3_core->platform.poll_events();
         r3_core->platform.poll_inputs();
@@ -85,6 +87,8 @@ int main() {
         
         r3_core->graphics.push_pipeline(&vertex_data, &u_model, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
         r3_core->graphics.push_pipeline(&vertex_data, &u_model2, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
+        
+        r3_core->graphics.update_camera();
         r3_core->graphics.flush_pipeline();
         r3_core->platform.swap_buffers();
     }

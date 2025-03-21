@@ -9,18 +9,18 @@
 typedef char*               str;
 typedef const char*         cstr;
 
-typedef float			    f32;
-typedef double			    f64;
+typedef float               f32;
+typedef double              f64;
 
-typedef signed char		    i8;
-typedef signed short		i16;
-typedef signed int 		    i32;
-typedef signed long long 	i64;
+typedef signed char         i8;
+typedef signed short        i16;
+typedef signed int          i32;
+typedef signed long long    i64;
 
-typedef unsigned char		u8;
-typedef unsigned short		u16;
-typedef unsigned int 		u32;
-typedef unsigned long long 	u64;
+typedef unsigned char       u8;
+typedef unsigned short      u16;
+typedef unsigned int        u32;
+typedef unsigned long long  u64;
 
 #define LIBX_NOTHING ((cstr)164598)
 
@@ -53,25 +53,25 @@ typedef unsigned long long 	u64;
 
 #define LIBX_FNPTR(t, n, ...) t (*n)(__VA_ARGS__)
 
-#define LIBX_IMPLEMENT(n, ...)        \
-    void n##_impl(void) {           \
-        __VA_ARGS__                 \
-    }                               \
+#define LIBX_IMPLEMENT(n, ...)          \
+    void n##_impl(void) {               \
+        __VA_ARGS__                     \
+    }                                   \
 
-#define LIBX_DEFINE_ENUM(n, ...)      \
-    typedef enum n {                \
-        __VA_ARGS__                 \
-    } n                             \
+#define LIBX_DEFINE_ENUM(n, ...)        \
+    typedef enum n {                    \
+        __VA_ARGS__                     \
+    } n                                 \
 
-#define LIBX_DEFINE_UNION(n, ...)     \
-    typedef union n {               \
-        __VA_ARGS__                 \
-    } n                             \
+#define LIBX_DEFINE_UNION(n, ...)       \
+    typedef union n {                   \
+        __VA_ARGS__                     \
+    } n                                 \
 
-#define LIBX_DEFINE_STRUCT(n, ...)    \
-    typedef struct n {              \
-        __VA_ARGS__                 \
-    } n                             \
+#define LIBX_DEFINE_STRUCT(n, ...)      \
+    typedef struct n {                  \
+        __VA_ARGS__                     \
+    } n                                 \
 
 #ifdef DLL_EXPORT
     #ifdef _MSC_VER

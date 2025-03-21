@@ -98,18 +98,38 @@ typedef struct R3_Render_Call {
 } R3_Render_Call;
 
 typedef struct _r3_graphics_api {
-    struct pipeline {
+    struct R3_Pipeline {
+        u8 init;
         Mat4 proj;
-        Mat4 view;
         Vec4 clear_color;
         R3_Shader* shader;
         R3_Render_Mode mode;
         R3_Render_Call* calls;
     } pipeline;
+    
+    struct R3_Camera {
+        u8 init;
+        Mat4 view;
+        f32 sensitivity;
+        f32 speed;
+        f32 yaw;
+        f32 roll;
+        f32 pitch;
+        Vec3 up;
+        Vec3 eye;
+        Vec3 right;
+        Vec3 center;
+        Vec3 direction;
+    } camera;
 
-    u8 (*init_pipeline)(R3_Render_Mode mode, R3_Shader* shader, Mat4 view, Mat4 proj);
+    u8 (*init_pipeline)(R3_Render_Mode mode, R3_Shader* shader, Mat4 proj);
     void (*push_pipeline)(R3_Vertex_Data* vertex, Mat4* model, R3_Shader* shader, R3_Texture* texture, R3_Render_Mode mode, R3_Render_Call_Type type);
     void (*flush_pipeline)(void);
+
+    u8 (*init_camera)(Vec3 eye, Vec3 center, Vec3 up);
+    void (*rotate_camera)( f32 dx, f32 dy);
+    void (*translate_camera)(i8 x, i8 y, i8 z);
+    void (*update_camera)(void);
 
     R3_Shader (*create_shader)(cstr vertex, cstr fragment);
     void (*destroy_shader)(R3_Shader* shader);
