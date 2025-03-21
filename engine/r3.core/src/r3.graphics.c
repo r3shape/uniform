@@ -2,7 +2,7 @@
 
 _r3_graphics_api* internal_api_ptr = NULL;
 
-
+// GENERAL GRAPHICS API
 R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
     u32 link = 0;
     u32 compile = 0;
@@ -80,7 +80,7 @@ u8 _send_uniform_impl(R3_Shader* shader, R3_Uniform_Type type, str name) {
         case R3_UNIFORM_VEC3: internal_api_ptr->gl.uniform3fv(location, 1, value); break;
         case R3_UNIFORM_VEC4: internal_api_ptr->gl.uniform4fv(location, 1, value); break;
         case R3_UNIFORM_MAT4: internal_api_ptr->gl.uniform_matrix4fv(location, 1, 1, value); break; // libx matrices are row-major
-        defaule: break;
+        default: break;
     }
     return LIBX_TRUE;
 }
@@ -188,8 +188,8 @@ void _destroy_vertex_data_impl(R3_Vertex_Data *vertexData) {
 #define STB_IMAGE_IMPLEMENTATION
 #include "../../../external/stb/include/stb_image.h"
 
-R3_Texture2D _create_texture2D_impl(char* path, R3_Texture_Format format) {
-    R3_Texture2D texture = { .id = 0, .width = 0, .height = 0, .channels = 0, .path = NULL, .raw = NULL };
+R3_Texture _create_texture2D_impl(char* path, R3_Texture_Format format) {
+R3_Texture texture = { .id = 0, .width = 0, .height = 0, .channels = 0, .path = NULL, .raw = NULL };
     if (!path) return texture;
 
     texture.path = path;
@@ -215,7 +215,7 @@ R3_Texture2D _create_texture2D_impl(char* path, R3_Texture_Format format) {
     return texture;
 }
 
-void _destroy_texture2D_impl(R3_Texture2D* texture) {
+void _destroy_texture2D_impl(R3_Texture* texture) {
     texture->width = 0;
     texture->height = 0;
     texture->channels = 0;
@@ -226,69 +226,87 @@ void _destroy_texture2D_impl(R3_Texture2D* texture) {
 }
 
 
-void _render_begin_impl(u32 mode, Vec4 clear_color, Mat4 projection) {
-    if (!internal_api_ptr) return;  // error: null ptr!
-    internal_api_ptr->renderer.mode = mode;
-    internal_api_ptr->renderer.projection = projection;
-    internal_api_ptr->renderer.clear_color = clear_color;
-}
-
-void _render_clear_impl(void) {
-    if (!internal_api_ptr || !internal_api_ptr->gl.init) return;  // error: null ptr!
-    internal_api_ptr->gl.clear_color(
-        internal_api_ptr->renderer.clear_color.x,
-        internal_api_ptr->renderer.clear_color.y,
-        internal_api_ptr->renderer.clear_color.z,
-        internal_api_ptr->renderer.clear_color.w
-    ); internal_api_ptr->gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-void _render_call_impl(u32 mode, R3_Shader* shader, u32 vertices, u32 indices, u32 vao) {
-    if (!internal_api_ptr || !shader) return;  // error: null ptr!
-    
-    structx->push_array(internal_api_ptr->renderer.calls, &(R3_Render_Call){
-        .mode = mode, .shader = shader,
-        .indices = indices, .vertices = vertices,
-        .vao = vao,
+// PIPELINE API
+void _push_pipeline_impl(R3_Vertex_Data* vertex, Mat4* model, R3_Shader* shader, R3_Texture* texture, R3_Render_Mode mode, R3_Render_Call_Type type) {
+    if (!internal_api_ptr->pipeline.calls) return;  // error: render pipeline not initialized!
+    structx->push_array(internal_api_ptr->pipeline.calls, &(R3_Render_Call){
+        .vertex = vertex,
+        .texture = texture,
+        .shader = shader,
+        .model = model,
+        .mode = mode,
+        .type = type
     });
 }
 
-void _render_end_impl(void) {
-    if (!internal_api_ptr || !internal_api_ptr->gl.init) return;  // error: null ptr!
-    Array_Head head = structx->get_array_head(internal_api_ptr->renderer.calls);
+void _flush_pipeline_impl(void) {
+    if (!internal_api_ptr->pipeline.calls) return;  // error: render pipeline not initialized!
+
+    internal_api_ptr->gl.clear_color(
+        internal_api_ptr->pipeline.clear_color.x,
+        internal_api_ptr->pipeline.clear_color.y,
+        internal_api_ptr->pipeline.clear_color.z,
+        internal_api_ptr->pipeline.clear_color.w
+    ); internal_api_ptr->gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    Array_Head head = structx->get_array_head(internal_api_ptr->pipeline.calls);
+    R3_Shader* shader = internal_api_ptr->pipeline.shader;
     LIBX_FORI(0, head.count, 1) {
         R3_Render_Call call;
-        structx->pull_array(internal_api_ptr->renderer.calls, 0, &call);
+        structx->pull_array(internal_api_ptr->pipeline.calls, 0, &call);
         
-        internal_api_ptr->gl.use_program(call.shader->program);
+        if (call.shader && shader->program != call.shader->program) {
+            shader = call.shader;
+            internal_api_ptr->set_uniform(shader, "u_proj", &internal_api_ptr->pipeline.proj.m);
+            internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_proj");
+            internal_api_ptr->set_uniform(shader, "u_view", &internal_api_ptr->pipeline.view.m);
+            internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_view");
+        } else {
+            internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_proj");
+            internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_view");
+        }
         
-        internal_api_ptr->set_uniform(call.shader, "u_projection", &internal_api_ptr->renderer.projection.m);
-        internal_api_ptr->send_uniform(call.shader, R3_UNIFORM_MAT4, "u_projection");
+        if (call.model) {
+            internal_api_ptr->set_uniform(shader, "u_model", &call.model->m);
+            internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_model");
+        }
         
-        internal_api_ptr->gl.bind_vertex_array(call.vao);
-        if (call.indices > 0) internal_api_ptr->gl.draw_elements(call.mode, call.indices, GL_UNSIGNED_INT, NULL);
-        else internal_api_ptr->gl.draw_arrays(call.mode, 0, call.vertices);
-        internal_api_ptr->gl.bind_vertex_array(0);
+        if (internal_api_ptr->pipeline.mode != call.mode) internal_api_ptr->pipeline.mode = call.mode;
+        
+        internal_api_ptr->gl.use_program(shader->program);
+        if (call.texture->id > 0) internal_api_ptr->gl.bind_texture(GL_TEXTURE_2D, call.texture->id);
+        internal_api_ptr->gl.bind_vertex_array(call.vertex->vao);
+        if (call.type == R3_RENDER_ARRAYS) {
+            internal_api_ptr->gl.draw_arrays(call.mode, 0, call.vertex->vertexCount);
+        } else if (call.type == R3_RENDER_ELEMENTS) {
+            internal_api_ptr->gl.draw_elements(call.mode, call.vertex->indexCount, GL_UNSIGNED_INT, NULL);
+        }
     }
 }
 
+u8 _init_pipeline_impl(R3_Render_Mode mode, R3_Shader* shader, Mat4 view, Mat4 proj) {
+    if (internal_api_ptr->pipeline.calls != NULL) {
+        printf("render pipeline already initialized.\n");
+        return LIBX_TRUE;
+    }
 
-void _set_mode_impl(R3_Render_Mode mode) {
-    if (!internal_api_ptr) return;  // error: null ptr!
-    (internal_api_ptr->renderer.mode != mode) ? mode : internal_api_ptr->renderer.mode;
+    if (mode >= R3_DRAW_MODES || !shader) return LIBX_FALSE;  // error: value error/null ptr!
+    
+    internal_api_ptr->pipeline.calls = structx->create_array(sizeof(R3_Render_Call), 1024);
+    if (!internal_api_ptr->pipeline.calls) return LIBX_FALSE;    // error: out of memory!
+
+    internal_api_ptr->pipeline.mode = mode;
+    internal_api_ptr->pipeline.proj = proj;
+    internal_api_ptr->pipeline.view = view;
+    internal_api_ptr->pipeline.shader = shader;
+    internal_api_ptr->pipeline.clear_color = mathx->vec.vec4(60/255.0, 120/255.0, 210/255.0, 255/255.0);
+
+    internal_api_ptr->set_uniform(internal_api_ptr->pipeline.shader, "u_proj", &internal_api_ptr->pipeline.proj.m);
+    internal_api_ptr->set_uniform(internal_api_ptr->pipeline.shader, "u_view", &internal_api_ptr->pipeline.view.m);
+    return LIBX_TRUE;
 }
 
-void _set_color_impl(Vec4 color) {
-    if (!internal_api_ptr) return;  // error: null ptr!
-    internal_api_ptr->renderer.clear_color = mathx->vec.vec4(
-        color.x / 255.0,
-        color.y / 255.0,
-        color.z / 255.0,
-        color.w / 255.0
-    );
-}
-
-
+// API SETUP & CONFIGURATION
 #if defined(R3_PLATFORM_WINDOWS)
 #include <Windows.h>
 #include <windowsx.h>
@@ -402,18 +420,10 @@ u8 _init_gl_impl(_r3_graphics_api* api) {
 u8 _r3_init_graphics(_r3_graphics_api* api) {
     if (!api) return LIBX_FALSE;
 
-    api->renderer.mode = 0;
-    api->renderer.shader = 0;
-    api->renderer.projection = mathx->mat.identity4();
+    api->init_pipeline = _init_pipeline_impl;
+    api->push_pipeline = _push_pipeline_impl;
+    api->flush_pipeline = _flush_pipeline_impl;
 
-    api->renderer.clear_color = mathx->vec.vec4(123/255.0, 161/255.0, 172/255.0, 255/255.0);
-    
-    api->renderer.calls = structx->create_array(sizeof(R3_Render_Call), 1024);
-    if (!api->renderer.calls) return LIBX_FALSE;    // error: out of memory!
-
-    api->set_mode = _set_mode_impl;
-    api->set_color = _set_color_impl;
-    
     api->create_shader = _create_shader_impl;
     api->destroy_shader = _destroy_shader_impl;
 
@@ -426,11 +436,6 @@ u8 _r3_init_graphics(_r3_graphics_api* api) {
     api->create_texture2D = _create_texture2D_impl;
     api->destroy_texture2D = _destroy_texture2D_impl;
 
-    api->render_begin = _render_begin_impl;
-    api->render_clear = _render_clear_impl;
-    api->render_call = _render_call_impl;
-    api->render_end = _render_end_impl;
-
     api->gl.init = LIBX_FALSE;
     api->init_gl = _init_gl_impl;
 
@@ -441,15 +446,12 @@ u8 _r3_init_graphics(_r3_graphics_api* api) {
 u8 _r3_cleanup_graphics(_r3_graphics_api* api) {
     if (!api) return LIBX_FALSE;
     
-    api->renderer.mode = 0;
-    api->renderer.shader = 0;
-    api->renderer.projection = mathx->mat.identity4();
-    api->renderer.clear_color = mathx->vec.vec4(0.0, 0.0, 0.0, 0.0);
-    structx->destroy_array(api->renderer.calls);
+    if (api->pipeline.calls) structx->destroy_array(api->pipeline.calls);
     
-    api->set_mode = NULL;
-    api->set_color = NULL;
-    
+    api->init_pipeline = NULL;
+    api->push_pipeline = NULL;
+    api->flush_pipeline = NULL;
+
     api->create_shader = NULL;
     api->destroy_shader = NULL;
 
@@ -462,13 +464,9 @@ u8 _r3_cleanup_graphics(_r3_graphics_api* api) {
     api->create_texture2D = NULL;
     api->destroy_texture2D = NULL;
 
-    api->render_begin = NULL;
-    api->render_clear = NULL;
-    api->render_call = NULL;
-    api->render_end = NULL;
-    
     api->init_gl = NULL;
 
     internal_api_ptr = NULL;
+
     return LIBX_TRUE;
 }

@@ -33,7 +33,7 @@ int main() {
         filex->read("../engine/assets/shaders/default/default.vert", 0),
         filex->read("../engine/assets/shaders/default/default.frag", 0));
 
-    R3_Texture2D texture = r3_core->graphics.create_texture2D("../engine/assets/textures/logo.png", R3_RGBA_FORMAT);
+    R3_Texture texture = r3_core->graphics.create_texture2D("../engine/assets/textures/logo.png", R3_RGBA_FORMAT);
     
     f32 speed = 0.02;
     f32 rotation = 0.0;
@@ -41,31 +41,28 @@ int main() {
     Vec3 location = mathx->vec.vec3(0, 0, 0);
     R3_Vertex_Data vertex_data = r3_core->graphics.create_vertex_data(
         (f32[]){
-            -0.5, -0.5, 0.5,    1.0, 0.0, 0.0,    0.0, 0.0,
-             0.5, -0.5, 0.5,    0.0, 1.0, 0.0,    1.0, 0.0,
-             0.0,  0.5, 0.5,    0.0, 0.0, 1.0,    0.5, 1.0
+           -0.5, -0.5, 0.5,    1.0, 0.0, 0.0,    0.0, 0.0,
+            0.5, -0.5, 0.5,    0.0, 1.0, 0.0,    1.0, 0.0,
+            0.0,  0.5, 0.5,    0.0, 0.0, 1.0,    0.5, 1.0
         }, 3, NULL, 0, R3_LOCATION_ATTR | R3_COLOR_ATTR | R3_TCOORD_ATTR
     );
     
-    r3_core->graphics.render_begin(
-        R3_TRIANGLE_MODE,
-        mathx->vec.vec4(60/255.0, 120/255.0, 210/255.0, 255/255.0),
+    Mat4 u_model2 = mathx->mat.identity4();
+
+    if (r3_core->graphics.init_pipeline(
+        R3_TRIANGLE_MODE, &shader,
+        mathx->mat.lookat(
+            mathx->vec.vec3(0, 0, 1),
+            mathx->vec.vec3(0, 0, 0),
+            mathx->vec.vec3(0, 1, 0)
+        ),
         mathx->mat.perspective(90.0, 800/600, 0, 1000)
-    );
-    
-    Mat4 u_view = mathx->mat.lookat(
-        mathx->vec.vec3(0, 0, 3),
-        mathx->vec.vec3(0, 0, 0),
-        mathx->vec.vec3(0, 1, 0)
-    );
-    
-    r3_core->graphics.set_uniform(&shader, "u_model", &u_model.m);
-    r3_core->graphics.set_uniform(&shader, "u_view", &u_view.m);
-    
+    )) printf("render pipeline initialized\n");
+    else printf("render pipeline failed to be initialized!\n");
+
     while (running) {
         r3_core->platform.poll_events();
         r3_core->platform.poll_inputs();
-        r3_core->graphics.render_clear();
                 
         if (r3_core->input.key_is_down(R3_KEY_A)) location.x -= speed;
         if (r3_core->input.key_is_down(R3_KEY_D)) location.x += speed;
@@ -83,13 +80,9 @@ int main() {
         u_model = mathx->mat.mult4(u_model, mathx->mat.roty4(rotation));
         u_model = mathx->mat.mult4(u_model, mathx->mat.rotz4(rotation));
         
-        r3_core->graphics.send_uniform(&shader, R3_UNIFORM_MAT4, "u_model");
-        r3_core->graphics.send_uniform(&shader, R3_UNIFORM_MAT4, "u_view");
-        r3_core->graphics.gl.bind_texture(GL_TEXTURE_2D, texture.id);
-        
-        r3_core->graphics.render_call(R3_TRIANGLE_MODE, &shader, 3, 0, vertex_data.vao);
-        r3_core->graphics.render_end();
-        
+        r3_core->graphics.push_pipeline(&vertex_data, &u_model, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
+        r3_core->graphics.push_pipeline(&vertex_data, &u_model2, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
+        r3_core->graphics.flush_pipeline();
         r3_core->platform.swap_buffers();
     }
     

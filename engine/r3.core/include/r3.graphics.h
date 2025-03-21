@@ -65,14 +65,14 @@ typedef enum R3_Texture_Format {
     R3_RGBA_FORMAT = 0x1908
 } R3_Texture_Format;
 
-typedef struct R3_Texture2D {
+typedef struct R3_Texture {
     u8* raw;
     str path;
     u32 id;
     u32 width;
     u32 height;
     u32 channels;
-} R3_Texture2D;
+} R3_Texture;
 
 typedef enum R3_Render_Mode {
     R3_POINT_MODE = 0x0000,
@@ -82,26 +82,35 @@ typedef enum R3_Render_Mode {
     R3_DRAW_MODES
 } R3_Render_Mode;
 
+typedef enum R3_Render_Call_Type {
+    R3_RENDER_ARRAYS,
+    R3_RENDER_ELEMENTS,
+    R3_DRAW_CALL_TYPES
+} R3_Render_Call_Type;
+
 typedef struct R3_Render_Call {
+    R3_Vertex_Data* vertex;
+    R3_Texture* texture;
     R3_Shader* shader;
-    u32 vao;
-    u32 mode;
-    u32 indices;
-    u32 vertices;
+    Mat4* model;
+    R3_Render_Mode mode;
+    R3_Render_Call_Type type;
 } R3_Render_Call;
 
 typedef struct _r3_graphics_api {
-    struct renderer {
-        u32 mode;
-        u32 shader;
-        Mat4 projection;
+    struct pipeline {
+        Mat4 proj;
+        Mat4 view;
         Vec4 clear_color;
+        R3_Shader* shader;
+        R3_Render_Mode mode;
         R3_Render_Call* calls;
-    } renderer;
+    } pipeline;
 
-    void (*set_color)(Vec4 color);
-    void (*set_mode)(R3_Render_Mode mode);
-    
+    u8 (*init_pipeline)(R3_Render_Mode mode, R3_Shader* shader, Mat4 view, Mat4 proj);
+    void (*push_pipeline)(R3_Vertex_Data* vertex, Mat4* model, R3_Shader* shader, R3_Texture* texture, R3_Render_Mode mode, R3_Render_Call_Type type);
+    void (*flush_pipeline)(void);
+
     R3_Shader (*create_shader)(cstr vertex, cstr fragment);
     void (*destroy_shader)(R3_Shader* shader);
 
@@ -110,14 +119,9 @@ typedef struct _r3_graphics_api {
 
     R3_Vertex_Data (*create_vertex_data)(f32 *vertices, u32 vertexCount, u32 *indices, u32 indexCount, u8 attrs);
     void (*destroy_vertex_data)(R3_Vertex_Data *vertexData);
-
-    R3_Texture2D (*create_texture2D)(str path, R3_Texture_Format format);
-    void (*destroy_texture2D)(R3_Texture2D* texture);
-
-    void (*render_begin)(u32 mode, Vec4 clear_color, Mat4 projection);
-    void (*render_call)(u32 mode, R3_Shader* shader, u32 vertices, u32 indices, u32 vao);
-    void (*render_clear)(void);
-    void (*render_end)(void);
+    
+    R3_Texture (*create_texture2D)(str path, R3_Texture_Format format);
+    void (*destroy_texture2D)(R3_Texture* texture);
 
     u8 (*init_gl)(struct _r3_graphics_api* api);
     struct gl {
