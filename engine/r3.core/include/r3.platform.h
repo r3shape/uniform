@@ -26,7 +26,7 @@ typedef struct R3_DLL {
 
 typedef struct _r3_platform_api {
     R3_Window* (*create_window)(const char *title, int width, int height);
-    void (*destroy_window)(R3_Window *window);
+    void (*destroy_window)(void);
 
     u8 (*create_gl_context)(void);
     void (*swap_buffers)(void);
@@ -34,6 +34,18 @@ typedef struct _r3_platform_api {
 
     void (*poll_events)(void);
     void (*poll_inputs)(void);
+
+    u8 (*get_window_flag)(u16 flag);
+    u8 (*set_window_flag)(u16 flag);
+    u8 (*rem_window_flag)(u16 flag);
+    u8 (*show_cursor)(void);
+    u8 (*hide_cursor)(void);
+    u8 (*center_cursor)(void);
+    u8 (*decenter_cursor)(void);
+    u8 (*bind_cursor)(void);
+    u8 (*unbind_cursor)(void);
+
+    void (*toggle_vsync)(u8 toggle);
 
     R3_DLL (*load_library)(const char *path, char *name);
     void* (*get_symbol)(R3_DLL* library, str name);

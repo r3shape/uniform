@@ -144,6 +144,9 @@ typedef struct _r3_graphics_api {
     void (*destroy_texture2D)(R3_Texture* texture);
 
     u8 (*init_gl)(struct _r3_graphics_api* api);
+
+    void (*toggle_wireframe)(u8 toggle);
+
     struct gl {
         u8 init;
 

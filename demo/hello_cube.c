@@ -75,9 +75,14 @@ int main() {
     else printf("camera failed to be initialized!\n");
     r3_core->graphics.camera.sensitivity = 0.05;
 
+    r3_core->platform.hide_cursor();
+    r3_core->platform.center_cursor();
     while (running) {
         r3_core->platform.poll_events();
         r3_core->platform.poll_inputs();
+        
+        if (r3_core->input.key_is_down(R3_KEY_F1)) r3_core->graphics.toggle_wireframe(1);
+        else r3_core->graphics.toggle_wireframe(0);
         
         if (r3_core->input.key_is_down(R3_KEY_A)) r3_core->graphics.translate_camera(-1, 0, 0);
         if (r3_core->input.key_is_down(R3_KEY_D)) r3_core->graphics.translate_camera( 1, 0, 0);
@@ -109,7 +114,7 @@ int main() {
     r3_core->events.unregister_callback(R3_EVENT_MOUSE_MOVE, camera_callback);
     
     r3_core->platform.destroy_gl_context();
-    r3_core->platform.destroy_window(window);
+    r3_core->platform.destroy_window();
 
     r3_cleanup_core();
     return 0;

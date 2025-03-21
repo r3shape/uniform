@@ -17,6 +17,8 @@ static struct internal_platform_state {
     _r3_input_api* input_api;
     _r3_events_api* events_api;
 } internal_platform_state = {0};
+_r3_platform_api* _platform_api = NULL;
+
 
 LRESULT CALLBACK _window_proc(HWND handle, u32 msg, WPARAM wParam, LPARAM lParam) {
     if (!handle) return DefWindowProcA(handle, msg, wParam, lParam);    // error: how did you get here?
@@ -25,13 +27,13 @@ LRESULT CALLBACK _window_proc(HWND handle, u32 msg, WPARAM wParam, LPARAM lParam
     GetWindowRect(internal_platform_state.handle, &window_rect);
 
     // only handle window flags during focus
-    // if (internal_platform_state.window.focused) {
-        // ShowCursor(r3_platform_api->get_window_flag(window, R3_SHOW_CURSOR));
-        // if (r3_platform_api->get_window_flag(window, R3_BIND_CURSOR))
-        //     ClipCursor(&window_rect);
-        // if (r3_platform_api->get_window_flag(window, R3_CENTER_CURSOR))
-        //     SetCursorPos((window_rect.left + window_rect.right) / 2, (window_rect.top + window_rect.bottom) / 2);
-    // }
+    if (internal_platform_state.window.focused) {
+        ShowCursor(_platform_api->get_window_flag(R3_SHOW_CURSOR));
+        if (_platform_api->get_window_flag(R3_BIND_CURSOR))
+            ClipCursor(&window_rect);
+        if (_platform_api->get_window_flag(R3_CENTER_CURSOR))
+            SetCursorPos((window_rect.left + window_rect.right) / 2, (window_rect.top + window_rect.bottom) / 2);
+    }
 
     switch(msg) {
         case WM_ERASEBKGND: return 1;
@@ -191,15 +193,14 @@ R3_Window* _create_window_impl(const char *title, int width, int height) {
     return win;
 }
 
-void _destroy_window_impl(R3_Window *window) {
-    if (!window) return;    // error: null ptr!
-    if (internal_platform_state.handle) DestroyWindow(internal_platform_state.handle);
-    *window = (R3_Window){0};
+void _destroy_window_impl(void) {
+    if (!internal_platform_state.handle) return;    // error: window not yet created!
+    DestroyWindow(internal_platform_state.handle);
 }
 
 
 u8 _create_gl_context_impl(void) {
-    if (!internal_platform_state.handle) return LIBX_FALSE;    // error: no window created!
+    if (!internal_platform_state.handle) return LIBX_FALSE;    // error: window not yet created!
 
     PIXELFORMATDESCRIPTOR pfd = {
         sizeof(PIXELFORMATDESCRIPTOR),
@@ -290,6 +291,71 @@ u8 _unload_library_impl(R3_DLL* library) {
     return LIBX_TRUE;
 }
 
+
+u8 _get_window_flag_impl(u16 flag) {
+    if (!internal_platform_state.handle) return LIBX_FALSE;    // error: window not yet created!
+    return ((internal_platform_state.window.flags & flag) == flag) ? LIBX_TRUE : LIBX_FALSE;
+}
+
+u8 _set_window_flag_impl(u16 flag) {
+    if (!internal_platform_state.handle) return LIBX_FALSE;    // error: window not yet created!
+    internal_platform_state.window.flags |= flag;
+    return LIBX_TRUE;
+}
+
+u8 _rem_window_flag_impl(u16 flag) {
+    if (!internal_platform_state.handle) return LIBX_FALSE;    // error: window not yet created!
+    internal_platform_state.window.flags &= ~flag;
+    return LIBX_TRUE;
+}
+
+
+u8 _show_cursor_impl(void) {
+    if (!internal_platform_state.handle) return LIBX_FALSE;    // error: window not yet created!
+    if (_platform_api->set_window_flag(R3_SHOW_CURSOR)) return LIBX_TRUE;
+    else return LIBX_FALSE;
+}
+
+u8 _hide_cursor_impl(void) {
+    if (!internal_platform_state.handle) return LIBX_FALSE;    // error: window not yet created!
+    if (_platform_api->rem_window_flag(R3_SHOW_CURSOR)) return LIBX_TRUE;
+    else return LIBX_FALSE;
+}
+
+u8 _center_cursor_impl(void) {
+    if (!internal_platform_state.handle) return LIBX_FALSE;    // error: window not yet created!
+    if (_platform_api->set_window_flag(R3_CENTER_CURSOR)) return LIBX_TRUE;
+    return LIBX_FALSE;
+}
+
+u8 _decenter_cursor_impl(void) {
+    if (!internal_platform_state.handle) return LIBX_FALSE;    // error: window not yet created!
+    if (_platform_api->rem_window_flag(R3_CENTER_CURSOR)) return LIBX_TRUE;
+    return LIBX_FALSE;
+}
+
+u8 _bind_cursor_impl(void) {
+    if (!internal_platform_state.handle) return LIBX_FALSE;    // error: window not yet created!
+    if (_platform_api->set_window_flag(R3_BIND_CURSOR)) return LIBX_TRUE;
+    return LIBX_FALSE;
+}
+
+u8 _unbind_cursor_impl(void) {
+    if (!internal_platform_state.handle) return LIBX_FALSE;    // error: window not yet created!
+    if (_platform_api->rem_window_flag(R3_BIND_CURSOR)) {
+        if (ClipCursor(NULL)) return LIBX_TRUE;
+    }
+    return LIBX_FALSE;
+}
+
+
+void _toggle_vsync_impl(u8 toggle) {
+    typedef BOOL(APIENTRY* PFNWGLSWAPINTERVALPROC)(int);
+    PFNWGLSWAPINTERVALPROC wglSwapIntervalEXT = 0;
+    wglSwapIntervalEXT = (PFNWGLSWAPINTERVALPROC)wglGetProcAddress("wglSwapIntervalEXT");
+    if (wglSwapIntervalEXT) wglSwapIntervalEXT(toggle);
+}
+
 #endif  // R3_PLATFORM_WINDOWS
 
 u8 _r3_init_platform(_r3_events_api* events_api, _r3_input_api* input_api, _r3_platform_api* api) {
@@ -308,10 +374,23 @@ u8 _r3_init_platform(_r3_events_api* events_api, _r3_input_api* input_api, _r3_p
     api->poll_events = _poll_events_impl;
     api->poll_inputs = _poll_inputs_impl;
     
+    api->get_window_flag = _get_window_flag_impl;
+    api->set_window_flag = _set_window_flag_impl;
+    api->rem_window_flag = _rem_window_flag_impl;
+    api->show_cursor = _show_cursor_impl;
+    api->hide_cursor = _hide_cursor_impl;
+    api->center_cursor = _center_cursor_impl;
+    api->decenter_cursor = _decenter_cursor_impl;
+    api->bind_cursor = _bind_cursor_impl;
+    api->unbind_cursor = _unbind_cursor_impl;
+
+    api->toggle_vsync = _toggle_vsync_impl;
+
     api->load_library = _load_library_impl;
     api->get_symbol = _get_symbol_impl;
     api->unload_library = _unload_library_impl;
 
+    _platform_api = api;
     return LIBX_TRUE;
 }
 
@@ -330,9 +409,22 @@ u8 _r3_cleanup_platform(_r3_platform_api* api) {
     api->poll_events = NULL;
     api->poll_inputs = NULL;
     
+    api->get_window_flag = NULL;
+    api->set_window_flag = NULL;
+    api->rem_window_flag = NULL;
+    api->show_cursor = NULL;
+    api->hide_cursor = NULL;
+    api->center_cursor = NULL;
+    api->decenter_cursor = NULL;
+    api->bind_cursor = NULL;
+    api->unbind_cursor = NULL;
+
+    api->toggle_vsync = NULL;
+
     api->load_library = NULL;
     api->get_symbol = NULL;
     api->unload_library = NULL;
     
+    _platform_api = NULL;
     return LIBX_TRUE;
 }

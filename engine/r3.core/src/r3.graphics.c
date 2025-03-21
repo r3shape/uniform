@@ -1,6 +1,6 @@
 #include "../include/r3.graphics.h"
 
-_r3_graphics_api* internal_api_ptr = NULL;
+_r3_graphics_api* _graphics_api = NULL;
 
 // GENERAL GRAPHICS API
 R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
@@ -13,13 +13,13 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
         return (R3_Shader){0};
     }
 
-    shader.program = internal_api_ptr->gl.create_program();
-    i32 v_Shader = internal_api_ptr->gl.create_shader(R3_VERTEX_SHADER);
-    i32 f_Shader = internal_api_ptr->gl.create_shader(R3_FRAGMENT_SHADER);
+    shader.program = _graphics_api->gl.create_program();
+    i32 v_Shader = _graphics_api->gl.create_shader(R3_VERTEX_SHADER);
+    i32 f_Shader = _graphics_api->gl.create_shader(R3_FRAGMENT_SHADER);
 
-    internal_api_ptr->gl.shader_source(v_Shader, 1, &vertex, NULL);
-    internal_api_ptr->gl.compile_shader(v_Shader);
-    internal_api_ptr->gl.get_shaderiv(v_Shader, R3_COMPILE_STATUS, &compile);
+    _graphics_api->gl.shader_source(v_Shader, 1, &vertex, NULL);
+    _graphics_api->gl.compile_shader(v_Shader);
+    _graphics_api->gl.get_shaderiv(v_Shader, R3_COMPILE_STATUS, &compile);
     if (!compile) {
         // error: failed to compile vertex-shader!
         printf("failed to compile vertex shader!\n");
@@ -27,9 +27,9 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
         return (R3_Shader){0};
     }
     
-    internal_api_ptr->gl.shader_source(f_Shader, 1, &fragment, NULL);
-    internal_api_ptr->gl.compile_shader(f_Shader);
-    internal_api_ptr->gl.get_shaderiv(f_Shader, R3_COMPILE_STATUS, &compile);
+    _graphics_api->gl.shader_source(f_Shader, 1, &fragment, NULL);
+    _graphics_api->gl.compile_shader(f_Shader);
+    _graphics_api->gl.get_shaderiv(f_Shader, R3_COMPILE_STATUS, &compile);
     if (!compile) {
         // error: failed to compile fragment-shader!
         printf("failed to compile fragment shader!\n");
@@ -37,10 +37,10 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
         return (R3_Shader){0};
     }
     
-    internal_api_ptr->gl.attach_shader(shader.program, v_Shader);
-    internal_api_ptr->gl.attach_shader(shader.program, f_Shader);
-    internal_api_ptr->gl.link_program(shader.program);
-    internal_api_ptr->gl.get_programiv(shader.program, R3_LINK_STATUS, &link);
+    _graphics_api->gl.attach_shader(shader.program, v_Shader);
+    _graphics_api->gl.attach_shader(shader.program, f_Shader);
+    _graphics_api->gl.link_program(shader.program);
+    _graphics_api->gl.get_programiv(shader.program, R3_LINK_STATUS, &link);
     if (!link) {
         // error: failed to link shader program!
         printf("failed to link shader!\n");
@@ -48,14 +48,14 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
         return (R3_Shader){0};
     }
 
-    internal_api_ptr->gl.delete_shader(v_Shader);
-    internal_api_ptr->gl.delete_shader(f_Shader);
+    _graphics_api->gl.delete_shader(v_Shader);
+    _graphics_api->gl.delete_shader(f_Shader);
     return shader;
 }
 
 void _destroy_shader_impl(R3_Shader* shader) {
     structx->destroy_hash_array(shader->uniforms);
-    internal_api_ptr->gl.delete_program(shader->program);
+    _graphics_api->gl.delete_program(shader->program);
 }
 
 u8 _set_uniform_impl(R3_Shader* shader, str name, void* value) {
@@ -69,17 +69,17 @@ u8 _send_uniform_impl(R3_Shader* shader, R3_Uniform_Type type, str name) {
     void* value = structx->get_hash_array(shader->uniforms, name);
     if (!value) return LIBX_FALSE;  // error: failed to find uniform in hashmap!
 
-    u32 location = internal_api_ptr->gl.get_uniform_location(shader->program, (cstr)name);
+    u32 location = _graphics_api->gl.get_uniform_location(shader->program, (cstr)name);
 
-    internal_api_ptr->gl.use_program(shader->program);
+    _graphics_api->gl.use_program(shader->program);
     switch (type) {
         case R3_UNIFORM_NONE: break;
         case R3_UNIFORM_TYPES: break;
-        case R3_UNIFORM_FLOAT: internal_api_ptr->gl.uniform1f(location, value); break;
-        case R3_UNIFORM_VEC2: internal_api_ptr->gl.uniform2fv(location, 1, value); break;
-        case R3_UNIFORM_VEC3: internal_api_ptr->gl.uniform3fv(location, 1, value); break;
-        case R3_UNIFORM_VEC4: internal_api_ptr->gl.uniform4fv(location, 1, value); break;
-        case R3_UNIFORM_MAT4: internal_api_ptr->gl.uniform_matrix4fv(location, 1, 1, value); break; // libx matrices are row-major
+        case R3_UNIFORM_FLOAT: _graphics_api->gl.uniform1f(location, value); break;
+        case R3_UNIFORM_VEC2: _graphics_api->gl.uniform2fv(location, 1, value); break;
+        case R3_UNIFORM_VEC3: _graphics_api->gl.uniform3fv(location, 1, value); break;
+        case R3_UNIFORM_VEC4: _graphics_api->gl.uniform4fv(location, 1, value); break;
+        case R3_UNIFORM_MAT4: _graphics_api->gl.uniform_matrix4fv(location, 1, 1, value); break; // libx matrices are row-major
         default: break;
     }
     return LIBX_TRUE;
@@ -87,7 +87,7 @@ u8 _send_uniform_impl(R3_Shader* shader, R3_Uniform_Type type, str name) {
 
 
 R3_Vertex_Data _create_vertex_data_impl(f32 *vertices, u32 vertexCount, u32 *indices, u32 indexCount, u8 attrs) {
-    if (!internal_api_ptr || !internal_api_ptr->gl.init) return (R3_Vertex_Data){0}; // error: null ptr!
+    if (!_graphics_api || !_graphics_api->gl.init) return (R3_Vertex_Data){0}; // error: null ptr!
 
     if ((attrs & ~((1 << R3_VERTEX_ATTRIBS) - 1)) != 0 || !vertices) {
         return (R3_Vertex_Data){0};
@@ -113,23 +113,23 @@ R3_Vertex_Data _create_vertex_data_impl(f32 *vertices, u32 vertexCount, u32 *ind
         }
     }
 
-    internal_api_ptr->gl.gen_vertex_arrays(1, &vertexData.vao);
-    internal_api_ptr->gl.gen_buffers(1, &vertexData.vbo);
+    _graphics_api->gl.gen_vertex_arrays(1, &vertexData.vao);
+    _graphics_api->gl.gen_buffers(1, &vertexData.vbo);
 
-    internal_api_ptr->gl.bind_vertex_array(vertexData.vao);
-    internal_api_ptr->gl.bind_buffer(R3_ARRAY_BUFFER, vertexData.vbo);
+    _graphics_api->gl.bind_vertex_array(vertexData.vao);
+    _graphics_api->gl.bind_buffer(R3_ARRAY_BUFFER, vertexData.vbo);
     
     size_t vertex_data_size = vertexCount * (stride * sizeof(f32));
-    internal_api_ptr->gl.buffer_data(R3_ARRAY_BUFFER, vertex_data_size, vertices, R3_STATIC_DRAW);
+    _graphics_api->gl.buffer_data(R3_ARRAY_BUFFER, vertex_data_size, vertices, R3_STATIC_DRAW);
 
     // generate EBO if indices are provided
     if (indexCount > 0 && indices) {
-        internal_api_ptr->gl.gen_buffers(1, &vertexData.ebo);
+        _graphics_api->gl.gen_buffers(1, &vertexData.ebo);
 
-        internal_api_ptr->gl.bind_buffer(R3_ELEMENT_ARRAY_BUFFER, vertexData.ebo);
+        _graphics_api->gl.bind_buffer(R3_ELEMENT_ARRAY_BUFFER, vertexData.ebo);
         
         size_t index_data_size = indexCount * sizeof(u32);
-        internal_api_ptr->gl.buffer_data(R3_ELEMENT_ARRAY_BUFFER, index_data_size, indices, R3_STATIC_DRAW);
+        _graphics_api->gl.buffer_data(R3_ELEMENT_ARRAY_BUFFER, index_data_size, indices, R3_STATIC_DRAW);
         
         vertexData.indices = indices;
         vertexData.indexCount = indexCount;
@@ -142,7 +142,7 @@ R3_Vertex_Data _create_vertex_data_impl(f32 *vertices, u32 vertexCount, u32 *ind
     // configure vertex attributes
     for (int i = 0; i < R3_VERTEX_ATTRIBS; i++) {
         if ((attrs & (1 << i)) != 0) {
-            internal_api_ptr->gl.vertex_attrib_pointer(
+            _graphics_api->gl.vertex_attrib_pointer(
                 i, 
                 attr_sizes[i], 
                 GL_FLOAT, 
@@ -150,12 +150,12 @@ R3_Vertex_Data _create_vertex_data_impl(f32 *vertices, u32 vertexCount, u32 *ind
                 stride * sizeof(f32), 
                 (void*)(offsets[i] * sizeof(f32))
             );
-            internal_api_ptr->gl.enable_vertex_attrib_array(i);
+            _graphics_api->gl.enable_vertex_attrib_array(i);
         }
     }
 
-    internal_api_ptr->gl.bind_buffer(R3_ARRAY_BUFFER, 0);
-    internal_api_ptr->gl.bind_vertex_array(0);
+    _graphics_api->gl.bind_buffer(R3_ARRAY_BUFFER, 0);
+    _graphics_api->gl.bind_vertex_array(0);
 
     vertexData.attrs = attrs;
     vertexData.vertices = vertices;
@@ -165,17 +165,17 @@ R3_Vertex_Data _create_vertex_data_impl(f32 *vertices, u32 vertexCount, u32 *ind
 }
 
 void _destroy_vertex_data_impl(R3_Vertex_Data *vertexData) {
-    if (!internal_api_ptr || !internal_api_ptr->gl.init) return;  // error: null ptr!
+    if (!_graphics_api || !_graphics_api->gl.init) return;  // error: null ptr!
 
     vertexData->attrs = 0;
     
-    internal_api_ptr->gl.delete_buffers(1, &vertexData->vbo);
+    _graphics_api->gl.delete_buffers(1, &vertexData->vbo);
     vertexData->vbo = 0;
     
-    internal_api_ptr->gl.delete_buffers(1, &vertexData->ebo);
+    _graphics_api->gl.delete_buffers(1, &vertexData->ebo);
     vertexData->ebo = 0;
     
-    internal_api_ptr->gl.delete_vertex_arrays(1, &vertexData->vao);
+    _graphics_api->gl.delete_vertex_arrays(1, &vertexData->vao);
     vertexData->vao = 0;
     
     vertexData->vertices = NULL;
@@ -197,20 +197,20 @@ R3_Texture texture = { .id = 0, .width = 0, .height = 0, .channels = 0, .path = 
     texture.raw = stbi_load(path, &texture.width, &texture.height, &texture.channels, 0);
     if (!texture.raw) return texture;    // error: failed to allocate raw data buffer!
 
-    internal_api_ptr->gl.gen_textures(1, &texture.id);
-    internal_api_ptr->gl.bind_texture(GL_TEXTURE_2D, texture.id);
+    _graphics_api->gl.gen_textures(1, &texture.id);
+    _graphics_api->gl.bind_texture(GL_TEXTURE_2D, texture.id);
 
     // set texture wrapping options
-    internal_api_ptr->gl.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // x axis
-    internal_api_ptr->gl.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // y axis
+    _graphics_api->gl.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // x axis
+    _graphics_api->gl.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // y axis
 
     // set texture filtering options (scaling up/down)
-    internal_api_ptr->gl.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    internal_api_ptr->gl.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    _graphics_api->gl.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    _graphics_api->gl.tex_parameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     // generate the texture
-    internal_api_ptr->gl.tex_image2D(GL_TEXTURE_2D, 0, format, texture.width, texture.height, 0, format, GL_UNSIGNED_BYTE, texture.raw);
-    internal_api_ptr->gl.generate_mipmap(GL_TEXTURE_2D);
+    _graphics_api->gl.tex_image2D(GL_TEXTURE_2D, 0, format, texture.width, texture.height, 0, format, GL_UNSIGNED_BYTE, texture.raw);
+    _graphics_api->gl.generate_mipmap(GL_TEXTURE_2D);
 
     return texture;
 }
@@ -220,7 +220,7 @@ void _destroy_texture2D_impl(R3_Texture* texture) {
     texture->height = 0;
     texture->channels = 0;
     texture ->path = NULL;
-    internal_api_ptr->gl.delete_textures(1, &texture->id);
+    _graphics_api->gl.delete_textures(1, &texture->id);
     stbi_image_free(texture->raw);
     texture->id = 0;
 }
@@ -228,8 +228,8 @@ void _destroy_texture2D_impl(R3_Texture* texture) {
 
 // PIPELINE API
 void _push_pipeline_impl(R3_Vertex_Data* vertex, Mat4* model, R3_Shader* shader, R3_Texture* texture, R3_Render_Mode mode, R3_Render_Call_Type type) {
-    if (!internal_api_ptr->pipeline.calls) return;  // error: render pipeline not initialized!
-    structx->push_array(internal_api_ptr->pipeline.calls, &(R3_Render_Call){
+    if (!_graphics_api->pipeline.calls) return;  // error: render pipeline not initialized!
+    structx->push_array(_graphics_api->pipeline.calls, &(R3_Render_Call){
         .vertex = vertex,
         .texture = texture,
         .shader = shader,
@@ -240,70 +240,70 @@ void _push_pipeline_impl(R3_Vertex_Data* vertex, Mat4* model, R3_Shader* shader,
 }
 
 void _flush_pipeline_impl(void) {
-    if (!internal_api_ptr->pipeline.calls) return;  // error: render pipeline not initialized!
+    if (!_graphics_api->pipeline.calls) return;  // error: render pipeline not initialized!
 
-    internal_api_ptr->gl.clear_color(
-        internal_api_ptr->pipeline.clear_color.x,
-        internal_api_ptr->pipeline.clear_color.y,
-        internal_api_ptr->pipeline.clear_color.z,
-        internal_api_ptr->pipeline.clear_color.w
-    ); internal_api_ptr->gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    _graphics_api->gl.clear_color(
+        _graphics_api->pipeline.clear_color.x,
+        _graphics_api->pipeline.clear_color.y,
+        _graphics_api->pipeline.clear_color.z,
+        _graphics_api->pipeline.clear_color.w
+    ); _graphics_api->gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    Array_Head head = structx->get_array_head(internal_api_ptr->pipeline.calls);
-    R3_Shader* shader = internal_api_ptr->pipeline.shader;
+    Array_Head head = structx->get_array_head(_graphics_api->pipeline.calls);
+    R3_Shader* shader = _graphics_api->pipeline.shader;
     LIBX_FORI(0, head.count, 1) {
         R3_Render_Call call;
-        structx->pull_array(internal_api_ptr->pipeline.calls, 0, &call);
+        structx->pull_array(_graphics_api->pipeline.calls, 0, &call);
         
         if (call.shader && shader->program != call.shader->program) {
             shader = call.shader;
-            internal_api_ptr->set_uniform(shader, "u_proj", &internal_api_ptr->pipeline.proj.m);
-            internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_proj");
-            if (internal_api_ptr->camera.init) {
-                internal_api_ptr->set_uniform(shader, "u_view", &internal_api_ptr->camera.view.m);
-                internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_view");
+            _graphics_api->set_uniform(shader, "u_proj", &_graphics_api->pipeline.proj.m);
+            _graphics_api->send_uniform(shader, R3_UNIFORM_MAT4, "u_proj");
+            if (_graphics_api->camera.init) {
+                _graphics_api->set_uniform(shader, "u_view", &_graphics_api->camera.view.m);
+                _graphics_api->send_uniform(shader, R3_UNIFORM_MAT4, "u_view");
             }
         } else {
-            internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_proj");
-            internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_view");
+            _graphics_api->send_uniform(shader, R3_UNIFORM_MAT4, "u_proj");
+            _graphics_api->send_uniform(shader, R3_UNIFORM_MAT4, "u_view");
         }
         
         if (call.model) {
-            internal_api_ptr->set_uniform(shader, "u_model", &call.model->m);
-            internal_api_ptr->send_uniform(shader, R3_UNIFORM_MAT4, "u_model");
+            _graphics_api->set_uniform(shader, "u_model", &call.model->m);
+            _graphics_api->send_uniform(shader, R3_UNIFORM_MAT4, "u_model");
         }
         
-        if (internal_api_ptr->pipeline.mode != call.mode) internal_api_ptr->pipeline.mode = call.mode;
+        if (_graphics_api->pipeline.mode != call.mode) _graphics_api->pipeline.mode = call.mode;
         
-        internal_api_ptr->gl.use_program(shader->program);
-        if (call.texture->id > 0) internal_api_ptr->gl.bind_texture(GL_TEXTURE_2D, call.texture->id);
-        internal_api_ptr->gl.bind_vertex_array(call.vertex->vao);
+        _graphics_api->gl.use_program(shader->program);
+        if (call.texture->id > 0) _graphics_api->gl.bind_texture(GL_TEXTURE_2D, call.texture->id);
+        _graphics_api->gl.bind_vertex_array(call.vertex->vao);
         if (call.type == R3_RENDER_ARRAYS) {
-            internal_api_ptr->gl.draw_arrays(call.mode, 0, call.vertex->vertexCount);
+            _graphics_api->gl.draw_arrays(call.mode, 0, call.vertex->vertexCount);
         } else if (call.type == R3_RENDER_ELEMENTS) {
-            internal_api_ptr->gl.draw_elements(call.mode, call.vertex->indexCount, GL_UNSIGNED_INT, NULL);
+            _graphics_api->gl.draw_elements(call.mode, call.vertex->indexCount, GL_UNSIGNED_INT, NULL);
         }
     }
 }
 
 u8 _init_pipeline_impl(R3_Render_Mode mode, R3_Shader* shader, Mat4 proj) {
-    if (internal_api_ptr->pipeline.calls != NULL) {
+    if (_graphics_api->pipeline.calls != NULL) {
         printf("render pipeline already initialized.\n");
         return LIBX_TRUE;
     }
 
     if (mode >= R3_DRAW_MODES || !shader) return LIBX_FALSE;  // error: value error/null ptr!
     
-    internal_api_ptr->pipeline.calls = structx->create_array(sizeof(R3_Render_Call), 1024);
-    if (!internal_api_ptr->pipeline.calls) return LIBX_FALSE;    // error: out of memory!
+    _graphics_api->pipeline.calls = structx->create_array(sizeof(R3_Render_Call), 1024);
+    if (!_graphics_api->pipeline.calls) return LIBX_FALSE;    // error: out of memory!
 
-    internal_api_ptr->pipeline.mode = mode;
-    internal_api_ptr->pipeline.proj = proj;
-    internal_api_ptr->pipeline.shader = shader;
-    internal_api_ptr->pipeline.clear_color = mathx->vec.vec4(60/255.0, 120/255.0, 210/255.0, 255/255.0);
+    _graphics_api->pipeline.mode = mode;
+    _graphics_api->pipeline.proj = proj;
+    _graphics_api->pipeline.shader = shader;
+    _graphics_api->pipeline.clear_color = mathx->vec.vec4(60/255.0, 120/255.0, 210/255.0, 255/255.0);
 
-    internal_api_ptr->set_uniform(internal_api_ptr->pipeline.shader, "u_proj", &internal_api_ptr->pipeline.proj.m);
-    internal_api_ptr->pipeline.init = LIBX_TRUE;
+    _graphics_api->set_uniform(_graphics_api->pipeline.shader, "u_proj", &_graphics_api->pipeline.proj.m);
+    _graphics_api->pipeline.init = LIBX_TRUE;
 
     return LIBX_TRUE;
 }
@@ -311,99 +311,108 @@ u8 _init_pipeline_impl(R3_Render_Mode mode, R3_Shader* shader, Mat4 proj) {
 
 // CAMERA API
 u8 _init_camera_impl(Vec3 eye, Vec3 center, Vec3 up) {
-    if (!internal_api_ptr->pipeline.calls) return LIBX_FALSE;
+    if (!_graphics_api->pipeline.calls) return LIBX_FALSE;
     
-    internal_api_ptr->camera.sensitivity = 0.1;
-    internal_api_ptr->camera.speed = 0.1;
-    internal_api_ptr->camera.roll = 0.0;
-    internal_api_ptr->camera.yaw = -90.0;
-    internal_api_ptr->camera.pitch = 0.0;
-    internal_api_ptr->camera.eye = eye;
-    internal_api_ptr->camera.center = center;
-    internal_api_ptr->camera.direction = mathx->vec.norm3(mathx->vec.sub3(eye, center));
-    internal_api_ptr->camera.right = mathx->vec.norm3(mathx->vec.cross3(up, internal_api_ptr->camera.direction));
-    internal_api_ptr->camera.up = mathx->vec.cross3(internal_api_ptr->camera.direction, internal_api_ptr->camera.right);
+    _graphics_api->camera.sensitivity = 0.1;
+    _graphics_api->camera.speed = 0.1;
+    _graphics_api->camera.roll = 0.0;
+    _graphics_api->camera.yaw = -90.0;
+    _graphics_api->camera.pitch = 0.0;
+    _graphics_api->camera.eye = eye;
+    _graphics_api->camera.center = center;
+    _graphics_api->camera.direction = mathx->vec.norm3(mathx->vec.sub3(eye, center));
+    _graphics_api->camera.right = mathx->vec.norm3(mathx->vec.cross3(up, _graphics_api->camera.direction));
+    _graphics_api->camera.up = mathx->vec.cross3(_graphics_api->camera.direction, _graphics_api->camera.right);
     
     // update the view matrix with camera vectors
-    internal_api_ptr->camera.view = mathx->mat.lookat(
-        internal_api_ptr->camera.eye,
-        mathx->vec.add3(internal_api_ptr->camera.eye, internal_api_ptr->camera.direction),
-        internal_api_ptr->camera.up
+    _graphics_api->camera.view = mathx->mat.lookat(
+        _graphics_api->camera.eye,
+        mathx->vec.add3(_graphics_api->camera.eye, _graphics_api->camera.direction),
+        _graphics_api->camera.up
     );
     
-    if (internal_api_ptr->pipeline.init) {
-        internal_api_ptr->set_uniform(internal_api_ptr->pipeline.shader, "u_view", &internal_api_ptr->camera.view.m);
+    if (_graphics_api->pipeline.init) {
+        _graphics_api->set_uniform(_graphics_api->pipeline.shader, "u_view", &_graphics_api->camera.view.m);
     }
 
-    internal_api_ptr->camera.init = LIBX_TRUE;
+    _graphics_api->camera.init = LIBX_TRUE;
     return LIBX_TRUE;
 }
 
 void _rotate_camera_impl( f32 dx, f32 dy) {
-    internal_api_ptr->camera.yaw += dx * internal_api_ptr->camera.sensitivity;
-    internal_api_ptr->camera.pitch += dy * internal_api_ptr->camera.sensitivity;
+    _graphics_api->camera.yaw += dx * _graphics_api->camera.sensitivity;
+    _graphics_api->camera.pitch += dy * _graphics_api->camera.sensitivity;
     
-    internal_api_ptr->camera.yaw = LIBX_WRAPF(internal_api_ptr->camera.yaw, 360.0);
-    internal_api_ptr->camera.pitch = LIBX_CLAMP(internal_api_ptr->camera.pitch, -89.0, 89.0);
+    _graphics_api->camera.yaw = LIBX_WRAPF(_graphics_api->camera.yaw, 360.0);
+    _graphics_api->camera.pitch = LIBX_CLAMP(_graphics_api->camera.pitch, -89.0, 89.0);
 }
 
 void _translate_camera_impl(i8 x, i8 y, i8 z) {
     if (x > 0) {
-        internal_api_ptr->camera.eye = mathx->vec.add3(internal_api_ptr->camera.eye, mathx->vec.scale3(mathx->vec.norm3(mathx->vec.cross3(
-            internal_api_ptr->camera.direction,
-            internal_api_ptr->camera.up
-        )), internal_api_ptr->camera.speed));
+        _graphics_api->camera.eye = mathx->vec.add3(_graphics_api->camera.eye, mathx->vec.scale3(mathx->vec.norm3(mathx->vec.cross3(
+            _graphics_api->camera.direction,
+            _graphics_api->camera.up
+        )), _graphics_api->camera.speed));
     }
     else if (x < 0) {
-        internal_api_ptr->camera.eye = mathx->vec.sub3(internal_api_ptr->camera.eye, mathx->vec.scale3(mathx->vec.norm3(mathx->vec.cross3(
-            internal_api_ptr->camera.direction,
-            internal_api_ptr->camera.up
-        )), internal_api_ptr->camera.speed));
+        _graphics_api->camera.eye = mathx->vec.sub3(_graphics_api->camera.eye, mathx->vec.scale3(mathx->vec.norm3(mathx->vec.cross3(
+            _graphics_api->camera.direction,
+            _graphics_api->camera.up
+        )), _graphics_api->camera.speed));
     }
 
     if (y > 0) {
-        internal_api_ptr->camera.eye = mathx->vec.add3(
-            internal_api_ptr->camera.eye,
-            mathx->vec.scale3(internal_api_ptr->camera.up, internal_api_ptr->camera.speed)
+        _graphics_api->camera.eye = mathx->vec.add3(
+            _graphics_api->camera.eye,
+            mathx->vec.scale3(_graphics_api->camera.up, _graphics_api->camera.speed)
         );
     }
     else if (y < 0) {
-        internal_api_ptr->camera.eye = mathx->vec.sub3(
-            internal_api_ptr->camera.eye,
-            mathx->vec.scale3(internal_api_ptr->camera.up, internal_api_ptr->camera.speed)
+        _graphics_api->camera.eye = mathx->vec.sub3(
+            _graphics_api->camera.eye,
+            mathx->vec.scale3(_graphics_api->camera.up, _graphics_api->camera.speed)
         );
     }
     
     if (z > 0) {
-        internal_api_ptr->camera.eye = mathx->vec.add3(
-            internal_api_ptr->camera.eye,
-            mathx->vec.scale3(internal_api_ptr->camera.direction, internal_api_ptr->camera.speed)
+        _graphics_api->camera.eye = mathx->vec.add3(
+            _graphics_api->camera.eye,
+            mathx->vec.scale3(_graphics_api->camera.direction, _graphics_api->camera.speed)
         );
     }
     else if (z < 0) {
-        internal_api_ptr->camera.eye = mathx->vec.sub3(
-            internal_api_ptr->camera.eye,
-            mathx->vec.scale3(internal_api_ptr->camera.direction, internal_api_ptr->camera.speed)
+        _graphics_api->camera.eye = mathx->vec.sub3(
+            _graphics_api->camera.eye,
+            mathx->vec.scale3(_graphics_api->camera.direction, _graphics_api->camera.speed)
         );
     }
 }
 
 void _update_camera_impl(void) {
-    internal_api_ptr->camera.direction = mathx->vec.norm3(mathx->vec.vec3(
-        cosf(mathx->scalar.to_radians(internal_api_ptr->camera.yaw)) * cosf(mathx->scalar.to_radians(internal_api_ptr->camera.pitch)),
-        sinf(mathx->scalar.to_radians(internal_api_ptr->camera.pitch)),
-        sinf(mathx->scalar.to_radians(internal_api_ptr->camera.yaw)) * cosf(mathx->scalar.to_radians(internal_api_ptr->camera.pitch))
+    _graphics_api->camera.direction = mathx->vec.norm3(mathx->vec.vec3(
+        cosf(mathx->scalar.to_radians(_graphics_api->camera.yaw)) * cosf(mathx->scalar.to_radians(_graphics_api->camera.pitch)),
+        sinf(mathx->scalar.to_radians(_graphics_api->camera.pitch)),
+        sinf(mathx->scalar.to_radians(_graphics_api->camera.yaw)) * cosf(mathx->scalar.to_radians(_graphics_api->camera.pitch))
     ));
-    internal_api_ptr->camera.right = mathx->vec.norm3(mathx->vec.cross3(internal_api_ptr->camera.direction, mathx->vec.vec3(0, 1.0, 0)));
-    internal_api_ptr->camera.up = mathx->vec.norm3(mathx->vec.cross3(internal_api_ptr->camera.right, internal_api_ptr->camera.direction));
+    _graphics_api->camera.right = mathx->vec.norm3(mathx->vec.cross3(_graphics_api->camera.direction, mathx->vec.vec3(0, 1.0, 0)));
+    _graphics_api->camera.up = mathx->vec.norm3(mathx->vec.cross3(_graphics_api->camera.right, _graphics_api->camera.direction));
 
-    internal_api_ptr->camera.view = mathx->mat.lookat(
-        internal_api_ptr->camera.eye,
-        mathx->vec.add3(internal_api_ptr->camera.eye, internal_api_ptr->camera.direction),
-        internal_api_ptr->camera.up
+    _graphics_api->camera.view = mathx->mat.lookat(
+        _graphics_api->camera.eye,
+        mathx->vec.add3(_graphics_api->camera.eye, _graphics_api->camera.direction),
+        _graphics_api->camera.up
     );
 }
 
+
+// GRAPHICAL UTILITIES
+void _toggle_wireframe_impl(u8 toggle) {
+    if (toggle) {
+        _graphics_api->gl.polygon_mode(GL_FRONT_AND_BACK, GL_LINE);
+    } else {
+        _graphics_api->gl.polygon_mode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+}
 
 // API SETUP & CONFIGURATION
 #if defined(R3_PLATFORM_WINDOWS)
@@ -543,7 +552,9 @@ u8 _r3_init_graphics(_r3_graphics_api* api) {
     api->gl.init = LIBX_FALSE;
     api->init_gl = _init_gl_impl;
 
-    internal_api_ptr = api;
+    api->toggle_wireframe = _toggle_wireframe_impl;
+
+    _graphics_api = api;
     return LIBX_TRUE;
 }
 
@@ -574,8 +585,9 @@ u8 _r3_cleanup_graphics(_r3_graphics_api* api) {
     api->destroy_texture2D = NULL;
 
     api->init_gl = NULL;
+    api->toggle_wireframe = NULL;
 
-    internal_api_ptr = NULL;
+    _graphics_api = NULL;
 
     return LIBX_TRUE;
 }

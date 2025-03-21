@@ -68,6 +68,9 @@ int main() {
         r3_core->platform.poll_events();
         r3_core->platform.poll_inputs();
         
+        if (r3_core->input.key_is_down(R3_KEY_F1)) r3_core->graphics.toggle_wireframe(1);
+        else r3_core->graphics.toggle_wireframe(0);
+        
         if (r3_core->input.key_is_down(R3_KEY_A)) location.x -= speed;
         if (r3_core->input.key_is_down(R3_KEY_D)) location.x += speed;
         if (r3_core->input.key_is_down(R3_KEY_W)) location.y += speed;
@@ -98,7 +101,7 @@ int main() {
     r3_core->events.unregister_callback(R3_EVENT_KEY_PRESSED, quit_callback2);
     
     r3_core->platform.destroy_gl_context();
-    r3_core->platform.destroy_window(window);
+    r3_core->platform.destroy_window();
 
     r3_cleanup_core();
     return 0;
