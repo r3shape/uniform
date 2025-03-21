@@ -30,16 +30,27 @@ r3engine includes **pre-configured `.r3make` files** for easy setup and compilat
 2. **Clone the Repository**:  
    ```bash
    git clone https://github.com/r3shape/r3engine
-   cd r3engine
    ```
 
-3. **Build the Engine**:  
+3. **Navigate to the `.r3make` directory:
    ```bash
-   r3make scripts/r3engine.r3make
+   cd r3engine
+   cd .r3make
    ```
 
-4. **Output**:  
-   The compiled `r3engine.dll` will be located in the `build` directory.
+4. **Build the Engine**:  
+   - Target: `r3` builds the `r3.dll` from `r3.core`
+   ```bash
+   r3make r3
+   ```
+5. **Build the Engine Demos**:  
+   - Target: `demo` builds the `demo` directory into corresponding `exe` files in the same output directory as the `r3` build target.
+   ```bash
+   r3make demo
+   ```
+
+5. **Output**:  
+   The compiled `r3.dll`, along with demo exe files will be located in the `build` directory.
 
 ---
 
@@ -56,13 +67,13 @@ For those who wish to **wield the source** themselves:
 2. **Compile the Engine**:  
    Manually compile using **GCC**:  
    ```bash
-   gcc -c r3engine/modules/core/src/*.c -Ir3engine/include -DLOTUS_DLL_EXPORT -o build/*.o
-   gcc -shared build/*.o -lopengl32 -lgdi32 -o build/r3engine.dll
+   gcc -c engine/r3.core/src/*.c -Iengine/include -o bin/ofiles/*.o
+   gcc -shared bin/ofiles/*.o -lopengl32 -lgdi32 -llibx -Lexternal/libx/bin -o build/r3engine.dll
    ```
 
 3. **Install Compiled Binaries**:  
    ```bash
-   cp build/r3engine.dll your_project/bin/
+   cp bin/r3.dll your_project/bin/
    ```
 
 <br>
@@ -75,7 +86,7 @@ For those who wish to **wield the source** themselves:
 2. **Compile with r3make or GCC**:  
    Example using **GCC**:  
    ```bash
-   gcc my_project.c -Ir3engine/include -lr3engine -o my_project.exe
+   gcc my_project.c -Iengine/include -lr3 -o my_project.exe
    ```
 
 <br>
