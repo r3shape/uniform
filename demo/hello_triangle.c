@@ -60,7 +60,7 @@ int main() {
 
     if (r3_core->graphics.init_camera(
         mathx->vec.vec3(0, 0, 1),
-        mathx->vec.vec3(0, 0, -1),
+        mathx->vec.vec3(0, 0,-1),
         mathx->vec.vec3(0, 1, 0)
     )) printf("camera initialized!\n");
     else printf("camera failed to be initialized!\n");
@@ -75,6 +75,11 @@ int main() {
         if (r3_core->input.key_is_down(R3_KEY_D)) location.x += speed;
         if (r3_core->input.key_is_down(R3_KEY_W)) location.y += speed;
         if (r3_core->input.key_is_down(R3_KEY_S)) location.y -= speed;
+
+        if (r3_core->input.key_is_down(R3_KEY_UP))      r3_core->graphics.translate_camera( 0, 1, 0);
+        if (r3_core->input.key_is_down(R3_KEY_DOWN))    r3_core->graphics.translate_camera( 0,-1, 0);
+        if (r3_core->input.key_is_down(R3_KEY_LEFT))    r3_core->graphics.translate_camera(-1, 0, 0);
+        if (r3_core->input.key_is_down(R3_KEY_RIGHT))   r3_core->graphics.translate_camera( 1, 0, 0);
         
         u_model = mathx->mat.identity4();
         u_model = mathx->mat.mult4(u_model, mathx->mat.scale4(32, 32, 1));
