@@ -7,7 +7,7 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
     u32 link = 0;
     u32 compile = 0;
 
-    R3_Shader shader = {.uniforms=structx->create_hash_array(16)};
+    R3_Shader shader = {.uniforms=structx->create_hash_array(32)};
     if (!shader.uniforms) {
         // error: failed to allocate uniform hashmap!
         return (R3_Shader){0};

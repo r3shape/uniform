@@ -28,7 +28,7 @@ u8 camera_callback(u16 event_code, R3_Event data) {
 
 int main() {
     r3_init_core();
-    
+        
     R3_Window* window = r3_core->platform.create_window("Hello Triangle", 800, 600);
     r3_core->platform.create_gl_context();
     r3_core->graphics.init_gl(&r3_core->graphics);
@@ -37,13 +37,59 @@ int main() {
     r3_core->events.register_callback(R3_EVENT_RESIZE, resize_callback);
     r3_core->events.register_callback(R3_EVENT_KEY_PRESSED, quit_callback2);
     r3_core->events.register_callback(R3_EVENT_MOUSE_MOVE, camera_callback);
-        
+    
+    struct Light {
+        Vec3 ambient;
+        Vec3 diffuse;
+        Vec3 specular;
+        Vec3 location;
+    } u_light = {
+        .ambient = mathx->vec.vec3(0.2, 0.2, 0.2),
+        .diffuse = mathx->vec.vec3(0.5, 0.5, 0.5),
+        .specular = mathx->vec.vec3(1.0, 1.0, 1.0),
+        .location = mathx->vec.vec3(0.0, 0.0, -3.0)
+    };
+    
+    struct Material {
+        f32 shine;
+        Vec3 ambient;
+        Vec3 diffuse;
+        Vec3 specular;
+    } u_material = {
+        .shine = 32,
+        .ambient = mathx->vec.vec3(1.0, 0.5, 0.31),
+        .diffuse = mathx->vec.vec3(1.0, 0.5, 0.31),
+        .specular = mathx->vec.vec3(0.5, 0.5, 0.5),
+    };
+    
     R3_Shader shader = r3_core->graphics.create_shader(
-        filex->read("../engine/assets/shaders/default/shader.vert", 0),
-        filex->read("../engine/assets/shaders/default/shader.frag", 0));
-    R3_Shader shader2 = r3_core->graphics.create_shader(
         filex->read("../engine/assets/shaders/light/shader.vert", 0),
         filex->read("../engine/assets/shaders/light/shader.frag", 0));
+        
+    r3_core->graphics.set_uniform(&shader, "u_light.ambient", &u_light.ambient);
+    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_light.ambient");
+    r3_core->graphics.set_uniform(&shader, "u_light.diffuse", &u_light.diffuse);
+    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_light.diffuse");
+    r3_core->graphics.set_uniform(&shader, "u_light.specular", &u_light.specular);
+    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_light.specular");
+    r3_core->graphics.set_uniform(&shader, "u_light.location", &u_light.location);
+    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_light.location");
+    
+    r3_core->graphics.set_uniform(&shader, "u_material.shine", &u_material.shine);
+    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_FLOAT, "u_material.shine");
+    r3_core->graphics.set_uniform(&shader, "u_material.ambient", &u_material.ambient);
+    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_material.ambient");
+    r3_core->graphics.set_uniform(&shader, "u_material.diffuse", &u_material.diffuse);
+    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_material.diffuse");
+    r3_core->graphics.set_uniform(&shader, "u_material.specular", &u_material.specular);
+    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_material.specular");
+    
+    r3_core->graphics.set_uniform(&shader, "u_view_location", &r3_core->graphics.camera.eye);
+    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_view_location");
+
+    R3_Shader shader2 = r3_core->graphics.create_shader(
+        filex->read("../engine/assets/shaders/light/source.vert", 0),
+        filex->read("../engine/assets/shaders/light/source.frag", 0));
 
     R3_Texture texture = r3_core->graphics.create_texture2D("../engine/assets/textures/logo.png", R3_RGBA_FORMAT);
     
@@ -53,10 +99,48 @@ int main() {
     Vec3 location = mathx->vec.vec3(0, 0, 0);
     R3_Vertex_Data vertex_data = r3_core->graphics.create_vertex_data(
         (f32[]){
-           -0.5, -0.5, 0.5,    1.0, 0.0, 0.0,    0.0, 0.0,
-            0.5, -0.5, 0.5,    0.0, 1.0, 0.0,    1.0, 0.0,
-            0.0,  0.5, 0.5,    0.0, 0.0, 1.0,    0.5, 1.0
-        }, 3, NULL, 0, R3_LOCATION_ATTR | R3_COLOR_ATTR | R3_TCOORD_ATTR
+            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+             0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+            -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+        
+            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+             0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+             0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+        
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+        
+             0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+             0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+             0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+             0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+             0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+             0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+        
+            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+             0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+             0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+             0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+            -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+        
+            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+             0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+            -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
+        }, 36, NULL, 0, R3_LOCATION_ATTR | R3_NORMAL_ATTR
     );
     
     Mat4 u_model2 = mathx->mat.identity4();
@@ -91,6 +175,8 @@ int main() {
         if (r3_core->input.key_is_down(R3_KEY_SPACE)) r3_core->graphics.translate_camera(0,  1, 0);
         if (r3_core->input.key_is_down(R3_KEY_SHIFT)) r3_core->graphics.translate_camera(0, -1, 0);
         
+        r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_view_location");
+
         u_model = mathx->mat.identity4();
         u_model = mathx->mat.mult4(u_model, mathx->mat.trans4(location.x, location.y, location.z));
         
@@ -99,6 +185,9 @@ int main() {
         u_model = mathx->mat.mult4(u_model, mathx->mat.rotx4(rotation));
         u_model = mathx->mat.mult4(u_model, mathx->mat.roty4(rotation));
         u_model = mathx->mat.mult4(u_model, mathx->mat.rotz4(rotation));
+        
+        u_model2 = mathx->mat.identity4();
+        u_model2 = mathx->mat.mult4(u_model2, mathx->mat.trans4(0, 0, -3));
         
         r3_core->graphics.push_pipeline(&vertex_data, &u_model, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
         r3_core->graphics.push_pipeline(&vertex_data, &u_model2, &shader2, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);

@@ -3,9 +3,6 @@
     "c-targets": {
         "r3": {
             "r3make": {
-                "pre-build": {
-                    "gitdeps": ["d34d0s/libx"]
-                },
                 "post-build": {
                     "nofiles": null
                 }
@@ -16,7 +13,7 @@
             "lib-links": {
                 "gdi32": null,
                 "opengl32": null,
-	    	    "libx": null
+	    	    "libx": "../external/libx/bin"
 	    },
             "out-type": "dll",
             "out-name": "r3",
