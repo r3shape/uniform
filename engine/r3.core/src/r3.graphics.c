@@ -79,7 +79,7 @@ u8 _send_uniform_impl(R3_Shader* shader, R3_Uniform_Type type, str name) {
         case R3_UNIFORM_VEC2: _graphics_api->gl.uniform2fv(location, 1, value); break;
         case R3_UNIFORM_VEC3: _graphics_api->gl.uniform3fv(location, 1, value); break;
         case R3_UNIFORM_VEC4: _graphics_api->gl.uniform4fv(location, 1, value); break;
-        case R3_UNIFORM_MAT4: _graphics_api->gl.uniform_matrix4fv(location, 1, 1, value); break; // libx matrices are row-major
+        case R3_UNIFORM_MAT4: _graphics_api->gl.uniform_matrix4fv(location, 1, 0, value); break;
         default: break;
     }
     return LIBX_TRUE;
@@ -228,7 +228,7 @@ void _destroy_texture2D_impl(R3_Texture* texture) {
 
 // PIPELINE API
 void _push_pipeline_impl(R3_Vertex_Data* vertex, Mat4* model, R3_Shader* shader, R3_Texture* texture, R3_Render_Mode mode, R3_Render_Call_Type type) {
-    if (!_graphics_api->pipeline.calls) return;  // error: render pipeline not initialized!
+    if (!_graphics_api->pipeline.init) return;  // error: render pipeline not initialized!
     structx->push_array(_graphics_api->pipeline.calls, &(R3_Render_Call){
         .vertex = vertex,
         .texture = texture,
@@ -240,7 +240,7 @@ void _push_pipeline_impl(R3_Vertex_Data* vertex, Mat4* model, R3_Shader* shader,
 }
 
 void _flush_pipeline_impl(void) {
-    if (!_graphics_api->pipeline.calls) return;  // error: render pipeline not initialized!
+    if (!_graphics_api->pipeline.init) return;  // error: render pipeline not initialized!
 
     _graphics_api->gl.clear_color(
         _graphics_api->pipeline.clear_color.x,
@@ -287,7 +287,7 @@ void _flush_pipeline_impl(void) {
 }
 
 u8 _init_pipeline_impl(R3_Render_Mode mode, R3_Shader* shader, Mat4 proj) {
-    if (_graphics_api->pipeline.calls != NULL) {
+    if (_graphics_api->pipeline.init) {
         printf("render pipeline already initialized.\n");
         return LIBX_TRUE;
     }
@@ -311,7 +311,7 @@ u8 _init_pipeline_impl(R3_Render_Mode mode, R3_Shader* shader, Mat4 proj) {
 
 // CAMERA API
 u8 _init_camera_impl(Vec3 eye, Vec3 center, Vec3 up) {
-    if (!_graphics_api->pipeline.calls) return LIBX_FALSE;
+    if (!_graphics_api->pipeline.init) return LIBX_FALSE;
     
     _graphics_api->camera.sensitivity = 0.1;
     _graphics_api->camera.speed = 0.1;
@@ -390,16 +390,16 @@ void _translate_camera_impl(i8 x, i8 y, i8 z) {
 
 void _update_camera_impl(void) {
     _graphics_api->camera.direction = mathx->vec.norm3(mathx->vec.vec3(
-        cosf(mathx->scalar.to_radians(_graphics_api->camera.yaw)) * cosf(mathx->scalar.to_radians(_graphics_api->camera.pitch)),
-        sinf(mathx->scalar.to_radians(_graphics_api->camera.pitch)),
-        sinf(mathx->scalar.to_radians(_graphics_api->camera.yaw)) * cosf(mathx->scalar.to_radians(_graphics_api->camera.pitch))
+        cosf(mathx->scalar.radians(_graphics_api->camera.yaw)) * cosf(mathx->scalar.radians(_graphics_api->camera.pitch)),
+        sinf(mathx->scalar.radians(_graphics_api->camera.pitch)),
+        sinf(mathx->scalar.radians(_graphics_api->camera.yaw)) * cosf(mathx->scalar.radians(_graphics_api->camera.pitch))
     ));
     _graphics_api->camera.right = mathx->vec.norm3(mathx->vec.cross3(_graphics_api->camera.direction, mathx->vec.vec3(0, 1.0, 0)));
     _graphics_api->camera.up = mathx->vec.norm3(mathx->vec.cross3(_graphics_api->camera.right, _graphics_api->camera.direction));
 
     _graphics_api->camera.view = mathx->mat.lookat(
         _graphics_api->camera.eye,
-        mathx->vec.add3(_graphics_api->camera.eye, _graphics_api->camera.direction),
+        _graphics_api->camera.direction,
         _graphics_api->camera.up
     );
 }

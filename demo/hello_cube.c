@@ -63,13 +63,13 @@ int main() {
 
     if (r3_core->graphics.init_pipeline(
         R3_TRIANGLE_MODE, &shader,
-        mathx->mat.perspective(90.0, 800/600, 0, 1000)
+        mathx->mat.perspective(45.0, 800/600, 0.1, 1000)
     )) printf("render pipeline initialized\n");
     else printf("render pipeline failed to be initialized!\n");
     
     if (r3_core->graphics.init_camera(
         mathx->vec.vec3(0, 0, 3),
-        mathx->vec.vec3(0, 0,-1),
+        mathx->vec.vec3(0, 0, 1),
         mathx->vec.vec3(0, 1, 0)
     )) printf("camera initialized!\n");
     else printf("camera failed to be initialized!\n");

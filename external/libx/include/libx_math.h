@@ -20,7 +20,7 @@ typedef struct Mat4 { f32 m[16]; } Mat4;
 typedef struct _libx_math_api {
     struct scalar {
         // Scalar Math
-        f32 (*to_radians)(f32 deg);
+        f32 (*radians)(f32 deg);
     } scalar;
     
     struct vec {
@@ -35,6 +35,7 @@ typedef struct _libx_math_api {
         Vec2 (*add2)(Vec2 v1, Vec2 v2);
         Vec2 (*sub2)(Vec2 v1, Vec2 v2);
         f32 (*dot2)(Vec2 v1, Vec2 v2);
+        f32 (*mag2)(Vec2 v);
         Vec2 (*norm2)(Vec2 v);
     
         // Vec3 Operations
@@ -43,6 +44,7 @@ typedef struct _libx_math_api {
         Vec3 (*add3)(Vec3 v1, Vec3 v2);
         Vec3 (*sub3)(Vec3 v1, Vec3 v2);
         f32 (*dot3)(Vec3 a, Vec3 b);
+        f32 (*mag3)(Vec3 v);
         Vec3 (*norm3)(Vec3 v);
         Vec3 (*cross3)(Vec3 v1, Vec3 v2);
     
@@ -52,9 +54,14 @@ typedef struct _libx_math_api {
         Vec4 (*add4)(Vec4 v1, Vec4 v2);
         Vec4 (*sub4)(Vec4 v1, Vec4 v2);
         f32 (*dot4)(Vec4 v1, Vec4 v2);
+        f32 (*mag4)(Vec4 v);
         Vec4 (*norm4)(Vec4 v);
     } vec;
 
+    /**
+     * Right-Handed Column-Major Matrix Transformation API
+     * (OpenGL Friendly)
+     */
     struct mat {
         // Utility
         void (*print2)(cstr name, Mat2 mat);
@@ -76,7 +83,7 @@ typedef struct _libx_math_api {
         Mat4 (*transpose4)(Mat4 mat);
         Mat4 (*trans4)(f32 x, f32 y, f32 z);
         Vec3 (*mult4v3)(Mat4 m, Vec3 v);
-        Mat4 (*rotate)(f32 x, f32 y, f32 z, f32 angle);
+        Mat4 (*rot4)(Vec3 axis, f32 angle);
         Mat4 (*rotx4)(f32 angle);
         Mat4 (*roty4)(f32 angle);
         Mat4 (*rotz4)(f32 angle);

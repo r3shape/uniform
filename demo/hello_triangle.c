@@ -38,7 +38,7 @@ int main() {
     f32 speed = 0.02;
     f32 rotation = 0.0;
     Mat4 u_model = mathx->mat.identity4();
-    Vec2 location = mathx->vec.vec2(12, 8);
+    Vec2 location = mathx->vec.vec2(400, 300);
     u_model = mathx->mat.mult4(u_model, mathx->mat.trans4(location.x, location.y, 0));
 
     R3_Vertex_Data vertex_data = r3_core->graphics.create_vertex_data(
@@ -64,6 +64,7 @@ int main() {
         mathx->vec.vec3(0, 1, 0)
     )) printf("camera initialized!\n");
     else printf("camera failed to be initialized!\n");
+    r3_core->graphics.camera.speed = 1;
     while (running) {
         r3_core->platform.poll_events();
         r3_core->platform.poll_inputs();
@@ -81,17 +82,16 @@ int main() {
         if (r3_core->input.key_is_down(R3_KEY_LEFT))    r3_core->graphics.translate_camera(-1, 0, 0);
         if (r3_core->input.key_is_down(R3_KEY_RIGHT))   r3_core->graphics.translate_camera( 1, 0, 0);
         
+        rotation += 1;
+        rotation = fmod(rotation, 360);
         u_model = mathx->mat.identity4();
+        u_model = mathx->mat.mult4(u_model, mathx->mat.rotz4(rotation));
         u_model = mathx->mat.mult4(u_model, mathx->mat.scale4(32, 32, 1));
         u_model = mathx->mat.mult4(u_model, mathx->mat.trans4(location.x, location.y, 0));
         
         u_model2 = mathx->mat.identity4();
         u_model2 = mathx->mat.mult4(u_model2, mathx->mat.scale4(32, 32, 1));
         u_model2 = mathx->mat.mult4(u_model2, mathx->mat.trans4(12, 8, 0));
-        
-        rotation += 1;
-        rotation = fmod(rotation, 360);
-        u_model = mathx->mat.mult4(u_model, mathx->mat.rotz4(rotation));
         
         r3_core->graphics.push_pipeline(&vertex_data, &u_model, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
         r3_core->graphics.push_pipeline(&vertex_data, &u_model2, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
