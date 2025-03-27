@@ -35,7 +35,7 @@ int main() {
 
     R3_Texture texture = r3_core->graphics.create_texture2D("../engine/assets/textures/logo.png", R3_RGBA_FORMAT);
     
-    f32 speed = 0.02;
+    f32 speed = 2;
     f32 rotation = 0.0;
     Mat4 u_model = mathx->mat.identity4();
     Vec2 location = mathx->vec.vec2(400, 300);
@@ -64,7 +64,7 @@ int main() {
         mathx->vec.vec3(0, 1, 0)
     )) printf("camera initialized!\n");
     else printf("camera failed to be initialized!\n");
-    r3_core->graphics.camera.speed = 1;
+    r3_core->graphics.camera.speed = 3;
     while (running) {
         r3_core->platform.poll_events();
         r3_core->platform.poll_inputs();

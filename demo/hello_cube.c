@@ -29,7 +29,7 @@ u8 camera_callback(u16 event_code, R3_Event data) {
 int main() {
     r3_init_core();
         
-    R3_Window* window = r3_core->platform.create_window("Hello Triangle", 800, 600);
+    R3_Window* window = r3_core->platform.create_window("Hello Cube", 800, 600);
     r3_core->platform.create_gl_context();
     r3_core->graphics.init_gl(&r3_core->graphics);
     
