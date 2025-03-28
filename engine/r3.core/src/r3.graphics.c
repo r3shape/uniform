@@ -82,6 +82,7 @@ u8 _send_uniform_impl(R3_Shader* shader, R3_Uniform_Type type, str name) {
         case R3_UNIFORM_MAT4: _graphics_api->gl.uniform_matrix4fv(location, 1, 0, value); break;
         default: break;
     }
+    _graphics_api->gl.use_program(0);
     return LIBX_TRUE;
 }
 
@@ -140,7 +141,7 @@ R3_Vertex_Data _create_vertex_data_impl(f32 *vertices, u32 vertexCount, u32 *ind
     }
 
     // configure vertex attributes
-    for (int i = 0; i < R3_VERTEX_ATTRIBS; i++) {
+    for (int i = 0; i < R3_VERTEX_ATTRIBS/2; i++) {
         if ((attrs & (1 << i)) != 0) {
             _graphics_api->gl.vertex_attrib_pointer(
                 i, 
@@ -266,6 +267,11 @@ void _flush_pipeline_impl(void) {
         } else {
             _graphics_api->send_uniform(shader, R3_UNIFORM_MAT4, "u_proj");
             _graphics_api->send_uniform(shader, R3_UNIFORM_MAT4, "u_view");
+            _graphics_api->send_uniform(shader, R3_UNIFORM_VEC3, "u_view_location");
+            _graphics_api->send_uniform(shader, R3_UNIFORM_VEC3, "u_light.ambient");
+            _graphics_api->send_uniform(shader, R3_UNIFORM_VEC3, "u_light.diffuse");
+            _graphics_api->send_uniform(shader, R3_UNIFORM_VEC3, "u_light.specular");
+            _graphics_api->send_uniform(shader, R3_UNIFORM_VEC3, "u_light.location");
         }
         
         if (call.model) {

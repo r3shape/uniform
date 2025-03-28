@@ -26,10 +26,33 @@ u8 camera_callback(u16 event_code, R3_Event data) {
     return LIBX_FALSE;
 }
 
+/**
+ * @brief Computes the y-coordinate of an oscillating motion following a sinusoidal (oscillatory, periodic, circular) wave.
+ * @param A: Amplitude - The maximum height of the wave.
+ * @param B: Frequency - Controls how fast the wave oscillates.
+ * @param t: Time - Drives the motion forward.
+ * @param C: Phase shift - Moves the wave left or right in time.
+ * @param D: Vertical shift - Raises or lowers the wave.
+
+ * @details
+ * The function models a point’s vertical position as it moves in a circular or oscillatory path.
+ * Mathematically, it returns the y-value of a sine wave:
+    y = a * sin(b * t + c) + d
+ * - The sine function describes smooth periodic motion.
+ * - A unit of time (t)
+ * - A larger amplitude (a) makes the oscillation taller.
+ * - A higher frequency (b) makes it oscillate faster.
+ * - The phase shift (c) offsets the wave horizontally.
+ * - The vertical shift (d) moves the entire wave up/down.
+*/
+i32 sinewv(f32 a, f32 b, f32 t, f32 c, f32 d) {
+    return a * sinf((b * t) + c) + d;
+}
+
 int main() {
     r3_init_core();
         
-    R3_Window* window = r3_core->platform.create_window("Hello Triangle", 800, 600);
+    R3_Window* window = r3_core->platform.create_window("Hello Cube", 800, 600);
     r3_core->platform.create_gl_context();
     r3_core->graphics.init_gl(&r3_core->graphics);
     
@@ -44,10 +67,10 @@ int main() {
         Vec3 specular;
         Vec3 location;
     } u_light = {
-        .ambient = mathx->vec.vec3(0.2, 0.2, 0.2),
-        .diffuse = mathx->vec.vec3(0.5, 0.5, 0.5),
+        .ambient = mathx->vec.vec3(0.5, 0.5, 0.5),
+        .diffuse = mathx->vec.vec3(0.3, 0.3, 0.3),
         .specular = mathx->vec.vec3(1.0, 1.0, 1.0),
-        .location = mathx->vec.vec3(0.0, 0.0, -3.0)
+        .location = mathx->vec.vec3(-2, 0.0, -2*32)
     };
     
     struct Material {
@@ -56,25 +79,25 @@ int main() {
         Vec3 diffuse;
         Vec3 specular;
     } u_material = {
-        .shine = 32,
+        .shine = 32.0,
         .ambient = mathx->vec.vec3(1.0, 0.5, 0.31),
         .diffuse = mathx->vec.vec3(1.0, 0.5, 0.31),
-        .specular = mathx->vec.vec3(0.5, 0.5, 0.5),
+        .specular = mathx->vec.vec3(0.5, 0.5, 0.5)
     };
     
     R3_Shader shader = r3_core->graphics.create_shader(
         filex->read("../engine/assets/shaders/light/shader.vert", 0),
-        filex->read("../engine/assets/shaders/light/shader.frag", 0));
-        
-    r3_core->graphics.set_uniform(&shader, "u_light.ambient", &u_light.ambient);
-    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_light.ambient");
-    r3_core->graphics.set_uniform(&shader, "u_light.diffuse", &u_light.diffuse);
-    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_light.diffuse");
-    r3_core->graphics.set_uniform(&shader, "u_light.specular", &u_light.specular);
-    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_light.specular");
-    r3_core->graphics.set_uniform(&shader, "u_light.location", &u_light.location);
-    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_light.location");
+        filex->read("../engine/assets/shaders/light/shader.frag", 0)
+    );
     
+    // light uniforms handled by flush call
+    r3_core->graphics.set_uniform(&shader, "u_light.ambient", &u_light.ambient);
+    r3_core->graphics.set_uniform(&shader, "u_light.diffuse", &u_light.diffuse);
+    r3_core->graphics.set_uniform(&shader, "u_light.specular", &u_light.specular);
+    r3_core->graphics.set_uniform(&shader, "u_light.location", &u_light.location);
+        
+    // libx.ecsx will handle creating render calls for mesh components, (batching impl will live here)
+    // setting the entity's material pointer to the pipeline structure via render call
     r3_core->graphics.set_uniform(&shader, "u_material.shine", &u_material.shine);
     r3_core->graphics.send_uniform(&shader, R3_UNIFORM_FLOAT, "u_material.shine");
     r3_core->graphics.set_uniform(&shader, "u_material.ambient", &u_material.ambient);
@@ -89,11 +112,12 @@ int main() {
 
     R3_Shader shader2 = r3_core->graphics.create_shader(
         filex->read("../engine/assets/shaders/light/source.vert", 0),
-        filex->read("../engine/assets/shaders/light/source.frag", 0));
+        filex->read("../engine/assets/shaders/light/source.frag", 0)
+    );
 
     R3_Texture texture = r3_core->graphics.create_texture2D("../engine/assets/textures/logo.png", R3_RGBA_FORMAT);
     
-    f32 speed = 0.02;
+    f32 speed = 0.5;
     f32 rotation = 0.0;
     Mat4 u_model = mathx->mat.identity4();
     Vec3 location = mathx->vec.vec3(0, 0, 0);
@@ -147,7 +171,7 @@ int main() {
 
     if (r3_core->graphics.init_pipeline(
         R3_TRIANGLE_MODE, &shader,
-        mathx->mat.perspective(45.0, 800/600, 0.1, 1000)
+        mathx->mat.perspective(60.0, 800/600, 0.1, 1000)
     )) printf("render pipeline initialized\n");
     else printf("render pipeline failed to be initialized!\n");
     
@@ -157,6 +181,7 @@ int main() {
         mathx->vec.vec3(0, 1, 0)
     )) printf("camera initialized!\n");
     else printf("camera failed to be initialized!\n");
+    r3_core->graphics.camera.speed = 0.5;
     r3_core->graphics.camera.sensitivity = 0.05;
 
     r3_core->platform.hide_cursor();
@@ -168,6 +193,11 @@ int main() {
         if (r3_core->input.key_is_down(R3_KEY_F1)) r3_core->graphics.toggle_wireframe(1);
         else r3_core->graphics.toggle_wireframe(0);
         
+        if (r3_core->input.key_is_down(R3_KEY_UP)) u_light.location.y += speed;
+        if (r3_core->input.key_is_down(R3_KEY_DOWN)) u_light.location.y -= speed;
+        if (r3_core->input.key_is_down(R3_KEY_LEFT)) u_light.location.x -= speed;
+        if (r3_core->input.key_is_down(R3_KEY_RIGHT)) u_light.location.x += speed;
+        
         if (r3_core->input.key_is_down(R3_KEY_A)) r3_core->graphics.translate_camera(-1, 0, 0);
         if (r3_core->input.key_is_down(R3_KEY_D)) r3_core->graphics.translate_camera( 1, 0, 0);
         if (r3_core->input.key_is_down(R3_KEY_W)) r3_core->graphics.translate_camera( 0, 0, 1);
@@ -175,19 +205,13 @@ int main() {
         if (r3_core->input.key_is_down(R3_KEY_SPACE)) r3_core->graphics.translate_camera(0,  1, 0);
         if (r3_core->input.key_is_down(R3_KEY_SHIFT)) r3_core->graphics.translate_camera(0, -1, 0);
         
-        r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_view_location");
-
         u_model = mathx->mat.identity4();
+        u_model = mathx->mat.mult4(u_model, mathx->mat.scale4(32, 32, 32));
         u_model = mathx->mat.mult4(u_model, mathx->mat.trans4(location.x, location.y, location.z));
         
-        rotation += 1;
-        rotation = fmod(rotation, 360);
-        u_model = mathx->mat.mult4(u_model, mathx->mat.rotx4(rotation));
-        u_model = mathx->mat.mult4(u_model, mathx->mat.roty4(rotation));
-        u_model = mathx->mat.mult4(u_model, mathx->mat.rotz4(rotation));
-        
         u_model2 = mathx->mat.identity4();
-        u_model2 = mathx->mat.mult4(u_model2, mathx->mat.trans4(0, 0, -3));
+        u_model2 = mathx->mat.mult4(u_model2, mathx->mat.scale4(32, 32, 32));
+        u_model2 = mathx->mat.mult4(u_model2, mathx->mat.trans4(u_light.location.x, u_light.location.y, u_light.location.z));
         
         r3_core->graphics.push_pipeline(&vertex_data, &u_model, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
         r3_core->graphics.push_pipeline(&vertex_data, &u_model2, &shader2, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
