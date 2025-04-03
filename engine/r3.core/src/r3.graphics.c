@@ -268,6 +268,8 @@ void _flush_pipeline_impl(void) {
             _graphics_api->send_uniform(shader, R3_UNIFORM_MAT4, "u_proj");
             _graphics_api->send_uniform(shader, R3_UNIFORM_MAT4, "u_view");
             _graphics_api->send_uniform(shader, R3_UNIFORM_VEC3, "u_view_location");
+
+            // TODO: abstract lighting uniform handling to the post-render pipeline
             _graphics_api->send_uniform(shader, R3_UNIFORM_VEC3, "u_light.ambient");
             _graphics_api->send_uniform(shader, R3_UNIFORM_VEC3, "u_light.diffuse");
             _graphics_api->send_uniform(shader, R3_UNIFORM_VEC3, "u_light.specular");
@@ -306,7 +308,7 @@ u8 _init_pipeline_impl(R3_Render_Mode mode, R3_Shader* shader, Mat4 proj) {
     _graphics_api->pipeline.mode = mode;
     _graphics_api->pipeline.proj = proj;
     _graphics_api->pipeline.shader = shader;
-    _graphics_api->pipeline.clear_color = mathx->vec.vec4(60/255.0, 120/255.0, 210/255.0, 255/255.0);
+    _graphics_api->pipeline.clear_color = (Vec4){0.14, 0.16, 0.18, 1.0};
 
     _graphics_api->set_uniform(_graphics_api->pipeline.shader, "u_proj", &_graphics_api->pipeline.proj.m);
     _graphics_api->pipeline.init = LIBX_TRUE;
