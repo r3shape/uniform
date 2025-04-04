@@ -31,7 +31,8 @@ int main() {
         
     R3_Shader shader = r3_core->graphics.create_shader(
         filex->read("../engine/assets/shaders/default/shader.vert", 0),
-        filex->read("../engine/assets/shaders/default/shader.frag", 0));
+        filex->read("../engine/assets/shaders/default/shader.frag", 0)
+    );
 
     R3_Texture texture = r3_core->graphics.create_texture2D("../engine/assets/textures/logo.png", R3_RGBA_FORMAT);
     
