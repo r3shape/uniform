@@ -1,5 +1,5 @@
-#include "../include/r3.pack.h"
-#include "../../r3.core/include/r3.core.h"
+#include <r3/r3.pack/include/r3.pack.h>
+#include <r3/r3.core/include/r3.core.h>
 
 typedef struct R3_Package {
     u8 id;

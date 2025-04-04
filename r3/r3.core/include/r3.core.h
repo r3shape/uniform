@@ -1,9 +1,9 @@
 #pragma once
 
-#include "r3.input.h"
-#include "r3.events.h"
-#include "r3.platform.h"
-#include "r3.graphics.h"
+#include <r3/r3.core/include/r3.input.h>
+#include <r3/r3.core/include/r3.events.h>
+#include <r3/r3.core/include/r3.platform.h>
+#include <r3/r3.core/include/r3.graphics.h>
 
 typedef struct _r3_core_api {
     _r3_input_api input;

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "r3.events.h"
-#include "r3.input.h"
-#include "r3.defines.h"
+#include <r3/r3.core/include/r3.events.h>
+#include <r3/r3.core/include/r3.input.h>
+#include <r3/r3.core/include/r3.defines.h>
 
 typedef enum R3_Window_Flag {
     R3_SHOW_CURSOR =     (1 << 0),

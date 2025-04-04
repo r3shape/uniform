@@ -1,4 +1,4 @@
-#include "../../include/r3.platform.h"
+#include <r3/r3.core/include/r3.platform.h>
 
 #if defined(R3_PLATFORM_WINDOWS)
 #include <stdio.h>

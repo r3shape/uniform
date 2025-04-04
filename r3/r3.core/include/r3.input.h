@@ -1,7 +1,7 @@
 #pragma once
 
-#include "r3.defines.h"
-#include "r3.events.h"
+#include <r3/r3.core/include/r3.defines.h>
+#include <r3/r3.core/include/r3.events.h>
 
 typedef enum R3_Mouse_Button {
     R3_MBUTTON_LEFT,

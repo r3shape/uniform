@@ -1,4 +1,4 @@
-#include "../../include/r3.h"
+#include <r3/include/r3.h>
 
 _r3_core_api* r3_core = NULL;
 

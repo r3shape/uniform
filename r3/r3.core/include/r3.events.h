@@ -1,6 +1,6 @@
 #pragma once
 
-#include "r3.defines.h"
+#include <r3/r3.core/include/r3.defines.h>
 
 #define R3_EVENT_MAX     ((1U << 12) - 1)
 #define R3_CALLBACK_MAX  (1U << 5)

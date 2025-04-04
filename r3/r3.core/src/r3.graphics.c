@@ -1,4 +1,4 @@
-#include "../include/r3.graphics.h"
+#include <r3/r3.core/include/r3.graphics.h>
 
 _r3_graphics_api* _graphics_api = NULL;
 

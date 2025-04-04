@@ -1,5 +1,5 @@
-#include "../r3/include/r3.h"
-#include "../r3/assets/packs/test_pack/test_pack.h"
+#include <r3/include/r3.h>
+#include <r3/assets/packs/test_pack/test_pack.h>
 
 void main() {
     r3_init_core();

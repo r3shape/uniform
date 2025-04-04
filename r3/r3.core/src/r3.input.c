@@ -1,4 +1,4 @@
-#include "../include/r3.input.h"
+#include <r3/r3.core/include/r3.input.h>
 
 static struct internal_input_state {
     struct devices {

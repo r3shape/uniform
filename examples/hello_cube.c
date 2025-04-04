@@ -1,4 +1,4 @@
-#include "../r3/include/r3.h"
+#include <r3/include/r3.h>
 
 u8 running = 1;
 u8 quit_callback2(u16 event_code, R3_Event data) {
@@ -62,8 +62,8 @@ int main() {
     };
     
     R3_Shader shader = r3_core->graphics.create_shader(
-        filex->read("r3/assets/shaders/light/shader.vert", 0),
-        filex->read("r3/assets/shaders/light/shader.frag", 0)
+        filex->read("assets/shaders/light/shader.vert", 0),
+        filex->read("assets/shaders/light/shader.frag", 0)
     );
     
     r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.ambient", .value = &u_light.ambient});
@@ -78,11 +78,11 @@ int main() {
     r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_material.specular", .value = &u_material.specular});
 
     R3_Shader shader2 = r3_core->graphics.create_shader(
-        filex->read("r3/assets/shaders/light/source.vert", 0),
-        filex->read("r3/assets/shaders/light/source.frag", 0)
+        filex->read("assets/shaders/light/source.vert", 0),
+        filex->read("assets/shaders/light/source.frag", 0)
     );
 
-    R3_Texture texture = r3_core->graphics.create_texture2D("r3/assets/textures/logo.png", R3_RGBA_FORMAT);
+    R3_Texture texture = r3_core->graphics.create_texture2D("assets/textures/logo.png", R3_RGBA_FORMAT);
     
     f32 speed = 0.5;
     f32 rotation = 0.0;

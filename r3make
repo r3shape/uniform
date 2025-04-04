@@ -9,7 +9,7 @@
             },
             "c-defines": ["DLL_EXPORT"],
 	        "src-dirs": ["r3/r3.core/src", "r3/r3.pack/src"],
-            "inc-dirs": ["r3/include", "r3/r3.pack/include"],
+            "inc-dirs": [".", "external"],
             "lib-links": {
                 "gdi32": null,
                 "opengl32": null,
@@ -27,7 +27,7 @@
                 }
             },
             "src-dirs": ["examples"],
-            "inc-dirs": ["r3/include"],
+            "inc-dirs": [".", "external"],
             "lib-links": {
                 "r3": "bin"
             },
@@ -43,7 +43,7 @@
                 }
             },
             "src-dirs": ["r3/assets/packs"],
-            "inc-dirs": ["r3/include"],
+            "inc-dirs": [".", "external"],
             "lib-links": {
                 "r3": "bin"
             },

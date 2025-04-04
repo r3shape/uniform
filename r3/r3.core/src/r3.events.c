@@ -1,4 +1,4 @@
-#include "../include/r3.events.h"
+#include <r3/r3.core/include/r3.events.h>
 
 static struct internal_event_state {
     u16 event_count;

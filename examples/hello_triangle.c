@@ -1,4 +1,4 @@
-#include "../r3/include/r3.h"
+#include <r3/include/r3.h>
 
 u8 running = 1;
 u8 quit_callback2(u16 event_code, R3_Event data) {
@@ -29,11 +29,11 @@ int main() {
     r3_core->events.register_callback(R3_EVENT_KEY_PRESSED, quit_callback2);
         
     R3_Shader shader = r3_core->graphics.create_shader(
-        filex->read("r3/assets/shaders/default/shader.vert", 0),
-        filex->read("r3/assets/shaders/default/shader.frag", 0)
+        filex->read("assets/shaders/default/shader.vert", 0),
+        filex->read("assets/shaders/default/shader.frag", 0)
     );
 
-    R3_Texture texture = r3_core->graphics.create_texture2D("r3/assets/textures/logo.png", R3_RGBA_FORMAT);
+    R3_Texture texture = r3_core->graphics.create_texture2D("assets/textures/logo.png", R3_RGBA_FORMAT);
     
     f32 speed = 2;
     f32 rotation = 0.0;

@@ -2,7 +2,7 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include "r3.defines.h"
+#include <r3/r3.core/include/r3.defines.h>
 
 // GL equivalent defines
 #define R3_STATIC_DRAW                0x88E4
