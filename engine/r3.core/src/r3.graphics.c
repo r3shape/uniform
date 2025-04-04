@@ -350,11 +350,6 @@ u8 _init_camera_impl(Vec3 eye, Vec3 center, Vec3 up) {
         _graphics_api->camera.up
     );
     
-    // if (_graphics_api->pipeline.init) {
-    //     _graphics_api->set_uniform(_graphics_api->pipeline.shader, "u_view", &_graphics_api->camera.view.m);
-    //     _graphics_api->set_uniform(_graphics_api->pipeline.shader, "u_view_location", &_graphics_api->camera.eye);
-    // }
-
     _graphics_api->camera.init = LIBX_TRUE;
     return LIBX_TRUE;
 }
