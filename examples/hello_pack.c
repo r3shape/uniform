@@ -1,11 +1,11 @@
-#include "../engine/include/r3.h"
-#include "../engine/assets/packs/test_pack/test_pack.h"
+#include "../r3/include/r3.h"
+#include "../r3/assets/packs/test_pack/test_pack.h"
 
 void main() {
     r3_init_core();
     r3_init_pack(r3_core);
 
-    test_pack_api* tpack = r3_pack->load_pack("test_pack", "../bin/packs");
+    test_pack_api* tpack = (test_pack_api*)r3_pack->load_pack("test_pack", "../bin/packs");
     if (!tpack) printf("failed to load test pack!\n");
     else printf("loaded test pack!\n");
 
