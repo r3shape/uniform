@@ -7,7 +7,7 @@
 #define COMPONENT_MAX   (1 << 5)
 #define ENTITY_MAX      ((1 << 16) - 1)
 
-typedef struct _stdlibx_ecs_api {
+typedef struct _libx_ecs_api {
     struct entity_manager {
         u32* queue;
         u32* mask;
@@ -41,8 +41,8 @@ typedef struct _stdlibx_ecs_api {
     u8 (*rem_component)(u8 id, u32 entity);
     u8 (*get_component)(u8 id, u32 entity, void* component);
     
-} _stdlibx_ecs_api;
-extern _stdlibx_ecs_api* ecsx;
+} _libx_ecs_api;
+extern _libx_ecs_api* ecsx;
 
 LIBX_API u8 libx_init_ecs(void);
 LIBX_API void libx_cleanup_ecs(void);

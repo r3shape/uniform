@@ -7,7 +7,7 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
     u32 link = 0;
     u32 compile = 0;
 
-    R3_Shader shader = {.uniforms=structx->create_hash_array(32)};
+    R3_Shader shader = {.uniforms = structx->create_hash_array(64)};
     if (!shader.uniforms) {
         // error: failed to allocate uniform hashmap!
         return (R3_Shader){0};
@@ -58,31 +58,31 @@ void _destroy_shader_impl(R3_Shader* shader) {
     _graphics_api->gl.delete_program(shader->program);
 }
 
-u8 _set_uniform_impl(R3_Shader* shader, str name, void* value) {
-    if (!shader || !name || !value) return LIBX_FALSE;  // error: null ptr!
-    return structx->put_hash_array(shader->uniforms, name, value);
+u8 _set_uniform_impl(R3_Shader* shader, R3_Uniform* uniform) {
+    if (!shader || !uniform) return LIBX_FALSE;  // error: null ptr!
+    if (!uniform->name || !uniform->value || uniform->type < 0 || uniform->type >= R3_UNIFORM_TYPES) {
+        return LIBX_FALSE;  // error: uniform value error!
+    }
+    uniform->location = _graphics_api->gl.get_uniform_location(shader->program, uniform->name);
+    return structx->put_hash_array(shader->uniforms, uniform->name, uniform);
 }
 
-u8 _send_uniform_impl(R3_Shader* shader, R3_Uniform_Type type, str name) {
+u8 _send_uniform_impl(R3_Shader* shader, str name) {
     if (!shader || !name) return LIBX_FALSE;    // error: null ptr!
     
-    void* value = structx->get_hash_array(shader->uniforms, name);
-    if (!value) return LIBX_FALSE;  // error: failed to find uniform in hashmap!
+    R3_Uniform* uniform = structx->get_hash_array(shader->uniforms, name);
+    if (!uniform) return LIBX_FALSE;  // error: failed to find uniform in hashmap!
 
-    u32 location = _graphics_api->gl.get_uniform_location(shader->program, (cstr)name);
-
-    _graphics_api->gl.use_program(shader->program);
-    switch (type) {
+    switch (uniform->type) {
         case R3_UNIFORM_NONE: break;
         case R3_UNIFORM_TYPES: break;
-        case R3_UNIFORM_FLOAT: _graphics_api->gl.uniform1f(location, value); break;
-        case R3_UNIFORM_VEC2: _graphics_api->gl.uniform2fv(location, 1, value); break;
-        case R3_UNIFORM_VEC3: _graphics_api->gl.uniform3fv(location, 1, value); break;
-        case R3_UNIFORM_VEC4: _graphics_api->gl.uniform4fv(location, 1, value); break;
-        case R3_UNIFORM_MAT4: _graphics_api->gl.uniform_matrix4fv(location, 1, 0, value); break;
+        case R3_UNIFORM_FLOAT: _graphics_api->gl.uniform1f(uniform->location, uniform->value); break;
+        case R3_UNIFORM_VEC2: _graphics_api->gl.uniform2fv(uniform->location, 1, uniform->value); break;
+        case R3_UNIFORM_VEC3: _graphics_api->gl.uniform3fv(uniform->location, 1, uniform->value); break;
+        case R3_UNIFORM_VEC4: _graphics_api->gl.uniform4fv(uniform->location, 1, uniform->value); break;
+        case R3_UNIFORM_MAT4: _graphics_api->gl.uniform_matrix4fv(uniform->location, 1, 0, uniform->value); break;
         default: break;
     }
-    _graphics_api->gl.use_program(0);
     return LIBX_TRUE;
 }
 
@@ -256,62 +256,73 @@ void _flush_pipeline_impl(void) {
         R3_Render_Call call;
         structx->pull_array(_graphics_api->pipeline.calls, 0, &call);
         
-        if (call.shader && shader->program != call.shader->program) {
-            shader = call.shader;
-            _graphics_api->set_uniform(shader, "u_proj", &_graphics_api->pipeline.proj.m);
-            _graphics_api->send_uniform(shader, R3_UNIFORM_MAT4, "u_proj");
-            if (_graphics_api->camera.init) {
-                _graphics_api->set_uniform(shader, "u_view", &_graphics_api->camera.view.m);
-                _graphics_api->send_uniform(shader, R3_UNIFORM_MAT4, "u_view");
-            }
+        if (call.shader) {
+            if (shader) {
+                if (shader->program != call.shader->program) shader = call.shader;
+            } else shader = call.shader;
         } else {
-            _graphics_api->send_uniform(shader, R3_UNIFORM_MAT4, "u_proj");
-            _graphics_api->send_uniform(shader, R3_UNIFORM_MAT4, "u_view");
-            _graphics_api->send_uniform(shader, R3_UNIFORM_VEC3, "u_view_location");
-
-            // TODO: abstract lighting uniform handling to the post-render pipeline
-            _graphics_api->send_uniform(shader, R3_UNIFORM_VEC3, "u_light.ambient");
-            _graphics_api->send_uniform(shader, R3_UNIFORM_VEC3, "u_light.diffuse");
-            _graphics_api->send_uniform(shader, R3_UNIFORM_VEC3, "u_light.specular");
-            _graphics_api->send_uniform(shader, R3_UNIFORM_VEC3, "u_light.location");
+            if (!shader) continue;
         }
         
-        if (call.model) {
-            _graphics_api->set_uniform(shader, "u_model", &call.model->m);
-            _graphics_api->send_uniform(shader, R3_UNIFORM_MAT4, "u_model");
+        if (call.model) _graphics_api->set_uniform(shader,
+            &(R3_Uniform){
+            .type = R3_UNIFORM_MAT4, 
+            .name = "u_model",
+            .value = &call.model->m
+        });
+        
+        if (_graphics_api->camera.init) {
+            _graphics_api->set_uniform(shader,
+                &(R3_Uniform){
+                .type = R3_UNIFORM_MAT4, 
+                .name = "u_view",
+                .value = &_graphics_api->camera.view.m
+            });
+            _graphics_api->set_uniform(shader,
+                &(R3_Uniform){
+                .type = R3_UNIFORM_VEC3, 
+                .name = "u_view_location",
+                .value = &_graphics_api->camera.eye
+            });
         }
+
+        _graphics_api->set_uniform(shader,
+            &(R3_Uniform){
+            .type = R3_UNIFORM_MAT4, 
+            .name = "u_proj",
+            .value = &_graphics_api->pipeline.proj.m
+        });
         
         if (_graphics_api->pipeline.mode != call.mode) _graphics_api->pipeline.mode = call.mode;
-        
         _graphics_api->gl.use_program(shader->program);
+        
+        R3_Uniform** uniforms = (R3_Uniform**)structx->get_hash_array_values(shader->uniforms);
+        LIBX_FORI(0, shader->uniforms->meta.count, 1) _graphics_api->send_uniform(shader, (str)uniforms[i]->name);
+        structx->destroy_array(uniforms);
+        
         if (call.texture->id > 0) _graphics_api->gl.bind_texture(GL_TEXTURE_2D, call.texture->id);
         _graphics_api->gl.bind_vertex_array(call.vertex->vao);
         if (call.type == R3_RENDER_ARRAYS) {
             _graphics_api->gl.draw_arrays(call.mode, 0, call.vertex->vertexCount);
         } else if (call.type == R3_RENDER_ELEMENTS) {
             _graphics_api->gl.draw_elements(call.mode, call.vertex->indexCount, GL_UNSIGNED_INT, NULL);
-        }
+        } _graphics_api->gl.use_program(0);
     }
 }
 
 u8 _init_pipeline_impl(R3_Render_Mode mode, R3_Shader* shader, Mat4 proj) {
-    if (_graphics_api->pipeline.init) {
-        printf("render pipeline already initialized.\n");
-        return LIBX_TRUE;
-    }
+    if (_graphics_api->pipeline.init) return LIBX_TRUE; // redundant call: graphics API already initialized!
 
     if (mode >= R3_DRAW_MODES || !shader) return LIBX_FALSE;  // error: value error/null ptr!
     
     _graphics_api->pipeline.calls = structx->create_array(sizeof(R3_Render_Call), 1024);
     if (!_graphics_api->pipeline.calls) return LIBX_FALSE;    // error: out of memory!
 
+    _graphics_api->pipeline.init = LIBX_TRUE;
     _graphics_api->pipeline.mode = mode;
     _graphics_api->pipeline.proj = proj;
     _graphics_api->pipeline.shader = shader;
     _graphics_api->pipeline.clear_color = (Vec4){0.14, 0.16, 0.18, 1.0};
-
-    _graphics_api->set_uniform(_graphics_api->pipeline.shader, "u_proj", &_graphics_api->pipeline.proj.m);
-    _graphics_api->pipeline.init = LIBX_TRUE;
 
     return LIBX_TRUE;
 }
@@ -339,9 +350,10 @@ u8 _init_camera_impl(Vec3 eye, Vec3 center, Vec3 up) {
         _graphics_api->camera.up
     );
     
-    if (_graphics_api->pipeline.init) {
-        _graphics_api->set_uniform(_graphics_api->pipeline.shader, "u_view", &_graphics_api->camera.view.m);
-    }
+    // if (_graphics_api->pipeline.init) {
+    //     _graphics_api->set_uniform(_graphics_api->pipeline.shader, "u_view", &_graphics_api->camera.view.m);
+    //     _graphics_api->set_uniform(_graphics_api->pipeline.shader, "u_view_location", &_graphics_api->camera.eye);
+    // }
 
     _graphics_api->camera.init = LIBX_TRUE;
     return LIBX_TRUE;

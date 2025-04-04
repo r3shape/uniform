@@ -1,6 +1,12 @@
 #include <stdio.h>
 #include "../engine/include/r3.h"
 
+/**
+ * TODO:
+ * - libx.ecsx will handle creating render calls for mesh components, (batching impl will live here)
+**/
+
+
 u8 running = 1;
 u8 quit_callback2(u16 event_code, R3_Event data) {
     u16 key = data.u16[0];
@@ -24,29 +30,6 @@ u8 camera_callback(u16 event_code, R3_Event data) {
         return LIBX_TRUE;
     }
     return LIBX_FALSE;
-}
-
-/**
- * @brief Computes the y-coordinate of an oscillating motion following a sinusoidal (oscillatory, periodic, circular) wave.
- * @param A: Amplitude - The maximum height of the wave.
- * @param B: Frequency - Controls how fast the wave oscillates.
- * @param t: Time - Drives the motion forward.
- * @param C: Phase shift - Moves the wave left or right in time.
- * @param D: Vertical shift - Raises or lowers the wave.
-
- * @details
- * The function models a point’s vertical position as it moves in a circular or oscillatory path.
- * Mathematically, it returns the y-value of a sine wave:
-    y = a * sin(b * t + c) + d
- * - The sine function describes smooth periodic motion.
- * - A unit of time (t)
- * - A larger amplitude (a) makes the oscillation taller.
- * - A higher frequency (b) makes it oscillate faster.
- * - The phase shift (c) offsets the wave horizontally.
- * - The vertical shift (d) moves the entire wave up/down.
-*/
-i32 sinewv(f32 a, f32 b, f32 t, f32 c, f32 d) {
-    return a * sinf((b * t) + c) + d;
 }
 
 int main() {
@@ -90,25 +73,16 @@ int main() {
         filex->read("../engine/assets/shaders/light/shader.frag", 0)
     );
     
-    // light uniforms handled by flush call
-    r3_core->graphics.set_uniform(&shader, "u_light.ambient", &u_light.ambient);
-    r3_core->graphics.set_uniform(&shader, "u_light.diffuse", &u_light.diffuse);
-    r3_core->graphics.set_uniform(&shader, "u_light.specular", &u_light.specular);
-    r3_core->graphics.set_uniform(&shader, "u_light.location", &u_light.location);
-        
-    // libx.ecsx will handle creating render calls for mesh components, (batching impl will live here)
-    // setting the entity's material pointer to the pipeline structure via render call
-    r3_core->graphics.set_uniform(&shader, "u_material.shine", &u_material.shine);
-    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_FLOAT, "u_material.shine");
-    r3_core->graphics.set_uniform(&shader, "u_material.ambient", &u_material.ambient);
-    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_material.ambient");
-    r3_core->graphics.set_uniform(&shader, "u_material.diffuse", &u_material.diffuse);
-    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_material.diffuse");
-    r3_core->graphics.set_uniform(&shader, "u_material.specular", &u_material.specular);
-    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_material.specular");
-    
-    r3_core->graphics.set_uniform(&shader, "u_view_location", &r3_core->graphics.camera.eye);
-    r3_core->graphics.send_uniform(&shader, R3_UNIFORM_VEC3, "u_view_location");
+    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.ambient", .value = &u_light.ambient});
+    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.diffuse", .value = &u_light.diffuse});
+    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.specular", .value = &u_light.specular});
+    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.location", .value = &u_light.location});
+
+    // TODO: debug why this float uniform types appear to not be set properly
+    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_FLOAT, .name = "u_material.shine", .value = &u_material.shine});
+    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_material.ambient", .value = &u_material.ambient});
+    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_material.diffuse", .value = &u_material.diffuse});
+    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_material.specular", .value = &u_material.specular});
 
     R3_Shader shader2 = r3_core->graphics.create_shader(
         filex->read("../engine/assets/shaders/light/source.vert", 0),
@@ -174,7 +148,7 @@ int main() {
         mathx->mat.perspective(60.0, 800/600, 0.1, 1000)
     )) printf("render pipeline initialized\n");
     else printf("render pipeline failed to be initialized!\n");
-    
+
     if (r3_core->graphics.init_camera(
         mathx->vec.vec3(0, 0, 3),
         mathx->vec.vec3(0, 0, 1),

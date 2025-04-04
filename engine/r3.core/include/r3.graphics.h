@@ -36,6 +36,13 @@ typedef enum R3_Uniform_Type {
     R3_UNIFORM_TYPES
 } R3_Uniform_Type;
 
+typedef struct R3_Uniform {
+    void* value;
+    cstr name;
+    u32 type;
+    u32 location;
+} R3_Uniform;
+
 typedef struct R3_Shader {
     Hash_Array* uniforms;
     u32 program;
@@ -134,8 +141,8 @@ typedef struct _r3_graphics_api {
     R3_Shader (*create_shader)(cstr vertex, cstr fragment);
     void (*destroy_shader)(R3_Shader* shader);
 
-    u8 (*set_uniform)(R3_Shader* shader, str name, void* value);
-    u8 (*send_uniform)(R3_Shader* shader, R3_Uniform_Type type, str name);
+    u8 (*set_uniform)(R3_Shader* shader, R3_Uniform* uniform);
+    u8 (*send_uniform)(R3_Shader* shader, str name);
 
     R3_Vertex_Data (*create_vertex_data)(f32 *vertices, u32 vertexCount, u32 *indices, u32 indexCount, u8 attrs);
     void (*destroy_vertex_data)(R3_Vertex_Data *vertexData);
