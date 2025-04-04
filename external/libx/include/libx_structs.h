@@ -98,6 +98,22 @@ typedef struct _libx_structs_api {
     Hash_Array* (*create_hash_array)(u32 max);
     u8 (*put_hash_array)(Hash_Array* array, cstr key, void* value);
     void* (*get_hash_array)(Hash_Array* array, cstr key);
+    
+    /**
+     * `get_hash_array_keys` iterates a given `Hash_Array` and populates a heap-allocated array
+     * containing all the keys stored in the `Hash_Array`.
+     * 
+     * Note: Don't forget to call `structx->destroy_array()` on the array returned from `get_hash_array_keys` when no longer needed!
+     */
+    cstr* (*get_hash_array_keys)(Hash_Array* array);
+    
+    /**
+     * `get_hash_array_values` iterates a given `Hash_Array` and populates a heap-allocated array
+     * containing all the values stored in the `Hash_Array`.
+     * 
+     * Note: Don't forget to call `structx->destroy_array()` on the array returned from `get_hash_array_values` when no longer needed!
+     */
+    void** (*get_hash_array_values)(Hash_Array* array);
     u8 (*pull_hash_array)(Hash_Array* array, cstr key, Key_Value* out);
     void (*destroy_hash_array)(Hash_Array* array);
 } _libx_structs_api;
