@@ -313,7 +313,7 @@ void _flush_pipeline_impl(void) {
 u8 _init_pipeline_impl(R3_Render_Mode mode, R3_Shader* shader, Mat4 proj) {
     if (_graphics_api->pipeline.init) return LIBX_TRUE; // redundant call: graphics API already initialized!
 
-    if (mode >= R3_DRAW_MODES || !shader) return LIBX_FALSE;  // error: value error/null ptr!
+    if (mode >= R3_DRAW_MODES) return LIBX_FALSE;  // error: value error
     
     _graphics_api->pipeline.calls = structx->create_array(sizeof(R3_Render_Call), 1024);
     if (!_graphics_api->pipeline.calls) return LIBX_FALSE;    // error: out of memory!

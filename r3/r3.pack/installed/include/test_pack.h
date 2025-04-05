@@ -1,5 +1,4 @@
-#define R3_PACK
-#include "../../../include/r3.h"
+#include <r3/r3.pack/include/r3.pack.h>
 
 #include <stdio.h>
 

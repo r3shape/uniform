@@ -1,4 +1,5 @@
-#include <r3/include/r3.h>
+#define R3_MODULES R3_CORE
+#include <r3/r3.core/include/r3.core.h>
 
 u8 running = 1;
 u8 quit_callback2(u16 event_code, R3_Event data) {
@@ -26,7 +27,7 @@ u8 camera_callback(u16 event_code, R3_Event data) {
 }
 
 int main() {
-    r3_init_core();
+    r3_init_core(R3_MODULES);
         
     R3_Window* window = r3_core->platform.create_window("Hello Cube", 800, 600);
     r3_core->platform.create_gl_context();

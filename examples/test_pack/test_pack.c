@@ -1,4 +1,4 @@
-#include "test_pack.h"
+#include <r3/r3.pack/installed/include/test_pack.h>
 
 void _hello_test_impl(str name) {
     printf("Hello, %s!\n", name);

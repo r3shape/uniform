@@ -1,6 +1,6 @@
 #pragma once
 
-#include <r3/r3.core/include/r3.defines.h>
+#include <r3/r3.core/include/r3.core.h>
 
 #define R3_PACK_MAX ((1U << 8) - 1)
 
@@ -21,6 +21,7 @@
     }
 
 #define R3_PACK_EXPORT(pack_api, ...)               \
+    void main(void) {}                              \
     void* _pack_export_impl(void) {                 \
         static pack_api _api = { __VA_ARGS__ };     \
         return &_api;                               \
@@ -34,4 +35,4 @@ typedef struct _r3_pack_api {
 extern _r3_pack_api* r3_pack;
 
 u8 r3_init_pack(void* r3_core);
-void r3_cleanup_pack(void);
+u8 r3_cleanup_pack(void);

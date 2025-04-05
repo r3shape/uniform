@@ -1,11 +1,11 @@
-#include <r3/include/r3.h>
-#include <r3/assets/packs/test_pack/test_pack.h>
+#define R3_MODULES R3_CORE|R3_PACK
+#include <r3/r3.core/include/r3.core.h>
+#include <r3/r3.pack/installed/include/test_pack.h>
 
 void main() {
-    r3_init_core();
-    r3_init_pack(r3_core);
+    r3_init_core(R3_MODULES);
 
-    test_pack_api* tpack = (test_pack_api*)r3_pack->load_pack("test_pack", "../bin/packs");
+    test_pack_api* tpack = (test_pack_api*)r3_pack->load_pack("test_pack", "r3/r3.pack/installed/bin");
     if (!tpack) printf("failed to load test pack!\n");
     else printf("loaded test pack!\n");
 
@@ -15,6 +15,5 @@ void main() {
     if(r3_pack->unload_pack("test_pack")) printf("test pack unloaded!\n");
     else printf("failed to unload test_pack!\n");
 
-    r3_cleanup_pack();
     r3_cleanup_core();
 }
