@@ -34,22 +34,6 @@
             "out-type": "exe",
             "out-name": null,
             "out-dir": "bin"
-        },
-        "test_pack": {
-            "r3make": {
-                "flags": ["buildeach"],
-                "post-build": {
-                    "nofiles": null
-                }
-            },
-            "src-dirs": ["examples/test_pack"],
-            "inc-dirs": [".", "external"],
-            "lib-links": {
-                "r3": "bin"
-            },
-            "out-type": "dll",
-            "out-name": null,
-            "out-dir": "r3/r3.pack/installed/bin"
         }
     }
 }

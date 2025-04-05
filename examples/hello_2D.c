@@ -21,20 +21,31 @@ u8 resize_callback(u16 event_code, R3_Event data) {
 int main() {
     r3_init_core(R3_MODULES);
 
-    R3_Window* window = r3_core->platform.create_window("Hello 2D", 800, 600);
+    R3_Window* window = r3_core->platform.create_window("Hello Triangle", 800, 600);
     r3_core->platform.create_gl_context();
     r3_core->graphics.init_gl(&r3_core->graphics);
     
     r3_core->events.register_callback(R3_EVENT_QUIT, quit_callback1);
     r3_core->events.register_callback(R3_EVENT_RESIZE, resize_callback);
     r3_core->events.register_callback(R3_EVENT_KEY_PRESSED, quit_callback2);
-    
+
     R3_Shader shader = r3_core->graphics.create_shader(
         filex->read("assets/shaders/default/shader.vert", 0),
         filex->read("assets/shaders/default/shader.frag", 0)
     );
 
     R3_Texture texture = r3_core->graphics.create_texture2D("assets/textures/logo.png", R3_RGBA_FORMAT);
+
+    f32 speed = 2;
+    Mat4 u_model = mathx->mat.identity4();
+    Vec2 location = mathx->vec.vec2(400, 300);
+    u_model = mathx->mat.mult4(u_model, mathx->mat.trans4(location.x, location.y, 0));
+
+    Mat4 u_model2 = mathx->mat.identity4();
+    u_model2 = mathx->mat.mult4(u_model2, mathx->mat.trans4(location.x, location.y, 0));
+
+    R3_Vertex_Data quad = r3_2D->shape2D.quad2D((Vec2){32.0, 32.0}, (Vec3){1, 1, 1});
+    R3_Vertex_Data triangle = r3_2D->shape2D.triangle2D((Vec2){32.0, 32.0}, (Vec3){1, 1, 1});
 
     if (r3_core->graphics.init_pipeline(
         R3_TRIANGLE_MODE, &shader,
@@ -49,14 +60,6 @@ int main() {
     )) printf("camera initialized!\n");
     else printf("camera failed to be initialized!\n");
     r3_core->graphics.camera.speed = 3;
-
-    Mat4 u_model = mathx->mat.identity4();
-    Vec2 location = mathx->vec.vec2(400, 300);
-    u_model = mathx->mat.mult4(u_model, mathx->mat.trans4(location.x, location.y, 0));
-
-    R3_Vertex_Data triangle = r3_2D->shape2D.triangle2D((Vec2){32, 32}, (Vec3){1, 0, 0});
-
-    r3_core->platform.show_cursor();
     while (running) {
         r3_core->platform.poll_events();
         r3_core->platform.poll_inputs();
@@ -64,7 +67,24 @@ int main() {
         if (r3_core->input.key_is_down(R3_KEY_F1)) r3_core->graphics.toggle_wireframe(1);
         else r3_core->graphics.toggle_wireframe(0);
 
-        r3_core->graphics.push_pipeline(&triangle, &u_model, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
+        if (r3_core->input.key_is_down(R3_KEY_A)) location.x -= speed;
+        if (r3_core->input.key_is_down(R3_KEY_D)) location.x += speed;
+        if (r3_core->input.key_is_down(R3_KEY_W)) location.y += speed;
+        if (r3_core->input.key_is_down(R3_KEY_S)) location.y -= speed;
+
+        if (r3_core->input.key_is_down(R3_KEY_UP))      r3_core->graphics.translate_camera( 0, 1, 0);
+        if (r3_core->input.key_is_down(R3_KEY_DOWN))    r3_core->graphics.translate_camera( 0,-1, 0);
+        if (r3_core->input.key_is_down(R3_KEY_LEFT))    r3_core->graphics.translate_camera(-1, 0, 0);
+        if (r3_core->input.key_is_down(R3_KEY_RIGHT))   r3_core->graphics.translate_camera( 1, 0, 0);
+
+        u_model = mathx->mat.identity4();
+        u_model = mathx->mat.mult4(u_model, mathx->mat.trans4(location.x, location.y, 0));
+        
+        u_model2 = mathx->mat.identity4();
+        u_model2 = mathx->mat.mult4(u_model2, mathx->mat.trans4(400, 300, 0));
+
+        r3_core->graphics.push_pipeline(&quad, &u_model, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ELEMENTS);
+        r3_core->graphics.push_pipeline(&triangle, &u_model2, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
 
         r3_core->graphics.flush_pipeline();
         r3_core->graphics.update_camera();
