@@ -155,20 +155,16 @@ int main() {
         r3_core->platform.poll_events();
         r3_core->platform.poll_inputs();
         
-        if (r3_core->input.key_is_down(R3_KEY_F1)) r3_core->graphics.toggle_wireframe(1);
-        else r3_core->graphics.toggle_wireframe(0);
+        r3_core->graphics.toggle_wireframe(r3_core->input.key_is_down(R3_KEY_F1));
+
+        u_light.location.x += speed * (r3_core->input.key_is_down(R3_KEY_RIGHT) - r3_core->input.key_is_down(R3_KEY_LEFT));
+        u_light.location.y += speed * (r3_core->input.key_is_down(R3_KEY_UP) - r3_core->input.key_is_down(R3_KEY_DOWN));
         
-        if (r3_core->input.key_is_down(R3_KEY_UP)) u_light.location.y += speed;
-        if (r3_core->input.key_is_down(R3_KEY_DOWN)) u_light.location.y -= speed;
-        if (r3_core->input.key_is_down(R3_KEY_LEFT)) u_light.location.x -= speed;
-        if (r3_core->input.key_is_down(R3_KEY_RIGHT)) u_light.location.x += speed;
-        
-        if (r3_core->input.key_is_down(R3_KEY_A)) r3_core->graphics.translate_camera(-1, 0, 0);
-        if (r3_core->input.key_is_down(R3_KEY_D)) r3_core->graphics.translate_camera( 1, 0, 0);
-        if (r3_core->input.key_is_down(R3_KEY_W)) r3_core->graphics.translate_camera( 0, 0, 1);
-        if (r3_core->input.key_is_down(R3_KEY_S)) r3_core->graphics.translate_camera( 0, 0,-1);
-        if (r3_core->input.key_is_down(R3_KEY_SPACE)) r3_core->graphics.translate_camera(0,  1, 0);
-        if (r3_core->input.key_is_down(R3_KEY_SHIFT)) r3_core->graphics.translate_camera(0, -1, 0);
+        r3_core->graphics.translate_camera(
+            (r3_core->input.key_is_down(R3_KEY_D) - r3_core->input.key_is_down(R3_KEY_A)),
+            (r3_core->input.key_is_down(R3_KEY_SPACE) - r3_core->input.key_is_down(R3_KEY_SHIFT)),
+            (r3_core->input.key_is_down(R3_KEY_W) - r3_core->input.key_is_down(R3_KEY_S))
+        );
         
         u_model = mathx->mat.identity4();
         u_model = mathx->mat.mult4(u_model, mathx->mat.scale4(32, 32, 32));

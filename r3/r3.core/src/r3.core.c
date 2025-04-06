@@ -28,7 +28,7 @@ u8 r3_init_core(u8 modules) {
 
     if ((modules & R3_2D) == R3_2D) {
         if (!libx_init_ecs()) return LIBX_FALSE;        // error: failed to init ecs api!
-        if (!r3_init_2D(r3_core)) return LIBX_FALSE;    // error: failed to init 2D api!
+        if (!r3_init_2D()) return LIBX_FALSE;    // error: failed to init 2D api!
     }
 
     r3_core->modules = modules;

@@ -17,6 +17,6 @@ u8 _r3_register_component2D(void);
 u8 _r3_unregister_component2D(void);
 
 // called internally via `r3_init_core`
-u8 r3_init_2D(void* r3_core);
+u8 r3_init_2D(void);
 // called internally via `r3_cleanup_core`
 u8 r3_cleanup_2D(void);

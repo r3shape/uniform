@@ -1,3 +1,6 @@
+// hello_2D.c
+// Now fully driven by libx ecsx!
+
 #define R3_MODULES R3_CORE|R3_2D
 #include <r3/r3.core/include/r3.core.h>
 
@@ -36,21 +39,28 @@ int main() {
 
     R3_Texture texture = r3_core->graphics.create_texture2D("assets/textures/logo.png", R3_RGBA_FORMAT);
 
-    f32 speed = 2;
-    Mat4 u_model = mathx->mat.identity4();
-    Vec2 location = mathx->vec.vec2(400, 300);
-    u_model = mathx->mat.mult4(u_model, mathx->mat.trans4(location.x, location.y, 0));
+    u32 entity0 = ecsx->create_entity();
+    u32 entity1 = ecsx->create_entity();
+    ecsx->add_component(R3_SPRITE2D, entity0);
+    ecsx->add_component(R3_TRANSFORM2D, entity0);
+    
+    ecsx->add_component(R3_SPRITE2D, entity1);
+    ecsx->add_component(R3_TRANSFORM2D, entity1);
 
-    Mat4 u_model2 = mathx->mat.identity4();
-    u_model2 = mathx->mat.mult4(u_model2, mathx->mat.trans4(location.x, location.y, 0));
+    R3_Sprite2D sprite0; ecsx->get_component(R3_SPRITE2D, entity0, &sprite0);
+    *sprite0.texture = texture;
+    r3_core->graphics.destroy_vertex_data(sprite0.vertex);
+    *sprite0.vertex = r3_2D->shape2D.triangle2D((Vec2){32.0, 32.0}, (Vec3){0, 1, 0});
 
-    R3_Vertex_Data triangle = r3_2D->shape2D.triangle2D((Vec2){32.0, 32.0}, (Vec3){1, 1, 1});
-
-    u32 entity = ecsx->create_entity();
-    ecsx->add_component(R3_SPRITE, entity);
-
-    R3_Sprite sprite; ecsx->get_component(R3_SPRITE, entity, &sprite);
-    sprite.texture = &texture;
+    R3_Transform2D trans0; ecsx->get_component(R3_TRANSFORM2D, entity0, &trans0);
+    *trans0.location = (Vec2){400, 300};
+    
+    R3_Sprite2D sprite1; ecsx->get_component(R3_SPRITE2D, entity1, &sprite1);
+    *sprite1.texture = texture;
+    *sprite1.color = (Vec3){1.0, 1.0, 1.0};
+    
+    R3_Transform2D trans1; ecsx->get_component(R3_TRANSFORM2D, entity1, &trans1);
+    *trans1.location = (Vec2){400, 300};
 
     r3_core->graphics.init_pipeline(
         R3_TRIANGLE_MODE, &shader,
@@ -67,52 +77,21 @@ int main() {
         r3_core->platform.poll_events();
         r3_core->platform.poll_inputs();
         
-        if (r3_core->input.key_is_down(R3_KEY_F1)) r3_core->graphics.toggle_wireframe(1);
-        else r3_core->graphics.toggle_wireframe(0);
-
-        if (r3_core->input.key_is_down(R3_KEY_A)) location.x -= speed;
-        if (r3_core->input.key_is_down(R3_KEY_D)) location.x += speed;
-        if (r3_core->input.key_is_down(R3_KEY_W)) location.y += speed;
-        if (r3_core->input.key_is_down(R3_KEY_S)) location.y -= speed;
+        r3_core->graphics.toggle_wireframe(r3_core->input.key_is_down(R3_KEY_F1));
         
-        sprite.color->x = LIBX_CLAMP(sprite.color->x + (0.01 * (r3_core->input.key_is_down(R3_KEY_PLUS) - r3_core->input.key_is_down(R3_KEY_MINUS))), 0.0, 1.0);
-
-        if (r3_core->input.key_is_down(R3_KEY_UP))      r3_core->graphics.translate_camera( 0, 1, 0);
-        if (r3_core->input.key_is_down(R3_KEY_DOWN))    r3_core->graphics.translate_camera( 0,-1, 0);
-        if (r3_core->input.key_is_down(R3_KEY_LEFT))    r3_core->graphics.translate_camera(-1, 0, 0);
-        if (r3_core->input.key_is_down(R3_KEY_RIGHT))   r3_core->graphics.translate_camera( 1, 0, 0);
-
-        u_model = mathx->mat.identity4();
-        u_model = mathx->mat.mult4(u_model, mathx->mat.trans4(location.x, location.y, 0));
+        sprite0.color->x = LIBX_CLAMP(sprite0.color->x + (0.01 * (r3_core->input.key_is_down(R3_KEY_PLUS) - r3_core->input.key_is_down(R3_KEY_MINUS))), 0.0, 1.0);
         
-        u_model2 = mathx->mat.identity4();
-        u_model2 = mathx->mat.mult4(u_model2, mathx->mat.trans4(400, 300, 0));
-
-        r3_core->graphics.push_pipeline(&(R3_Render_Call){
-            .vertex = sprite.vertex, .model = &u_model,
-            .shader = NULL, .texture = sprite.texture,
-            .mode = R3_TRIANGLE_MODE, .type = R3_RENDER_ELEMENTS,
-            .uniform_count = 1, .uniforms = (R3_Uniform*[]){
-                &(R3_Uniform){
-                    .name = "u_sprite_color",
-                    .type = R3_UNIFORM_VEC3,
-                    .value = sprite.color
-                }
-            }
-        });
+        trans0.velocity->x = (r3_core->input.key_is_down(R3_KEY_D) - r3_core->input.key_is_down(R3_KEY_A));
+        trans0.velocity->y = (r3_core->input.key_is_down(R3_KEY_W) - r3_core->input.key_is_down(R3_KEY_S));
         
-        r3_core->graphics.push_pipeline(&(R3_Render_Call){
-            .vertex = &triangle, .model = &u_model2,
-            .shader = NULL, .texture = &texture,
-            .mode = R3_TRIANGLE_MODE, .type = R3_RENDER_ARRAYS,
-            .uniform_count = 1, .uniforms = (R3_Uniform*[]){
-                &(R3_Uniform){
-                    .name = "u_sprite_color",
-                    .type = R3_UNIFORM_VEC3,
-                    .value = &(Vec3){0.0, 1.0, 0.0}
-                }
-            }
-        });
+        r3_core->graphics.translate_camera(
+            (r3_core->input.key_is_down(R3_KEY_RIGHT) - r3_core->input.key_is_down(R3_KEY_LEFT)),
+            (r3_core->input.key_is_down(R3_KEY_UP) - r3_core->input.key_is_down(R3_KEY_DOWN)),
+            0
+        );
+
+        ecsx->run_systems(R3_TRANSFORM2D);
+        ecsx->run_systems(R3_SPRITE2D);
 
         r3_core->graphics.flush_pipeline();
         r3_core->graphics.update_camera();

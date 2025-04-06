@@ -101,7 +101,7 @@ typedef struct R3_Render_Call {
     R3_Shader* shader;
     Mat4* model;
     u8 uniform_count;
-    R3_Uniform** uniforms;
+    R3_Uniform uniforms[12];    // 12 per-call uniforms permitted as 4 uniforms are set by default in `flush_pipeline()` (u_model, u_view, u_proj, u_view_locaiton)
     R3_Render_Mode mode;
     R3_Render_Call_Type type;
 } R3_Render_Call;
