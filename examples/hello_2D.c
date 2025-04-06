@@ -44,22 +44,25 @@ int main() {
     Mat4 u_model2 = mathx->mat.identity4();
     u_model2 = mathx->mat.mult4(u_model2, mathx->mat.trans4(location.x, location.y, 0));
 
-    R3_Vertex_Data quad = r3_2D->shape2D.quad2D((Vec2){32.0, 32.0}, (Vec3){1, 1, 1});
     R3_Vertex_Data triangle = r3_2D->shape2D.triangle2D((Vec2){32.0, 32.0}, (Vec3){1, 1, 1});
 
-    if (r3_core->graphics.init_pipeline(
+    u32 entity = ecsx->create_entity();
+    ecsx->add_component(R3_SPRITE, entity);
+
+    R3_Sprite sprite; ecsx->get_component(R3_SPRITE, entity, &sprite);
+    sprite.texture = &texture;
+
+    r3_core->graphics.init_pipeline(
         R3_TRIANGLE_MODE, &shader,
         mathx->mat.ortho(0, window->size[0], 0, window->size[1], 0, 1)
-    )) printf("render pipeline initialized\n");
-    else printf("render pipeline failed to be initialized!\n");
-
-    if (r3_core->graphics.init_camera(
+    ); r3_core->graphics.init_camera(
         mathx->vec.vec3(0, 0, 1),
         mathx->vec.vec3(0, 0,-1),
         mathx->vec.vec3(0, 1, 0)
-    )) printf("camera initialized!\n");
-    else printf("camera failed to be initialized!\n");
+    );
+
     r3_core->graphics.camera.speed = 3;
+    
     while (running) {
         r3_core->platform.poll_events();
         r3_core->platform.poll_inputs();
@@ -71,6 +74,8 @@ int main() {
         if (r3_core->input.key_is_down(R3_KEY_D)) location.x += speed;
         if (r3_core->input.key_is_down(R3_KEY_W)) location.y += speed;
         if (r3_core->input.key_is_down(R3_KEY_S)) location.y -= speed;
+        
+        sprite.color->x = LIBX_CLAMP(sprite.color->x + (0.01 * (r3_core->input.key_is_down(R3_KEY_PLUS) - r3_core->input.key_is_down(R3_KEY_MINUS))), 0.0, 1.0);
 
         if (r3_core->input.key_is_down(R3_KEY_UP))      r3_core->graphics.translate_camera( 0, 1, 0);
         if (r3_core->input.key_is_down(R3_KEY_DOWN))    r3_core->graphics.translate_camera( 0,-1, 0);
@@ -83,8 +88,31 @@ int main() {
         u_model2 = mathx->mat.identity4();
         u_model2 = mathx->mat.mult4(u_model2, mathx->mat.trans4(400, 300, 0));
 
-        r3_core->graphics.push_pipeline(&quad, &u_model, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ELEMENTS);
-        r3_core->graphics.push_pipeline(&triangle, &u_model2, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
+        r3_core->graphics.push_pipeline(&(R3_Render_Call){
+            .vertex = sprite.vertex, .model = &u_model,
+            .shader = NULL, .texture = sprite.texture,
+            .mode = R3_TRIANGLE_MODE, .type = R3_RENDER_ELEMENTS,
+            .uniform_count = 1, .uniforms = (R3_Uniform*[]){
+                &(R3_Uniform){
+                    .name = "u_sprite_color",
+                    .type = R3_UNIFORM_VEC3,
+                    .value = sprite.color
+                }
+            }
+        });
+        
+        r3_core->graphics.push_pipeline(&(R3_Render_Call){
+            .vertex = &triangle, .model = &u_model2,
+            .shader = NULL, .texture = &texture,
+            .mode = R3_TRIANGLE_MODE, .type = R3_RENDER_ARRAYS,
+            .uniform_count = 1, .uniforms = (R3_Uniform*[]){
+                &(R3_Uniform){
+                    .name = "u_sprite_color",
+                    .type = R3_UNIFORM_VEC3,
+                    .value = &(Vec3){0.0, 1.0, 0.0}
+                }
+            }
+        });
 
         r3_core->graphics.flush_pipeline();
         r3_core->graphics.update_camera();

@@ -100,6 +100,8 @@ typedef struct R3_Render_Call {
     R3_Texture* texture;
     R3_Shader* shader;
     Mat4* model;
+    u8 uniform_count;
+    R3_Uniform** uniforms;
     R3_Render_Mode mode;
     R3_Render_Call_Type type;
 } R3_Render_Call;
@@ -130,7 +132,7 @@ typedef struct _r3_graphics_api {
     } camera;
 
     u8 (*init_pipeline)(R3_Render_Mode mode, R3_Shader* shader, Mat4 proj);
-    void (*push_pipeline)(R3_Vertex_Data* vertex, Mat4* model, R3_Shader* shader, R3_Texture* texture, R3_Render_Mode mode, R3_Render_Call_Type type);
+    void (*push_pipeline)(R3_Render_Call* call);
     void (*flush_pipeline)(void);
 
     u8 (*init_camera)(Vec3 eye, Vec3 center, Vec3 up);
@@ -196,7 +198,7 @@ typedef struct _r3_graphics_api {
         void (*get_program_info_log)(u32 program, i32 maxLength, i32 *length, char *infoLog);
         u32 (*get_uniform_location)(u32 program, const char* name);
         
-        void (*uniform1f)(u32 location, const f32* value);
+        void (*uniform1f)(u32 location, f32 value);
         void (*uniform2fv)(u32 location, u32 count, const f32* value);
         void (*uniform3fv)(u32 location, u32 count, const f32* value);
         void (*uniform4fv)(u32 location, u32 count, const f32* value);

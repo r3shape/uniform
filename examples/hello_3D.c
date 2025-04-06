@@ -137,18 +137,15 @@ int main() {
     
     Mat4 u_model2 = mathx->mat.identity4();
 
-    if (r3_core->graphics.init_pipeline(
+    r3_core->graphics.init_pipeline(
         R3_TRIANGLE_MODE, &shader,
         mathx->mat.perspective(60.0, 800/600, 0.1, 1000)
-    )) printf("render pipeline initialized\n");
-    else printf("render pipeline failed to be initialized!\n");
-
-    if (r3_core->graphics.init_camera(
+    ); r3_core->graphics.init_camera(
         mathx->vec.vec3(0, 0, 3),
         mathx->vec.vec3(0, 0, 1),
         mathx->vec.vec3(0, 1, 0)
-    )) printf("camera initialized!\n");
-    else printf("camera failed to be initialized!\n");
+    );
+    
     r3_core->graphics.camera.speed = 0.5;
     r3_core->graphics.camera.sensitivity = 0.05;
 
@@ -181,9 +178,17 @@ int main() {
         u_model2 = mathx->mat.mult4(u_model2, mathx->mat.scale4(32, 32, 32));
         u_model2 = mathx->mat.mult4(u_model2, mathx->mat.trans4(u_light.location.x, u_light.location.y, u_light.location.z));
         
-        r3_core->graphics.push_pipeline(&vertex_data, &u_model, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
-        r3_core->graphics.push_pipeline(&vertex_data, &u_model2, &shader2, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
-        
+        r3_core->graphics.push_pipeline(&(R3_Render_Call){
+            .vertex = &vertex_data, .model = &u_model,
+            .shader = NULL, .texture = &texture,
+            .mode = R3_TRIANGLE_MODE, .type = R3_RENDER_ARRAYS
+        });
+        r3_core->graphics.push_pipeline(&(R3_Render_Call){
+            .vertex = &vertex_data, .model = &u_model2,
+            .shader = &shader2, .texture = &texture,
+            .mode = R3_TRIANGLE_MODE, .type = R3_RENDER_ARRAYS
+        });
+
         r3_core->graphics.update_camera();
         r3_core->graphics.flush_pipeline();
         r3_core->platform.swap_buffers();

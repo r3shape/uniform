@@ -1,5 +1,4 @@
 #include <r3/r3.2D/include/r3.2D.h>
-#include <r3/r3.core/include/r3.core.h>
 
 R3_Vertex_Data _triangle2D_impl(Vec2 size, Vec3 color) {
     f32 half_width =    size.x * 0.5f;

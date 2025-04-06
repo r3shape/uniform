@@ -7,7 +7,7 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
     u32 link = 0;
     u32 compile = 0;
 
-    R3_Shader shader = {.uniforms = structx->create_hash_array(64)};
+    R3_Shader shader = {.uniforms = structx->create_hash_array(32)};
     if (!shader.uniforms) {
         // error: failed to allocate uniform hashmap!
         return (R3_Shader){0};
@@ -76,11 +76,11 @@ u8 _send_uniform_impl(R3_Shader* shader, str name) {
     switch (uniform->type) {
         case R3_UNIFORM_NONE: break;
         case R3_UNIFORM_TYPES: break;
-        case R3_UNIFORM_FLOAT: _graphics_api->gl.uniform1f(uniform->location, uniform->value); break;
-        case R3_UNIFORM_VEC2: _graphics_api->gl.uniform2fv(uniform->location, 1, uniform->value); break;
-        case R3_UNIFORM_VEC3: _graphics_api->gl.uniform3fv(uniform->location, 1, uniform->value); break;
-        case R3_UNIFORM_VEC4: _graphics_api->gl.uniform4fv(uniform->location, 1, uniform->value); break;
-        case R3_UNIFORM_MAT4: _graphics_api->gl.uniform_matrix4fv(uniform->location, 1, 0, uniform->value); break;
+        case R3_UNIFORM_FLOAT: _graphics_api->gl.uniform1f(uniform->location, *(f32*)uniform->value); break;
+        case R3_UNIFORM_VEC2: _graphics_api->gl.uniform2fv(uniform->location, 1, (f32*)uniform->value); break;
+        case R3_UNIFORM_VEC3: _graphics_api->gl.uniform3fv(uniform->location, 1, (f32*)uniform->value); break;
+        case R3_UNIFORM_VEC4: _graphics_api->gl.uniform4fv(uniform->location, 1, (f32*)uniform->value); break;
+        case R3_UNIFORM_MAT4: _graphics_api->gl.uniform_matrix4fv(uniform->location, 1, 0, (f32*)uniform->value); break;
         default: break;
     }
     return LIBX_TRUE;
@@ -228,16 +228,9 @@ void _destroy_texture2D_impl(R3_Texture* texture) {
 
 
 // PIPELINE API
-void _push_pipeline_impl(R3_Vertex_Data* vertex, Mat4* model, R3_Shader* shader, R3_Texture* texture, R3_Render_Mode mode, R3_Render_Call_Type type) {
+void _push_pipeline_impl(R3_Render_Call* call) {
     if (!_graphics_api->pipeline.init) return;  // error: render pipeline not initialized!
-    structx->push_array(_graphics_api->pipeline.calls, &(R3_Render_Call){
-        .vertex = vertex,
-        .texture = texture,
-        .shader = shader,
-        .model = model,
-        .mode = mode,
-        .type = type
-    });
+    structx->push_array(_graphics_api->pipeline.calls, call);
 }
 
 void _flush_pipeline_impl(void) {
@@ -293,20 +286,32 @@ void _flush_pipeline_impl(void) {
             .value = &_graphics_api->pipeline.proj.m
         });
         
+        if (call.uniform_count) {
+            LIBX_FORI(0, call.uniform_count, 1) {
+                if (i >= 16 || !call.uniforms[i]) break;
+                _graphics_api->set_uniform(shader, call.uniforms[i]);
+            }
+        }
+
         if (_graphics_api->pipeline.mode != call.mode) _graphics_api->pipeline.mode = call.mode;
         _graphics_api->gl.use_program(shader->program);
         
         R3_Uniform** uniforms = (R3_Uniform**)structx->get_hash_array_values(shader->uniforms);
-        LIBX_FORI(0, shader->uniforms->meta.count, 1) _graphics_api->send_uniform(shader, (str)uniforms[i]->name);
+        LIBX_FORI(0, shader->uniforms->meta.count, 1) {
+            _graphics_api->send_uniform(shader, (str)uniforms[i]->name);
+        }
         structx->destroy_array(uniforms);
-        
-        if (call.texture->id > 0) _graphics_api->gl.bind_texture(GL_TEXTURE_2D, call.texture->id);
+
+        if (call.texture && call.texture->id > 0) _graphics_api->gl.bind_texture(GL_TEXTURE_2D, call.texture->id);
         _graphics_api->gl.bind_vertex_array(call.vertex->vao);
         if (call.type == R3_RENDER_ARRAYS) {
             _graphics_api->gl.draw_arrays(call.mode, 0, call.vertex->vertexCount);
         } else if (call.type == R3_RENDER_ELEMENTS) {
             _graphics_api->gl.draw_elements(call.mode, call.vertex->indexCount, GL_UNSIGNED_INT, NULL);
-        } _graphics_api->gl.use_program(0);
+        }
+        _graphics_api->gl.bind_texture(GL_TEXTURE_2D, 0);
+        _graphics_api->gl.bind_vertex_array(0);
+        _graphics_api->gl.use_program(0);
     }
 }
 

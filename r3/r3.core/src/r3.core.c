@@ -52,8 +52,8 @@ u8 r3_cleanup_core(void) {
     }
 
     if ((r3_core->modules & R3_2D) == R3_2D) {
-        libx_cleanup_ecs();
         result = r3_cleanup_2D();
+        libx_cleanup_ecs();
     }
     
     memx->dealloc(r3_core);
