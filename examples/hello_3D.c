@@ -1,4 +1,5 @@
-#include <r3/include/r3.h>
+#define R3_MODULES R3_CORE
+#include <r3/r3.core/include/r3.core.h>
 
 u8 running = 1;
 u8 quit_callback2(u16 event_code, R3_Event data) {
@@ -26,7 +27,7 @@ u8 camera_callback(u16 event_code, R3_Event data) {
 }
 
 int main() {
-    r3_init_core();
+    r3_init_core(R3_MODULES);
         
     R3_Window* window = r3_core->platform.create_window("Hello Cube", 800, 600);
     r3_core->platform.create_gl_context();
@@ -136,18 +137,15 @@ int main() {
     
     Mat4 u_model2 = mathx->mat.identity4();
 
-    if (r3_core->graphics.init_pipeline(
+    r3_core->graphics.init_pipeline(
         R3_TRIANGLE_MODE, &shader,
         mathx->mat.perspective(60.0, 800/600, 0.1, 1000)
-    )) printf("render pipeline initialized\n");
-    else printf("render pipeline failed to be initialized!\n");
-
-    if (r3_core->graphics.init_camera(
+    ); r3_core->graphics.init_camera(
         mathx->vec.vec3(0, 0, 3),
         mathx->vec.vec3(0, 0, 1),
         mathx->vec.vec3(0, 1, 0)
-    )) printf("camera initialized!\n");
-    else printf("camera failed to be initialized!\n");
+    );
+    
     r3_core->graphics.camera.speed = 0.5;
     r3_core->graphics.camera.sensitivity = 0.05;
 
@@ -157,20 +155,16 @@ int main() {
         r3_core->platform.poll_events();
         r3_core->platform.poll_inputs();
         
-        if (r3_core->input.key_is_down(R3_KEY_F1)) r3_core->graphics.toggle_wireframe(1);
-        else r3_core->graphics.toggle_wireframe(0);
+        r3_core->graphics.toggle_wireframe(r3_core->input.key_is_down(R3_KEY_F1));
+
+        u_light.location.x += speed * (r3_core->input.key_is_down(R3_KEY_RIGHT) - r3_core->input.key_is_down(R3_KEY_LEFT));
+        u_light.location.y += speed * (r3_core->input.key_is_down(R3_KEY_UP) - r3_core->input.key_is_down(R3_KEY_DOWN));
         
-        if (r3_core->input.key_is_down(R3_KEY_UP)) u_light.location.y += speed;
-        if (r3_core->input.key_is_down(R3_KEY_DOWN)) u_light.location.y -= speed;
-        if (r3_core->input.key_is_down(R3_KEY_LEFT)) u_light.location.x -= speed;
-        if (r3_core->input.key_is_down(R3_KEY_RIGHT)) u_light.location.x += speed;
-        
-        if (r3_core->input.key_is_down(R3_KEY_A)) r3_core->graphics.translate_camera(-1, 0, 0);
-        if (r3_core->input.key_is_down(R3_KEY_D)) r3_core->graphics.translate_camera( 1, 0, 0);
-        if (r3_core->input.key_is_down(R3_KEY_W)) r3_core->graphics.translate_camera( 0, 0, 1);
-        if (r3_core->input.key_is_down(R3_KEY_S)) r3_core->graphics.translate_camera( 0, 0,-1);
-        if (r3_core->input.key_is_down(R3_KEY_SPACE)) r3_core->graphics.translate_camera(0,  1, 0);
-        if (r3_core->input.key_is_down(R3_KEY_SHIFT)) r3_core->graphics.translate_camera(0, -1, 0);
+        r3_core->graphics.translate_camera(
+            (r3_core->input.key_is_down(R3_KEY_D) - r3_core->input.key_is_down(R3_KEY_A)),
+            (r3_core->input.key_is_down(R3_KEY_SPACE) - r3_core->input.key_is_down(R3_KEY_SHIFT)),
+            (r3_core->input.key_is_down(R3_KEY_W) - r3_core->input.key_is_down(R3_KEY_S))
+        );
         
         u_model = mathx->mat.identity4();
         u_model = mathx->mat.mult4(u_model, mathx->mat.scale4(32, 32, 32));
@@ -180,9 +174,17 @@ int main() {
         u_model2 = mathx->mat.mult4(u_model2, mathx->mat.scale4(32, 32, 32));
         u_model2 = mathx->mat.mult4(u_model2, mathx->mat.trans4(u_light.location.x, u_light.location.y, u_light.location.z));
         
-        r3_core->graphics.push_pipeline(&vertex_data, &u_model, NULL, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
-        r3_core->graphics.push_pipeline(&vertex_data, &u_model2, &shader2, &texture, R3_TRIANGLE_MODE, R3_RENDER_ARRAYS);
-        
+        r3_core->graphics.push_pipeline(&(R3_Render_Call){
+            .vertex = &vertex_data, .model = &u_model,
+            .shader = NULL, .texture = &texture,
+            .mode = R3_TRIANGLE_MODE, .type = R3_RENDER_ARRAYS
+        });
+        r3_core->graphics.push_pipeline(&(R3_Render_Call){
+            .vertex = &vertex_data, .model = &u_model2,
+            .shader = &shader2, .texture = &texture,
+            .mode = R3_TRIANGLE_MODE, .type = R3_RENDER_ARRAYS
+        });
+
         r3_core->graphics.update_camera();
         r3_core->graphics.flush_pipeline();
         r3_core->platform.swap_buffers();

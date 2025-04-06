@@ -1,4 +1,4 @@
-![r3engine](engine/assets/r3-sticker.png)
+![r3engine](r3/assets/r3-sticker.png)
 
 ![GitHub Stars](https://img.shields.io/github/stars/r3shape/r3engine?style=for-the-badge&label=stars&labelColor=black&color=white)
 ![License](https://img.shields.io/badge/mit-badge?style=for-the-badge&logo=mit&logoColor=white&label=License&labelColor=black&color=white)
@@ -67,7 +67,7 @@ For those who wish to **wield the source** themselves:
 2. **Compile the Engine**:  
    Manually compile using **GCC**:  
    ```bash
-   gcc -c engine/r3.core/src/*.c -Iengine/include -o bin/ofiles/*.o
+   gcc -c r3/r3.core/src/*.c -Iengine/include -o bin/ofiles/*.o
    gcc -shared bin/ofiles/*.o -lopengl32 -lgdi32 -llibx -Lexternal/libx/bin -o build/r3engine.dll
    ```
 

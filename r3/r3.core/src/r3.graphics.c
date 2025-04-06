@@ -7,7 +7,7 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
     u32 link = 0;
     u32 compile = 0;
 
-    R3_Shader shader = {.uniforms = structx->create_hash_array(64)};
+    R3_Shader shader = {.uniforms = structx->array.create_hash_array(32)};
     if (!shader.uniforms) {
         // error: failed to allocate uniform hashmap!
         return (R3_Shader){0};
@@ -23,7 +23,7 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
     if (!compile) {
         // error: failed to compile vertex-shader!
         printf("failed to compile vertex shader!\n");
-        structx->destroy_hash_array(shader.uniforms);
+        structx->array.destroy_hash_array(shader.uniforms);
         return (R3_Shader){0};
     }
     
@@ -33,7 +33,7 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
     if (!compile) {
         // error: failed to compile fragment-shader!
         printf("failed to compile fragment shader!\n");
-        structx->destroy_hash_array(shader.uniforms);
+        structx->array.destroy_hash_array(shader.uniforms);
         return (R3_Shader){0};
     }
     
@@ -44,7 +44,7 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
     if (!link) {
         // error: failed to link shader program!
         printf("failed to link shader!\n");
-        structx->destroy_hash_array(shader.uniforms);
+        structx->array.destroy_hash_array(shader.uniforms);
         return (R3_Shader){0};
     }
 
@@ -54,7 +54,7 @@ R3_Shader _create_shader_impl(cstr vertex, cstr fragment) {
 }
 
 void _destroy_shader_impl(R3_Shader* shader) {
-    structx->destroy_hash_array(shader->uniforms);
+    structx->array.destroy_hash_array(shader->uniforms);
     _graphics_api->gl.delete_program(shader->program);
 }
 
@@ -64,23 +64,23 @@ u8 _set_uniform_impl(R3_Shader* shader, R3_Uniform* uniform) {
         return LIBX_FALSE;  // error: uniform value error!
     }
     uniform->location = _graphics_api->gl.get_uniform_location(shader->program, uniform->name);
-    return structx->put_hash_array(shader->uniforms, uniform->name, uniform);
+    return structx->array.put_hash_array(shader->uniforms, uniform->name, uniform);
 }
 
 u8 _send_uniform_impl(R3_Shader* shader, str name) {
     if (!shader || !name) return LIBX_FALSE;    // error: null ptr!
     
-    R3_Uniform* uniform = structx->get_hash_array(shader->uniforms, name);
+    R3_Uniform* uniform = structx->array.get_hash_array(shader->uniforms, name);
     if (!uniform) return LIBX_FALSE;  // error: failed to find uniform in hashmap!
 
     switch (uniform->type) {
         case R3_UNIFORM_NONE: break;
         case R3_UNIFORM_TYPES: break;
-        case R3_UNIFORM_FLOAT: _graphics_api->gl.uniform1f(uniform->location, uniform->value); break;
-        case R3_UNIFORM_VEC2: _graphics_api->gl.uniform2fv(uniform->location, 1, uniform->value); break;
-        case R3_UNIFORM_VEC3: _graphics_api->gl.uniform3fv(uniform->location, 1, uniform->value); break;
-        case R3_UNIFORM_VEC4: _graphics_api->gl.uniform4fv(uniform->location, 1, uniform->value); break;
-        case R3_UNIFORM_MAT4: _graphics_api->gl.uniform_matrix4fv(uniform->location, 1, 0, uniform->value); break;
+        case R3_UNIFORM_FLOAT: _graphics_api->gl.uniform1f(uniform->location, *(f32*)uniform->value); break;
+        case R3_UNIFORM_VEC2: _graphics_api->gl.uniform2fv(uniform->location, 1, (f32*)uniform->value); break;
+        case R3_UNIFORM_VEC3: _graphics_api->gl.uniform3fv(uniform->location, 1, (f32*)uniform->value); break;
+        case R3_UNIFORM_VEC4: _graphics_api->gl.uniform4fv(uniform->location, 1, (f32*)uniform->value); break;
+        case R3_UNIFORM_MAT4: _graphics_api->gl.uniform_matrix4fv(uniform->location, 1, 0, (f32*)uniform->value); break;
         default: break;
     }
     return LIBX_TRUE;
@@ -228,16 +228,9 @@ void _destroy_texture2D_impl(R3_Texture* texture) {
 
 
 // PIPELINE API
-void _push_pipeline_impl(R3_Vertex_Data* vertex, Mat4* model, R3_Shader* shader, R3_Texture* texture, R3_Render_Mode mode, R3_Render_Call_Type type) {
+void _push_pipeline_impl(R3_Render_Call* call) {
     if (!_graphics_api->pipeline.init) return;  // error: render pipeline not initialized!
-    structx->push_array(_graphics_api->pipeline.calls, &(R3_Render_Call){
-        .vertex = vertex,
-        .texture = texture,
-        .shader = shader,
-        .model = model,
-        .mode = mode,
-        .type = type
-    });
+    structx->array.push_array(_graphics_api->pipeline.calls, call);
 }
 
 void _flush_pipeline_impl(void) {
@@ -250,11 +243,11 @@ void _flush_pipeline_impl(void) {
         _graphics_api->pipeline.clear_color.w
     ); _graphics_api->gl.clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    Array_Head head = structx->get_array_head(_graphics_api->pipeline.calls);
+    Array_Head head = structx->array.get_array_head(_graphics_api->pipeline.calls);
     R3_Shader* shader = _graphics_api->pipeline.shader;
     LIBX_FORI(0, head.count, 1) {
         R3_Render_Call call;
-        structx->pull_array(_graphics_api->pipeline.calls, 0, &call);
+        structx->array.pull_array(_graphics_api->pipeline.calls, 0, &call);
         
         if (call.shader) {
             if (shader) {
@@ -293,29 +286,41 @@ void _flush_pipeline_impl(void) {
             .value = &_graphics_api->pipeline.proj.m
         });
         
+        if (call.uniform_count && call.uniform_count <= 12) {
+            LIBX_FORI(0, call.uniform_count, 1) {
+                if (!call.uniforms[i].name || !call.uniforms[i].value) break;
+                _graphics_api->set_uniform(shader, &call.uniforms[i]);
+            }
+        }
+
         if (_graphics_api->pipeline.mode != call.mode) _graphics_api->pipeline.mode = call.mode;
         _graphics_api->gl.use_program(shader->program);
         
-        R3_Uniform** uniforms = (R3_Uniform**)structx->get_hash_array_values(shader->uniforms);
-        LIBX_FORI(0, shader->uniforms->meta.count, 1) _graphics_api->send_uniform(shader, (str)uniforms[i]->name);
-        structx->destroy_array(uniforms);
-        
-        if (call.texture->id > 0) _graphics_api->gl.bind_texture(GL_TEXTURE_2D, call.texture->id);
+        R3_Uniform** uniforms = (R3_Uniform**)structx->array.get_hash_array_values(shader->uniforms);
+        LIBX_FORI(0, shader->uniforms->meta.count, 1) {
+            _graphics_api->send_uniform(shader, (str)uniforms[i]->name);
+        }
+        structx->array.destroy_array(uniforms);
+
+        if (call.texture && call.texture->id > 0) _graphics_api->gl.bind_texture(GL_TEXTURE_2D, call.texture->id);
         _graphics_api->gl.bind_vertex_array(call.vertex->vao);
         if (call.type == R3_RENDER_ARRAYS) {
             _graphics_api->gl.draw_arrays(call.mode, 0, call.vertex->vertexCount);
         } else if (call.type == R3_RENDER_ELEMENTS) {
             _graphics_api->gl.draw_elements(call.mode, call.vertex->indexCount, GL_UNSIGNED_INT, NULL);
-        } _graphics_api->gl.use_program(0);
+        }
+        _graphics_api->gl.bind_texture(GL_TEXTURE_2D, 0);
+        _graphics_api->gl.bind_vertex_array(0);
+        _graphics_api->gl.use_program(0);
     }
 }
 
 u8 _init_pipeline_impl(R3_Render_Mode mode, R3_Shader* shader, Mat4 proj) {
     if (_graphics_api->pipeline.init) return LIBX_TRUE; // redundant call: graphics API already initialized!
 
-    if (mode >= R3_DRAW_MODES || !shader) return LIBX_FALSE;  // error: value error/null ptr!
+    if (mode >= R3_DRAW_MODES) return LIBX_FALSE;  // error: value error
     
-    _graphics_api->pipeline.calls = structx->create_array(sizeof(R3_Render_Call), 1024);
+    _graphics_api->pipeline.calls = structx->array.create_array(sizeof(R3_Render_Call), 1024);
     if (!_graphics_api->pipeline.calls) return LIBX_FALSE;    // error: out of memory!
 
     _graphics_api->pipeline.init = LIBX_TRUE;
@@ -576,7 +581,7 @@ u8 _r3_init_graphics(_r3_graphics_api* api) {
 u8 _r3_cleanup_graphics(_r3_graphics_api* api) {
     if (!api) return LIBX_FALSE;
     
-    if (api->pipeline.calls) structx->destroy_array(api->pipeline.calls);
+    if (api->pipeline.calls) structx->array.destroy_array(api->pipeline.calls);
     
     api->init_pipeline = NULL;
     api->push_pipeline = NULL;
