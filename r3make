@@ -17,7 +17,7 @@
 	        },
             "out-type": "dll",
             "out-name": "r3",
-            "out-dir": "bin"
+            "out-dir": "build"
         },
         "examples": {
             "r3make": {
@@ -29,11 +29,11 @@
             "src-dirs": ["examples"],
             "inc-dirs": [".", "external"],
             "lib-links": {
-                "r3": "bin"
+                "r3": "build"
             },
             "out-type": "exe",
             "out-name": null,
-            "out-dir": "bin"
+            "out-dir": "build"
         }
     }
 }

@@ -6,9 +6,7 @@
 ---
 
 ### Relevant Links
-
-| [Module Reference](https://github.com/r3shape/r3engine/blob/main/docs/module_ref/module_ref.md) | [API Reference](https://github.com/r3shape/r3engine/blob/main/docs/api_ref/api_ref.md) | [Example Guides](https://github.com/r3shape/r3engine/blob/main/docs/examples/examples.md) |  [Example Code](https://github.com/r3shape/r3engine/tree/main/examples) |   
-| [Official Discord](https://discord.gg/kreGBCVsQQ) | [Official Reddit](https://www.reddit.com/r/r3engineEngine/) | [r3engine Discussions](https://github.com/r3shape/r3engine/discussions) | [r3engine FAQ](https://github.com/r3shape/r3engine/wiki/r3engine-FAQ) |  
+| [Discord](https://discord.gg/kreGBCVsQQ) | [Reddit](https://www.reddit.com/r/r3engineEngine/) | [Discussions](https://github.com/r3shape/r3engine/discussions) | [FAQ](https://github.com/r3shape/r3engine/wiki/r3engine-FAQ) | [Example Code](https://github.com/r3shape/r3engine/tree/main/examples) |  
 
 
 ## Building the Engine Source
@@ -35,7 +33,6 @@ r3engine includes **pre-configured `.r3make` files** for easy setup and compilat
 3. **Navigate to the `.r3make` directory:
    ```bash
    cd r3engine
-   cd .r3make
    ```
 
 4. **Build the Engine**:  
@@ -44,13 +41,13 @@ r3engine includes **pre-configured `.r3make` files** for easy setup and compilat
    r3make r3
    ```
 5. **Build the Engine Demos**:  
-   - Target: `demo` builds the `demo` directory into corresponding `exe` files in the same output directory as the `r3` build target.
+   - Target: `examples` builds the `examples` directory into corresponding `exe` files in the same output directory as the `r3` build target.
    ```bash
-   r3make demo
+   r3make examples
    ```
 
 5. **Output**:  
-   The compiled `r3.dll`, along with demo exe files will be located in the `build` directory.
+   The compiled `r3.dll`, along with example exe files will be located in the `build` directory.
 
 ---
 
