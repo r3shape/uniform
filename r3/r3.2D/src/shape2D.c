@@ -34,6 +34,7 @@ R3_Vertex_Data _quad2D_impl(Vec2 size, Vec3 color) {
     );
 }
 
+
 u8 _r3_init_shape2D(_r3_2D_api* r3_2D) {
     if (!r3_2D) return LIBX_FALSE;  // error: null ptr!
     

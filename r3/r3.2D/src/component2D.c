@@ -18,6 +18,7 @@ static struct R3_Transform_Storage {
     Vec2 location[ENTITY_MAX];
 } transform_store = {0};
 
+
 u8 _add_sprite_impl(u32 entity) {
     sprite_store.size[entity] = (Vec2){32.0, 32.0};
     sprite_store.color[entity] = (Vec3){84/255.0, 52/255.0, 150/255.0};

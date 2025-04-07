@@ -8,7 +8,7 @@
                 }
             },
             "c-defines": ["DLL_EXPORT"],
-	        "src-dirs": ["r3/r3.core/src", "r3/r3.pack/src", "r3/r3.2D/src"],
+	        "src-dirs": ["r3/r3.core/src", "r3/r3.pack/src", "r3/r3.2D/src", "r3/r3.3D/src"],
             "inc-dirs": [".", "external"],
             "lib-links": {
                 "gdi32": null,

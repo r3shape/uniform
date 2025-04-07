@@ -1,6 +1,7 @@
 #include <r3/r3.core/include/r3.core.h>
 #include <r3/r3.pack/include/r3.pack.h>
 #include <r3/r3.2D/include/r3.2D.h>
+#include <r3/r3.3D/include/r3.3D.h>
 
 _r3_core_api* r3_core = NULL;
 
@@ -31,6 +32,11 @@ u8 r3_init_core(u8 modules) {
         if (!r3_init_2D()) return LIBX_FALSE;    // error: failed to init 2D api!
     }
 
+    if ((modules & R3_3D) == R3_3D) {
+        if (!libx_init_ecs()) return LIBX_FALSE;        // error: failed to init ecs api!
+        if (!r3_init_3D()) return LIBX_FALSE;    // error: failed to init 3D api!
+    }
+
     r3_core->modules = modules;
     return LIBX_TRUE;
 }
@@ -53,6 +59,11 @@ u8 r3_cleanup_core(void) {
 
     if ((r3_core->modules & R3_2D) == R3_2D) {
         result = r3_cleanup_2D();
+        libx_cleanup_ecs();
+    }
+    
+    if ((r3_core->modules & R3_3D) == R3_3D) {
+        result = r3_cleanup_3D();
         libx_cleanup_ecs();
     }
     

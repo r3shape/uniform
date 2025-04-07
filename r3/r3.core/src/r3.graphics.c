@@ -252,10 +252,8 @@ void _flush_pipeline_impl(void) {
         if (call.shader) {
             if (shader) {
                 if (shader->program != call.shader->program) shader = call.shader;
-            } else shader = call.shader;
-        } else {
-            if (!shader) continue;
-        }
+            }
+        } if (!shader) continue;  // error: no global shader set!
         
         if (call.model) _graphics_api->set_uniform(shader,
             &(R3_Uniform){

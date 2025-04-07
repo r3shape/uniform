@@ -29,6 +29,9 @@ u8 r3_cleanup_core(void);
     #if ((R3_MODULES & R3_2D))
         #include <r3/r3.2D/include/r3.2D.h>
     #endif
+    #if ((R3_MODULES & R3_3D))
+        #include <r3/r3.3D/include/r3.3D.h>
+    #endif
 #else
     #define R3_MODULES R3_CORE
 #endif
