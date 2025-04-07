@@ -60,34 +60,36 @@ int main() {
 
     R3_Texture texture = r3_core->graphics.create_texture2D("assets/textures/logo.png", R3_RGBA_FORMAT);
     
-    u32 entity0 = ecsx->create_entity();
-    ecsx->add_component(R3_TRANSFORM3D, entity0);
-    ecsx->add_component(R3_MESH3D, entity0);
-    ecsx->add_component(R3_MATERIAL3D, entity0);
+    u32 entity0 = ecsx->create_entity_with(3, (u8[]){
+        R3_TRANSFORM3D,
+        R3_MESH3D,
+        R3_MATERIAL3D
+    });
     
-    u32 entity1 = ecsx->create_entity();
-    ecsx->add_component(R3_TRANSFORM3D, entity1);
-    ecsx->add_component(R3_MESH3D, entity1);
-    ecsx->add_component(R3_SHADER3D, entity1);
-
     R3_Mesh3D mesh0; ecsx->get_component(R3_MESH3D, entity0, &mesh0);
     *mesh0.texture = texture;
 
     R3_Transform3D trans0; ecsx->get_component(R3_TRANSFORM3D, entity0, &trans0);
     *trans0.scale = (Vec3){10, 10, 10};
+    
+    u32 entity1 = ecsx->create_entity_with(3, (u8[]){
+        R3_TRANSFORM3D,
+        R3_MESH3D,
+        R3_SHADER3D
+    });
 
     R3_Mesh3D mesh1; ecsx->get_component(R3_MESH3D, entity1, &mesh1);
     *mesh1.texture = texture;
-
+    
+    R3_Transform3D trans1; ecsx->get_component(R3_TRANSFORM3D, entity1, &trans1);
+    *trans1.location = mathx->vec.vec3(0, 0, -32);
+    *trans1.scale = (Vec3){5, 5, 5};
+    
     r3_3D->set_shader3D(entity1, 
         r3_core->graphics.create_shader(
             filex->read("assets/shaders/light/source.vert", 0),
             filex->read("assets/shaders/light/source.frag", 0)
     ));
-
-    R3_Transform3D trans1; ecsx->get_component(R3_TRANSFORM3D, entity1, &trans1);
-    *trans1.location = mathx->vec.vec3(0, 0, -32);
-    *trans1.scale = (Vec3){5, 5, 5};
     
     r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.ambient", .value = &u_light.ambient});
     r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.diffuse", .value = &u_light.diffuse});
