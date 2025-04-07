@@ -1,4 +1,7 @@
-#define R3_MODULES R3_CORE
+// hello_3D.c
+// Now fully driven by libx ecsx!
+
+#define R3_MODULES R3_CORE|R3_3D
 #include <r3/r3.core/include/r3.core.h>
 
 u8 running = 1;
@@ -29,7 +32,7 @@ u8 camera_callback(u16 event_code, R3_Event data) {
 int main() {
     r3_init_core(R3_MODULES);
         
-    R3_Window* window = r3_core->platform.create_window("Hello Cube", 800, 600);
+    R3_Window* window = r3_core->platform.create_window("Hello 3D", 800, 600);
     r3_core->platform.create_gl_context();
     r3_core->graphics.init_gl(&r3_core->graphics);
     
@@ -50,92 +53,46 @@ int main() {
         .location = mathx->vec.vec3(-2, 0.0, -2*32)
     };
     
-    struct Material {
-        f32 shine;
-        Vec3 ambient;
-        Vec3 diffuse;
-        Vec3 specular;
-    } u_material = {
-        .shine = 32.0,
-        .ambient = mathx->vec.vec3(1.0, 0.5, 0.31),
-        .diffuse = mathx->vec.vec3(1.0, 0.5, 0.31),
-        .specular = mathx->vec.vec3(0.5, 0.5, 0.5)
-    };
-    
     R3_Shader shader = r3_core->graphics.create_shader(
         filex->read("assets/shaders/light/shader.vert", 0),
         filex->read("assets/shaders/light/shader.frag", 0)
     );
+
+    R3_Texture texture = r3_core->graphics.create_texture2D("assets/textures/logo.png", R3_RGBA_FORMAT);
+    
+    u32 entity0 = ecsx->create_entity();
+    ecsx->add_component(R3_TRANSFORM3D, entity0);
+    ecsx->add_component(R3_MESH3D, entity0);
+    ecsx->add_component(R3_MATERIAL3D, entity0);
+    
+    u32 entity1 = ecsx->create_entity();
+    ecsx->add_component(R3_TRANSFORM3D, entity1);
+    ecsx->add_component(R3_MESH3D, entity1);
+    ecsx->add_component(R3_SHADER3D, entity1);
+
+    R3_Mesh3D mesh0; ecsx->get_component(R3_MESH3D, entity0, &mesh0);
+    *mesh0.texture = texture;
+
+    R3_Transform3D trans0; ecsx->get_component(R3_TRANSFORM3D, entity0, &trans0);
+    *trans0.scale = (Vec3){10, 10, 10};
+
+    R3_Mesh3D mesh1; ecsx->get_component(R3_MESH3D, entity1, &mesh1);
+    *mesh1.texture = texture;
+
+    r3_3D->set_shader3D(entity1, 
+        r3_core->graphics.create_shader(
+            filex->read("assets/shaders/light/source.vert", 0),
+            filex->read("assets/shaders/light/source.frag", 0)
+    ));
+
+    R3_Transform3D trans1; ecsx->get_component(R3_TRANSFORM3D, entity1, &trans1);
+    *trans1.location = mathx->vec.vec3(0, 0, -32);
+    *trans1.scale = (Vec3){5, 5, 5};
     
     r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.ambient", .value = &u_light.ambient});
     r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.diffuse", .value = &u_light.diffuse});
     r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.specular", .value = &u_light.specular});
-    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.location", .value = &u_light.location});
-
-    // TODO: debug why this float uniform types appear to not be set properly
-    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_FLOAT, .name = "u_material.shine", .value = &u_material.shine});
-    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_material.ambient", .value = &u_material.ambient});
-    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_material.diffuse", .value = &u_material.diffuse});
-    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_material.specular", .value = &u_material.specular});
-
-    R3_Shader shader2 = r3_core->graphics.create_shader(
-        filex->read("assets/shaders/light/source.vert", 0),
-        filex->read("assets/shaders/light/source.frag", 0)
-    );
-
-    R3_Texture texture = r3_core->graphics.create_texture2D("assets/textures/logo.png", R3_RGBA_FORMAT);
-    
-    f32 speed = 0.5;
-    f32 rotation = 0.0;
-    Mat4 u_model = mathx->mat.identity4();
-    Vec3 location = mathx->vec.vec3(0, 0, 0);
-    R3_Vertex_Data vertex_data = r3_core->graphics.create_vertex_data(
-        (f32[]){
-            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-             0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-             0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-            -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-            -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-        
-            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-        
-            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-            -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-        
-             0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-             0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-             0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-             0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-             0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-             0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-        
-            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-             0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-             0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-             0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-        
-            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-             0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-             0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
-        }, 36, NULL, 0, R3_LOCATION_ATTR | R3_NORMAL_ATTR
-    );
-    
-    Mat4 u_model2 = mathx->mat.identity4();
+    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.location", .value = trans1.location});
 
     r3_core->graphics.init_pipeline(
         R3_TRIANGLE_MODE, &shader,
@@ -146,7 +103,7 @@ int main() {
         mathx->vec.vec3(0, 1, 0)
     );
     
-    r3_core->graphics.camera.speed = 0.5;
+    r3_core->graphics.camera.speed = 0.2;
     r3_core->graphics.camera.sensitivity = 0.05;
 
     r3_core->platform.hide_cursor();
@@ -155,35 +112,21 @@ int main() {
         r3_core->platform.poll_events();
         r3_core->platform.poll_inputs();
         
+        mesh0.color->x = LIBX_CLAMP(mesh0.color->x + (0.01 * (r3_core->input.key_is_down(R3_KEY_PLUS) - r3_core->input.key_is_down(R3_KEY_MINUS))), 0.0, 1.0);
         r3_core->graphics.toggle_wireframe(r3_core->input.key_is_down(R3_KEY_F1));
 
-        u_light.location.x += speed * (r3_core->input.key_is_down(R3_KEY_RIGHT) - r3_core->input.key_is_down(R3_KEY_LEFT));
-        u_light.location.y += speed * (r3_core->input.key_is_down(R3_KEY_UP) - r3_core->input.key_is_down(R3_KEY_DOWN));
+        trans1.location->x += 1.0 * (r3_core->input.key_is_down(R3_KEY_RIGHT) - r3_core->input.key_is_down(R3_KEY_LEFT));
+        trans1.location->y += 1.0 * (r3_core->input.key_is_down(R3_KEY_UP) - r3_core->input.key_is_down(R3_KEY_DOWN));
         
         r3_core->graphics.translate_camera(
             (r3_core->input.key_is_down(R3_KEY_D) - r3_core->input.key_is_down(R3_KEY_A)),
             (r3_core->input.key_is_down(R3_KEY_SPACE) - r3_core->input.key_is_down(R3_KEY_SHIFT)),
             (r3_core->input.key_is_down(R3_KEY_W) - r3_core->input.key_is_down(R3_KEY_S))
         );
-        
-        u_model = mathx->mat.identity4();
-        u_model = mathx->mat.mult4(u_model, mathx->mat.scale4(32, 32, 32));
-        u_model = mathx->mat.mult4(u_model, mathx->mat.trans4(location.x, location.y, location.z));
-        
-        u_model2 = mathx->mat.identity4();
-        u_model2 = mathx->mat.mult4(u_model2, mathx->mat.scale4(32, 32, 32));
-        u_model2 = mathx->mat.mult4(u_model2, mathx->mat.trans4(u_light.location.x, u_light.location.y, u_light.location.z));
-        
-        r3_core->graphics.push_pipeline(&(R3_Render_Call){
-            .vertex = &vertex_data, .model = &u_model,
-            .shader = NULL, .texture = &texture,
-            .mode = R3_TRIANGLE_MODE, .type = R3_RENDER_ARRAYS
-        });
-        r3_core->graphics.push_pipeline(&(R3_Render_Call){
-            .vertex = &vertex_data, .model = &u_model2,
-            .shader = &shader2, .texture = &texture,
-            .mode = R3_TRIANGLE_MODE, .type = R3_RENDER_ARRAYS
-        });
+
+        ecsx->run_systems(R3_TRANSFORM3D);
+        ecsx->run_systems(R3_MATERIAL3D);
+        ecsx->run_systems(R3_MESH3D);
 
         r3_core->graphics.update_camera();
         r3_core->graphics.flush_pipeline();
