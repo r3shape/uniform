@@ -284,7 +284,7 @@ void _flush_pipeline_impl(void) {
             .value = &_graphics_api->pipeline.proj.m
         });
         
-        if (call.uniform_count && call.uniform_count <= 12) {
+        if (call.uniform_count && call.uniform_count <= (16 - shader->uniforms->meta.count)) {
             LIBX_FORI(0, call.uniform_count, 1) {
                 if (!call.uniforms[i].name || !call.uniforms[i].value) break;
                 _graphics_api->set_uniform(shader, &call.uniforms[i]);

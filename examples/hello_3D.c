@@ -57,11 +57,6 @@ int main() {
         filex->read("assets/shaders/light/shader.vert", 0),
         filex->read("assets/shaders/light/shader.frag", 0)
     );
-    
-    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.ambient", .value = &u_light.ambient});
-    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.diffuse", .value = &u_light.diffuse});
-    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.specular", .value = &u_light.specular});
-    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.location", .value = &u_light.location});
 
     R3_Texture texture = r3_core->graphics.create_texture2D("assets/textures/logo.png", R3_RGBA_FORMAT);
     
@@ -78,14 +73,8 @@ int main() {
     R3_Mesh3D mesh0; ecsx->get_component(R3_MESH3D, entity0, &mesh0);
     *mesh0.texture = texture;
 
-    R3_Material3D mat0; ecsx->get_component(R3_MATERIAL3D, entity0, &mat0);
-    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_FLOAT, .name = "u_material.shine", .value = mat0.shine});
-    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_material.ambient", .value = mat0.ambient});
-    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_material.diffuse", .value = mat0.diffuse});
-    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_material.specular", .value = mat0.specular});
-
     R3_Transform3D trans0; ecsx->get_component(R3_TRANSFORM3D, entity0, &trans0);
-    *trans0.scale = (Vec3){64, 64, 64};
+    *trans0.scale = (Vec3){10, 10, 10};
 
     R3_Mesh3D mesh1; ecsx->get_component(R3_MESH3D, entity1, &mesh1);
     *mesh1.texture = texture;
@@ -97,7 +86,13 @@ int main() {
     ));
 
     R3_Transform3D trans1; ecsx->get_component(R3_TRANSFORM3D, entity1, &trans1);
-    *trans1.scale = (Vec3){64, 64, 64};
+    *trans1.location = mathx->vec.vec3(0, 0, -32);
+    *trans1.scale = (Vec3){5, 5, 5};
+    
+    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.ambient", .value = &u_light.ambient});
+    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.diffuse", .value = &u_light.diffuse});
+    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.specular", .value = &u_light.specular});
+    r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.location", .value = trans1.location});
 
     r3_core->graphics.init_pipeline(
         R3_TRIANGLE_MODE, &shader,
@@ -120,9 +115,8 @@ int main() {
         mesh0.color->x = LIBX_CLAMP(mesh0.color->x + (0.01 * (r3_core->input.key_is_down(R3_KEY_PLUS) - r3_core->input.key_is_down(R3_KEY_MINUS))), 0.0, 1.0);
         r3_core->graphics.toggle_wireframe(r3_core->input.key_is_down(R3_KEY_F1));
 
-        u_light.location.x += 1.0 * (r3_core->input.key_is_down(R3_KEY_RIGHT) - r3_core->input.key_is_down(R3_KEY_LEFT));
-        u_light.location.y += 1.0 * (r3_core->input.key_is_down(R3_KEY_UP) - r3_core->input.key_is_down(R3_KEY_DOWN));
-        *trans1.location = u_light.location;
+        trans1.location->x += 1.0 * (r3_core->input.key_is_down(R3_KEY_RIGHT) - r3_core->input.key_is_down(R3_KEY_LEFT));
+        trans1.location->y += 1.0 * (r3_core->input.key_is_down(R3_KEY_UP) - r3_core->input.key_is_down(R3_KEY_DOWN));
         
         r3_core->graphics.translate_camera(
             (r3_core->input.key_is_down(R3_KEY_D) - r3_core->input.key_is_down(R3_KEY_A)),
@@ -131,7 +125,7 @@ int main() {
         );
 
         ecsx->run_systems(R3_TRANSFORM3D);
-        // ecsx->run_systems(R3_MATERIAL3D);    // TODO: figure out the shader pointer error?
+        ecsx->run_systems(R3_MATERIAL3D);
         ecsx->run_systems(R3_MESH3D);
 
         r3_core->graphics.update_camera();

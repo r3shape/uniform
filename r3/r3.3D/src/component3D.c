@@ -23,6 +23,7 @@ static struct R3_Material_Storage {
     Vec3 ambient[ENTITY_MAX];
     Vec3 diffuse[ENTITY_MAX];
     Vec3 specular[ENTITY_MAX];
+    R3_Uniform uniforms[ENTITY_MAX][4];
 } material_store = {0};
 
 static struct R3_ShaderSrc_Storage {
@@ -31,7 +32,7 @@ static struct R3_ShaderSrc_Storage {
 
 
 u8 _add_mesh3D_impl(u32 entity) {
-    mesh_store.size[entity] = mathx->vec.vec3(32.0, 32.0, 32.0);
+    mesh_store.size[entity] = mathx->vec.vec3(64, 64, 64);
     mesh_store.texture[entity] = (R3_Texture){.id = 0};
     mesh_store.color[entity] = mathx->vec.vec3(84/255.0, 52/255.0, 150/255.0);
     mesh_store.vertex[entity] = r3_3D->shape3D.cube3D(mesh_store.size[entity], mesh_store.color[entity]);
@@ -116,6 +117,7 @@ u8 _transform3D_system_impl(u32 entity) {
         transform_store.velocity[entity]
     );
 
+    // model scaling
     transform_store.model[entity] = mathx->mat.identity4();
     transform_store.model[entity] = mathx->mat.mult4(
         transform_store.model[entity],
@@ -125,6 +127,7 @@ u8 _transform3D_system_impl(u32 entity) {
             transform_store.scale[entity].z
     ));
 
+    // model rotation
     transform_store.model[entity] = mathx->mat.mult4(
         transform_store.model[entity],
         mathx->mat.rotx4(transform_store.rotation[entity].x)
@@ -138,6 +141,7 @@ u8 _transform3D_system_impl(u32 entity) {
         mathx->mat.rotz4(transform_store.rotation[entity].z)
     );
     
+    // model translation
     transform_store.model[entity] = mathx->mat.mult4(
         transform_store.model[entity],
         mathx->mat.trans4(
@@ -155,6 +159,10 @@ u8 _add_material3D_impl(u32 entity) {
     material_store.ambient[entity] = mathx->vec.vec3(1.0, 0.5, 0.31);
     material_store.diffuse[entity] = mathx->vec.vec3(1.0, 0.5, 0.31);
     material_store.specular[entity] = mathx->vec.vec3(0.5, 0.5, 0.5);
+    material_store.uniforms[entity][0] = (R3_Uniform){.type = R3_UNIFORM_FLOAT,.name =  "u_material.shine",   .value = &material_store.shine[entity]};
+    material_store.uniforms[entity][1] = (R3_Uniform){.type = R3_UNIFORM_VEC3, .name =  "u_material.ambient", .value = &material_store.ambient[entity]};
+    material_store.uniforms[entity][2] = (R3_Uniform){.type = R3_UNIFORM_VEC3, .name =  "u_material.diffuse", .value = &material_store.diffuse[entity]};
+    material_store.uniforms[entity][3] = (R3_Uniform){.type = R3_UNIFORM_VEC3, .name =  "u_material.specular",.value = &material_store.specular[entity]};
     return LIBX_TRUE;
 }
 
@@ -176,10 +184,10 @@ u8 _get_material3D_impl(u32 entity, R3_Material3D* component) {
 
 u8 _material3D_system_impl(u32 entity) {
     R3_Shader* shader = (ecsx->has_component(R3_SHADER3D, entity)) ? &shader_store.shader[entity] : r3_core->graphics.pipeline.shader;
-    r3_core->graphics.set_uniform(shader, &(R3_Uniform){.type = R3_UNIFORM_FLOAT,.name =  "u_material.shine",   .value = &material_store.shine[entity]});
-    r3_core->graphics.set_uniform(shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name =  "u_material.ambient", .value = &material_store.ambient[entity]});
-    r3_core->graphics.set_uniform(shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name =  "u_material.diffuse", .value = &material_store.diffuse[entity]});
-    r3_core->graphics.set_uniform(shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name =  "u_material.specular",.value = &material_store.specular[entity]});
+    r3_core->graphics.set_uniform(shader, &material_store.uniforms[entity][0]); // u_material.shine
+    r3_core->graphics.set_uniform(shader, &material_store.uniforms[entity][1]); // u_material.ambient
+    r3_core->graphics.set_uniform(shader, &material_store.uniforms[entity][2]); // u_material.diffuse
+    r3_core->graphics.set_uniform(shader, &material_store.uniforms[entity][3]); // u_material.specular
     return LIBX_TRUE;
 }
 
