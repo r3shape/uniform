@@ -30,6 +30,7 @@ typedef struct _libx_ecs_api {
     } component_manager;
 
     u32 (*create_entity)(void);
+    u32 (*create_entity_with)(u8 count, u8* ids);
     void (*destroy_entity)(u32 entity);
     
     u8 (*register_component)(

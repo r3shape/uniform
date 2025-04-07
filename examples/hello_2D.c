@@ -39,13 +39,10 @@ int main() {
 
     R3_Texture texture = r3_core->graphics.create_texture2D("assets/textures/logo.png", R3_RGBA_FORMAT);
 
-    u32 entity0 = ecsx->create_entity();
-    u32 entity1 = ecsx->create_entity();
-    ecsx->add_component(R3_SPRITE2D, entity0);
-    ecsx->add_component(R3_TRANSFORM2D, entity0);
-    
-    ecsx->add_component(R3_SPRITE2D, entity1);
-    ecsx->add_component(R3_TRANSFORM2D, entity1);
+    u32 entity0 = ecsx->create_entity_with(2, (u8[]){
+        R3_SPRITE2D,
+        R3_TRANSFORM2D
+    });
 
     R3_Sprite2D sprite0; ecsx->get_component(R3_SPRITE2D, entity0, &sprite0);
     *sprite0.texture = texture;
@@ -54,6 +51,11 @@ int main() {
 
     R3_Transform2D trans0; ecsx->get_component(R3_TRANSFORM2D, entity0, &trans0);
     *trans0.location = (Vec2){400, 300};
+
+    u32 entity1 = ecsx->create_entity_with(2, (u8[]){
+        R3_SPRITE2D,
+        R3_TRANSFORM2D
+    });
     
     R3_Sprite2D sprite1; ecsx->get_component(R3_SPRITE2D, entity1, &sprite1);
     *sprite1.texture = texture;
