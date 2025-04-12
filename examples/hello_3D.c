@@ -2,7 +2,7 @@
 // Now fully driven by libx ecsx!
 
 #define R3_MODULES R3_CORE|R3_3D
-#include <r3/r3.core/include/r3.core.h>
+#include <r3/core/r3.core.h>
 
 u8 running = 1;
 u8 quit_callback2(u16 event_code, R3_Event data) {
@@ -47,48 +47,48 @@ int main() {
         Vec3 specular;
         Vec3 location;
     } u_light = {
-        .ambient = mathx->vec.vec3(0.5, 0.5, 0.5),
-        .diffuse = mathx->vec.vec3(0.3, 0.3, 0.3),
-        .specular = mathx->vec.vec3(1.0, 1.0, 1.0),
-        .location = mathx->vec.vec3(-2, 0.0, -2*32)
+        .ambient = libx->mathx.vec.vec3(0.5, 0.5, 0.5),
+        .diffuse = libx->mathx.vec.vec3(0.3, 0.3, 0.3),
+        .specular = libx->mathx.vec.vec3(1.0, 1.0, 1.0),
+        .location = libx->mathx.vec.vec3(-2, 0.0, -2*32)
     };
     
     R3_Shader shader = r3_core->graphics.create_shader(
-        filex->read("assets/shaders/light/shader.vert", 0),
-        filex->read("assets/shaders/light/shader.frag", 0)
+        libx->filex.read("external/assets/shaders/light/shader.vert", 0),
+        libx->filex.read("external/assets/shaders/light/shader.frag", 0)
     );
 
-    R3_Texture texture = r3_core->graphics.create_texture2D("assets/textures/logo.png", R3_RGBA_FORMAT);
+    R3_Texture texture = r3_core->graphics.create_texture2D("external/assets/textures/logo.png", R3_RGBA_FORMAT);
     
-    u32 entity0 = ecsx->create_entity_with(3, (u8[]){
+    u32 entity0 = libx->ecsx.create_entity_with(3, (u8[]){
         R3_TRANSFORM3D,
         R3_MESH3D,
         R3_MATERIAL3D
     });
     
-    R3_Mesh3D mesh0; ecsx->get_component(R3_MESH3D, entity0, &mesh0);
+    R3_Mesh3D mesh0; libx->ecsx.get_component(R3_MESH3D, entity0, &mesh0);
     *mesh0.texture = texture;
 
-    R3_Transform3D trans0; ecsx->get_component(R3_TRANSFORM3D, entity0, &trans0);
+    R3_Transform3D trans0; libx->ecsx.get_component(R3_TRANSFORM3D, entity0, &trans0);
     *trans0.scale = (Vec3){10, 10, 10};
     
-    u32 entity1 = ecsx->create_entity_with(3, (u8[]){
+    u32 entity1 = libx->ecsx.create_entity_with(3, (u8[]){
         R3_TRANSFORM3D,
         R3_MESH3D,
         R3_SHADER3D
     });
 
-    R3_Mesh3D mesh1; ecsx->get_component(R3_MESH3D, entity1, &mesh1);
+    R3_Mesh3D mesh1; libx->ecsx.get_component(R3_MESH3D, entity1, &mesh1);
     *mesh1.texture = texture;
     
-    R3_Transform3D trans1; ecsx->get_component(R3_TRANSFORM3D, entity1, &trans1);
-    *trans1.location = mathx->vec.vec3(0, 0, -32);
+    R3_Transform3D trans1; libx->ecsx.get_component(R3_TRANSFORM3D, entity1, &trans1);
+    *trans1.location = libx->mathx.vec.vec3(0, 0, -32);
     *trans1.scale = (Vec3){5, 5, 5};
     
     r3_3D->set_shader3D(entity1, 
         r3_core->graphics.create_shader(
-            filex->read("assets/shaders/light/source.vert", 0),
-            filex->read("assets/shaders/light/source.frag", 0)
+            libx->filex.read("external/assets/shaders/light/source.vert", 0),
+            libx->filex.read("external/assets/shaders/light/source.frag", 0)
     ));
     
     r3_core->graphics.set_uniform(&shader, &(R3_Uniform){.type = R3_UNIFORM_VEC3, .name = "u_light.ambient", .value = &u_light.ambient});
@@ -98,11 +98,11 @@ int main() {
 
     r3_core->graphics.init_pipeline(
         R3_TRIANGLE_MODE, &shader,
-        mathx->mat.perspective(60.0, 800/600, 0.1, 1000)
+        libx->mathx.mat.perspective(60.0, 800/600, 0.1, 1000)
     ); r3_core->graphics.init_camera(
-        mathx->vec.vec3(0, 0, 3),
-        mathx->vec.vec3(0, 0, 1),
-        mathx->vec.vec3(0, 1, 0)
+        libx->mathx.vec.vec3(0, 0, 3),
+        libx->mathx.vec.vec3(0, 0, 1),
+        libx->mathx.vec.vec3(0, 1, 0)
     );
     
     r3_core->graphics.camera.speed = 0.2;
@@ -126,9 +126,9 @@ int main() {
             (r3_core->input.key_is_down(R3_KEY_W) - r3_core->input.key_is_down(R3_KEY_S))
         );
 
-        ecsx->run_systems(R3_TRANSFORM3D);
-        ecsx->run_systems(R3_MATERIAL3D);
-        ecsx->run_systems(R3_MESH3D);
+        libx->ecsx.run_systems(R3_TRANSFORM3D);
+        libx->ecsx.run_systems(R3_MATERIAL3D);
+        libx->ecsx.run_systems(R3_MESH3D);
 
         r3_core->graphics.update_camera();
         r3_core->graphics.flush_pipeline();

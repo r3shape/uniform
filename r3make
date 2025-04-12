@@ -7,29 +7,45 @@
                     "nofiles": null
                 }
             },
-            "c-defines": ["DLL_EXPORT"],
-	        "src-dirs": ["r3/r3.core/src", "r3/r3.pack/src", "r3/r3.2D/src", "r3/r3.3D/src"],
-            "inc-dirs": [".", "external"],
+            "c-defines": [
+                "DLL_EXPORT"
+            ],
+            "src-dirs": [
+                "r3/core",
+                "r3/modules"
+            ],
+            "inc-dirs": [
+                ".",
+                "external/thirdparty"
+            ],
             "lib-links": {
                 "gdi32": null,
                 "opengl32": null,
-	    	    "libx": "external/libx/bin"
-	        },
-            "out-type": "dll",
+                "libx": "external/thirdparty/libx/bin"
+            },
+            "out-type": "lib",
             "out-name": "r3",
             "out-dir": "build"
         },
         "examples": {
             "r3make": {
-                "flags": ["buildeach"],
+                "flags": [
+                    "buildeach"
+                ],
                 "post-build": {
                     "nofiles": null
                 }
             },
-            "src-dirs": ["examples"],
-            "inc-dirs": [".", "external"],
+            "src-dirs": [
+                "examples"
+            ],
+            "inc-dirs": [
+                ".",
+                "external/thirdparty"
+            ],
             "lib-links": {
-                "r3": "build"
+                "r3": "build",
+                "libx": "external/thirdparty/libx/bin"
             },
             "out-type": "exe",
             "out-name": null,
