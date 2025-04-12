@@ -2,7 +2,7 @@
 // Now fully driven by libx ecsx!
 
 #define R3_MODULES R3_CORE|R3_2D
-#include <r3/r3.core/include/r3.core.h>
+#include <r3/core/r3.core.h>
 
 u8 running = 1;
 u8 quit_callback2(u16 event_code, R3_Event data) {
@@ -22,8 +22,7 @@ u8 resize_callback(u16 event_code, R3_Event data) {
 }
 
 int main() {
-    r3_init_core(R3_MODULES);
-
+    printf("R3 Initialized: %d\n", r3_init_core(R3_MODULES));
     R3_Window* window = r3_core->platform.create_window("Hello Triangle", 800, 600);
     r3_core->platform.create_gl_context();
     r3_core->graphics.init_gl(&r3_core->graphics);
@@ -31,46 +30,46 @@ int main() {
     r3_core->events.register_callback(R3_EVENT_QUIT, quit_callback1);
     r3_core->events.register_callback(R3_EVENT_RESIZE, resize_callback);
     r3_core->events.register_callback(R3_EVENT_KEY_PRESSED, quit_callback2);
-
+    
     R3_Shader shader = r3_core->graphics.create_shader(
-        filex->read("assets/shaders/default/shader.vert", 0),
-        filex->read("assets/shaders/default/shader.frag", 0)
+        libx->filex.read("external/assets/shaders/default/shader.vert", 0),
+        libx->filex.read("external/assets/shaders/default/shader.frag", 0)
     );
-
-    R3_Texture texture = r3_core->graphics.create_texture2D("assets/textures/logo.png", R3_RGBA_FORMAT);
-
-    u32 entity0 = ecsx->create_entity_with(2, (u8[]){
+    
+    R3_Texture texture = r3_core->graphics.create_texture2D("external/assets/textures/logo.png", R3_RGBA_FORMAT);
+    
+    u32 entity0 = libx->ecsx.create_entity_with(2, (u8[]){
         R3_SPRITE2D,
         R3_TRANSFORM2D
     });
 
-    R3_Sprite2D sprite0; ecsx->get_component(R3_SPRITE2D, entity0, &sprite0);
+    R3_Sprite2D sprite0; libx->ecsx.get_component(R3_SPRITE2D, entity0, &sprite0);
     *sprite0.texture = texture;
     r3_core->graphics.destroy_vertex_data(sprite0.vertex);
     *sprite0.vertex = r3_2D->shape2D.triangle2D((Vec2){32.0, 32.0}, (Vec3){0, 1, 0});
 
-    R3_Transform2D trans0; ecsx->get_component(R3_TRANSFORM2D, entity0, &trans0);
+    R3_Transform2D trans0; libx->ecsx.get_component(R3_TRANSFORM2D, entity0, &trans0);
     *trans0.location = (Vec2){400, 300};
 
-    u32 entity1 = ecsx->create_entity_with(2, (u8[]){
+    u32 entity1 = libx->ecsx.create_entity_with(2, (u8[]){
         R3_SPRITE2D,
         R3_TRANSFORM2D
     });
     
-    R3_Sprite2D sprite1; ecsx->get_component(R3_SPRITE2D, entity1, &sprite1);
+    R3_Sprite2D sprite1; libx->ecsx.get_component(R3_SPRITE2D, entity1, &sprite1);
     *sprite1.texture = texture;
     *sprite1.color = (Vec3){1.0, 1.0, 1.0};
     
-    R3_Transform2D trans1; ecsx->get_component(R3_TRANSFORM2D, entity1, &trans1);
+    R3_Transform2D trans1; libx->ecsx.get_component(R3_TRANSFORM2D, entity1, &trans1);
     *trans1.location = (Vec2){400, 300};
 
     r3_core->graphics.init_pipeline(
         R3_TRIANGLE_MODE, &shader,
-        mathx->mat.ortho(0, window->size[0], 0, window->size[1], 0, 1)
+        libx->mathx.mat.ortho(0, window->size[0], 0, window->size[1], 0, 1)
     ); r3_core->graphics.init_camera(
-        mathx->vec.vec3(0, 0, 1),
-        mathx->vec.vec3(0, 0,-1),
-        mathx->vec.vec3(0, 1, 0)
+        libx->mathx.vec.vec3(0, 0, 1),
+        libx->mathx.vec.vec3(0, 0,-1),
+        libx->mathx.vec.vec3(0, 1, 0)
     );
 
     r3_core->graphics.camera.speed = 3;
@@ -92,8 +91,8 @@ int main() {
             0
         );
 
-        ecsx->run_systems(R3_TRANSFORM2D);
-        ecsx->run_systems(R3_SPRITE2D);
+        libx->ecsx.run_systems(R3_TRANSFORM2D);
+        libx->ecsx.run_systems(R3_SPRITE2D);
 
         r3_core->graphics.flush_pipeline();
         r3_core->graphics.update_camera();
