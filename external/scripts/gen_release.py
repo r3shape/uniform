@@ -9,23 +9,23 @@ CALL_DIR = CWD
 RELEASE_VER = None
 
 README = """
-The r3engine is a pluggable, highly extendable game engine written in pure C,
+Koncept is a pluggable, highly extendable game engine written in pure C,
 designed to make the development and distribution of games and media simpler.
 
 You can find the latest release and additional information at:
-https://github.com/r3shape/r3engine
+https://github.com/r3shape/koncept
 
 This library is distributed under the terms of the MIT license,
 available in [LICENSE.txt](LICENSE.txt).
 
 # Using this package
-This package contains the `r3` engine built for x64 Windows.
+This package contains the `koncept` engine built for x64 Windows.
 
-To use this package, simply replace an existing 64-bit r3.dll with the one included here.
+To use this package, simply replace an existing 64-bit koncept.dll with the one included here.
 
 # Development packages
 If you're looking for packages containing headers and static archives, check for this package:
--  r3-dev-2025.0.1-mingw-w64.zip (for development using mingw-w64)
+-  koncept-dev-2025.0.1-mingw-w64.zip (for development using mingw-w64)
 
 Happy Coding!
 
@@ -92,7 +92,7 @@ def gen_release() -> None:
         config = json.load(f)
 
     try:
-        artifact = config["c-targets"]["r3"]
+        artifact = config["c-targets"]["koncept"]
         out_dir = os_path(artifact["out-dir"])
         out_name = artifact["out-name"]
         out_type = artifact["out-type"]
@@ -101,21 +101,21 @@ def gen_release() -> None:
         return
 
     # Build DLL first
-    config["c-targets"]["r3"]["out-type"] = "dll"
+    config["c-targets"]["koncept"]["out-type"] = "dll"
     with open("r3make", "w") as f:
         json.dump(config, f, indent=4)
-    subprocess.call(["r3make", "r3"])
+    subprocess.call(["r3make", "koncept"])
 
     # Then build static lib
-    config["c-targets"]["r3"]["out-type"] = "lib"
+    config["c-targets"]["koncept"]["out-type"] = "lib"
     with open("r3make", "w") as f:
         json.dump(config, f, indent=4)
-    subprocess.call(["r3make", "r3"])
+    subprocess.call(["r3make", "koncept"])
 
     # Get version from version file
     version_path = None
     for root, dirs, files in os.walk(CALL_DIR):
-        if root.endswith(os_path("r3/core")) and "version" in files:
+        if root.endswith(os_path("koncept/core")) and "version" in files:
             version_path = os.path.join(root, "version")
             break
 
@@ -127,8 +127,8 @@ def gen_release() -> None:
         RELEASE_VER = f.read().strip()
 
     release_base = os_path(f"{CALL_DIR}/release")
-    std_dir = os_path(f"{release_base}/r3-{RELEASE_VER}-mingw-w64")
-    dev_dir = os_path(f"{release_base}/r3-{RELEASE_VER}-dev-mingw-w64")
+    std_dir = os_path(f"{release_base}/koncept-{RELEASE_VER}-mingw-w64")
+    dev_dir = os_path(f"{release_base}/koncept-{RELEASE_VER}-dev-mingw-w64")
 
     os.makedirs(std_dir, exist_ok=True)
     os.makedirs(dev_dir, exist_ok=True)
@@ -166,7 +166,7 @@ def gen_release() -> None:
     print("[+] Creating dev release...")
     bin_dir = os.path.join(dev_dir, "bin")
     lib_dir = os.path.join(dev_dir, "lib")
-    inc_dir = os.path.join(dev_dir, "r3")
+    inc_dir = os.path.join(dev_dir, "koncept")
 
     os.makedirs(bin_dir, exist_ok=True)
     os.makedirs(lib_dir, exist_ok=True)
@@ -177,11 +177,11 @@ def gen_release() -> None:
     shutil.copyfile(lib_path, os.path.join(lib_dir, f"{out_name}.lib"))
 
     # Copy public headers
-    for root, _, files in os.walk(os_path("r3")):
+    for root, _, files in os.walk(os_path("koncept")):
         for f in files:
             if f.endswith(".h"):
                 src = os.path.join(root, f)
-                rel = os.path.relpath(root, os_path("r3"))
+                rel = os.path.relpath(root, os_path("koncept"))
                 dst_folder = os.path.join(inc_dir, rel)
                 os.makedirs(dst_folder, exist_ok=True)
                 shutil.copyfile(src, os.path.join(dst_folder, f))

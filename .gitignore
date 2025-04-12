@@ -1,4 +1,5 @@
 bin/
-assets/
 build/
+assets/
+release/
 .vscode/

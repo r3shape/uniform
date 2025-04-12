@@ -1,18 +1,21 @@
 {
     "c-instance": "GCC",
     "c-targets": {
-        "r3": {
+        "koncept": {
             "r3make": {
                 "post-build": {
                     "nofiles": null
                 }
             },
+            "c-flags": [
+                "-std=c99"
+            ],
             "c-defines": [
                 "DLL_EXPORT"
             ],
             "src-dirs": [
-                "r3/core",
-                "r3/modules"
+                "koncept/core",
+                "koncept/modules"
             ],
             "inc-dirs": [
                 ".",
@@ -21,10 +24,10 @@
             "lib-links": {
                 "gdi32": null,
                 "opengl32": null,
-                "libx": "external/thirdparty/libx/bin"
+                "corex": "external/thirdparty/corex/bin"
             },
-            "out-type": "lib",
-            "out-name": "r3",
+            "out-type": "dll",
+            "out-name": "koncept",
             "out-dir": "build"
         },
         "examples": {
@@ -36,6 +39,9 @@
                     "nofiles": null
                 }
             },
+            "c-flags": [
+                "-std=c99"
+            ],
             "src-dirs": [
                 "examples"
             ],
@@ -44,8 +50,8 @@
                 "external/thirdparty"
             ],
             "lib-links": {
-                "r3": "build",
-                "libx": "external/thirdparty/libx/bin"
+                "koncept": "build",
+                "corex": "external/thirdparty/corex/bin"
             },
             "out-type": "exe",
             "out-name": null,
