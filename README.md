@@ -91,7 +91,7 @@ For those who wish to **wield the source** themselves:
 ## r3engine Contributors
 
 <a href="https://github.com/r3shape/r3engine/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=r3shape/r3engine&max=500&columns=20&anon=1" />
+  <img src="https://contrib.rocks/image?repo=r3shape/r3engine"/>
 </a>
 
 <br>
