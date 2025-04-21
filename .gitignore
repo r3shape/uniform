@@ -2,4 +2,3 @@ bin/
 build/
 release/
 .vscode/
-external/assets
