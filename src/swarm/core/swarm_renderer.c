@@ -148,8 +148,8 @@ none _render(none) {
 
             GPUProgram* program = &resources.programv[pipeline->program];
             swarmGPU->bindProgram(program);
-            SSDK_FORI(0, node->uniforms, 1) {
-                swarmGPU->sendUniform(node->uniformv[i].name, program);
+            SSDK_FORK(0, node->uniforms, 1) {
+                swarmGPU->sendUniform(node->uniformv[k].name, program);
             }
 
             saneLog->logFmt(
