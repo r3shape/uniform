@@ -78,7 +78,7 @@ GPUHandle _createFrame(none) {
     state.frame->calls = 0;
     state.frame->phases = 0;
     state.frame->handle = resources.frames++;
-    saneMemory->arena_reset(&state.frame->arena);
+    saneMemory->arenaReset(&state.frame->arena);
     memset(state.frame->callv,  0, sizeof(state.frame->callv));
     memset(state.frame->phasev, 0, sizeof(state.frame->phasev));
     saneLog->logFmt(SANE_LOG_INFO, "[Renderer] Created GPUFrame (handle=%u)", state.frame->handle);
@@ -162,7 +162,7 @@ none _initRenderer(GPUBackend backend) {
         default: break;
     }
 
-    if (!saneMemory->create_allocator(SANE_ALLOC_ARENA, SSDK_KB, 8, &defaultFrame.arena)) {
+    if (!saneMemory->createAllocator(SANE_ALLOC_ARENA, SSDK_KB, 8, &defaultFrame.arena)) {
         saneLog->log(SANE_LOG_ERROR, "[Renderer] Initialization Failed | Error Creating Arena Allocator");
         return;
     }
@@ -183,8 +183,8 @@ none _shutdownRenderer(none) {
         default: break;
     }
 
-    saneMemory->destroy_allocator(&defaultFrame.arena);
-    
+    saneMemory->destroyAllocator(&defaultFrame.arena);
+
     saneLog->log(SANE_LOG_SUCCESS, "[Renderer] Shutdown");
     swarmRenderer = NULL;
 }

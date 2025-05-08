@@ -112,10 +112,10 @@ typedef struct GPUCall {
 typedef struct GPUFrame {
     u32 calls;
     u32 phases;
+    Allocator arena;
     GPUHandle handle;
     GPUPhase phasev[32];
     GPUCall callv[1024];
-    SaneAllocator arena;
 } GPUFrame;
 
 typedef struct GPUResources {

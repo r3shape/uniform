@@ -3,14 +3,14 @@
 
 #include <include/SSDK/globals.h>
 
-typedef enum SaneLogLevel {
+typedef enum LogLevel {
     SANE_LOG_BASE,
     SANE_LOG_INFO,
     SANE_LOG_WARN,
     SANE_LOG_SUCCESS,
     SANE_LOG_ERROR,
     SANE_LOG_LEVELS
-} SaneLogLevel;
+} LogLevel;
 
 typedef struct SaneLog {
     SaneModule module;

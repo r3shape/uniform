@@ -3,19 +3,19 @@
 
 #include <include/SSDK/globals.h>
 
-typedef struct SaneBlob {
+typedef struct Blob {
     ptr data;
     u64 size;
-} SaneBlob;
+} Blob;
 
-typedef enum SaneAllocatorType {
+typedef enum AllocatorType {
     SANE_ALLOC_DEFAULT,
     SANE_ALLOC_ARENA,
     SANE_ALLOC_TYPES
-} SaneAllocatorType;
+} AllocatorType;
 
-typedef struct SaneAllocator {
-    SaneAllocatorType type;
+typedef struct Allocator {
+    AllocatorType type;
     union context {
         struct arena {
             ptr buffer;
@@ -24,7 +24,7 @@ typedef struct SaneAllocator {
             u64 max;
         } arena;
     } context;
-} SaneAllocator;
+} Allocator;
 
 typedef struct SaneMemory {
     SSDK_FNPTR(ptr, alloc, u64 size, u64 align);
@@ -32,15 +32,15 @@ typedef struct SaneMemory {
     SSDK_FNPTR(none, zero, ptr mem, u64 size);
     SSDK_FNPTR(ptr, realloc, ptr mem, u64 size, u64 align);
     
-    SSDK_FNPTR(byte, blob_alloc, u64 align, SaneBlob* blob);
-    SSDK_FNPTR(byte, blob_realloc, u64 size, u64 align, SaneBlob* blob);
-    SSDK_FNPTR(byte, blob_dealloc, SaneBlob* blob);
+    SSDK_FNPTR(byte, blobAlloc, u64 align, Blob* blob);
+    SSDK_FNPTR(byte, blobRealloc, u64 size, u64 align, Blob* blob);
+    SSDK_FNPTR(byte, blobDealloc, Blob* blob);
     
-    SSDK_FNPTR(byte, create_allocator, SaneAllocatorType type, u64 max, u64 align, SaneAllocator* allocator);
-    SSDK_FNPTR(byte, destroy_allocator, SaneAllocator* allocator);
+    SSDK_FNPTR(byte, createAllocator, AllocatorType type, u64 max, u64 align, Allocator* allocator);
+    SSDK_FNPTR(byte, destroyAllocator, Allocator* allocator);
     
-    SSDK_FNPTR(ptr, arena_alloc, u64 size, u64 align, SaneAllocator* allocator);
-    SSDK_FNPTR(none, arena_reset, SaneAllocator* allocator);
+    SSDK_FNPTR(ptr, arenaAlloc, u64 size, u64 align, Allocator* allocator);
+    SSDK_FNPTR(none, arenaReset, Allocator* allocator);
     SaneModule module;
 } SaneMemory;
 extern SaneMemory* saneMemory;
