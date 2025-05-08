@@ -1,4 +1,5 @@
-#include <include/swarm/swarm.h>
+#include <include/swarm/core/swarm_inputs.h>
+#include <include/swarm/core/swarm_events.h>
 
 static struct _InputsInternal {
     struct devices {

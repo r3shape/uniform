@@ -1,4 +1,7 @@
-#include <include/swarm/swarm.h>
+#include <include/swarm/core/swarm_platform.h>
+#include <include/swarm/core/swarm_renderer.h>
+#include <include/swarm/core/swarm_events.h>
+#include <include/swarm/core/swarm_inputs.h>
 
 #if defined(SWARM_PLATFORM_WINDOWS)
 #include <stdio.h>

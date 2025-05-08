@@ -5,3 +5,8 @@ release/
 .vscode/
 __local__/
 external/assets
+
+*.a
+*.lib
+*.dll
+*.exe

@@ -14,6 +14,21 @@
         "name": "swarm.core",
         "dest": "build"
     },
+    "runtime": {
+        "defines": ["SSDK_BUILD_SOURCE"],
+        "flags": ["-Wall", "-Werror", "-std=c99"],
+        
+        "sources": ["src/swarm/runtime/*.c"],
+        "includes": [".", "external/thirdparty/SSDK"],
+        "libraries": {
+            "swarm.core": "build",
+            "SSDK": "external/thirdparty/SSDK/bin"
+        },
+
+        "type": "exe",
+        "name": "swarm",
+        "dest": "build"
+    },
     "testbed": {
         "flags": ["-Wall", "-Werror", "-std=c99"],
         
@@ -24,8 +39,8 @@
             "SSDK": "external/thirdparty/SSDK/bin"
         },
     
-        "type": "exe",
-        "name": "swarm.testbed",
-        "dest": "build"
+        "type": "dll",
+        "name": "game",
+        "dest": "external/runtime"
     }
 }

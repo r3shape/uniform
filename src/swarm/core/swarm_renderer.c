@@ -1,14 +1,15 @@
-#include <include/swarm/swarm.h>
+#include <include/swarm/core/swarm_renderer.h>
+#include <include/swarm/core/swarm_platform.h>
 #include <include/swarm/core/GLAPI.h>
 
 // GPU BACKENDS
 GLAPI* gl = NULL;
 
 // GPU STATE
-static GPUFrame defaultFrame = {0};
-static GPUPhase defaultPhase = {0};
-static GPUResources resources = (GPUResources){0};
-static GPUState state = (GPUState){ .frame = &defaultFrame, .phase = &defaultPhase };
+GPUFrame defaultFrame = {0};
+GPUPhase defaultPhase = {0};
+GPUResources resources = (GPUResources){0};
+GPUState state = (GPUState){ .frame = &defaultFrame, .phase = &defaultPhase };
 
 GPUHandle _createProgram(const char* vs, const char* fs) {
     GPUHandle handle = resources.programs++;
@@ -157,7 +158,7 @@ none _initRenderer(GPUBackend backend) {
         } break;
         case GPU_BACKEND_VULKAN:    // fall-through
         case GPU_BACKEND_DIRECTX:   // fall-through
-        case GPU_BACKEND_INVLAID:   // fall-through
+        case GPU_BACKEND_INVALID:   // fall-through
         default: break;
     }
 
@@ -178,10 +179,12 @@ none _shutdownRenderer(none) {
         }
         case GPU_BACKEND_VULKAN:    // fall-through
         case GPU_BACKEND_DIRECTX:   // fall-through
-        case GPU_BACKEND_INVLAID:   // fall-through
+        case GPU_BACKEND_INVALID:   // fall-through
         default: break;
     }
 
+    saneMemory->destroy_allocator(&defaultFrame.arena);
+    
     saneLog->log(SANE_LOG_SUCCESS, "[Renderer] Shutdown");
     swarmRenderer = NULL;
 }

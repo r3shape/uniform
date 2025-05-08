@@ -8,7 +8,7 @@
 typedef u32 GPUHandle;
 
 typedef enum GPUBackend {
-    GPU_BACKEND_INVLAID,
+    GPU_BACKEND_INVALID,
     GPU_BACKEND_OPENGL,
     GPU_BACKEND_VULKAN,
     GPU_BACKEND_DIRECTX
