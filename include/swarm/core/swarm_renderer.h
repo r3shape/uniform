@@ -32,9 +32,17 @@ typedef enum GPUTextureType {
 
 typedef enum GPUTextureFormat {
     GPU_TEXTURE_FORMAT_INVALID,
-    GPU_TEXTURE_FORMAT_RGBA,
-    GPU_TEXTURE_FORMAT_RGB
+    GPU_TEXTURE_FORMAT_RGBA     = 0x1908,
+    GPU_TEXTURE_FORMAT_RGB      = 0x1907
 } GPUTextureFormat;
+
+typedef enum GPUMode {
+    GPU_MODE_INVALID,
+    GPU_POINT_MODE      = 0x0000,
+    GPU_LINE_MODE       = 0x0001,
+    GPU_TRIANGLE_MODE   = 0x0004,
+    GPU_QUAD_MODE       = 0x0007
+} GPUMode;
 
 typedef struct GPUBuffer {
     u32 size;
@@ -60,7 +68,7 @@ typedef enum GPUVertexAttribute {
     GPU_VERTEX_COLOR    = 1 << 1, // 2 (0b0010)
     GPU_VERTEX_TEX      = 1 << 2, // 4 (0b0100)
     GPU_VERTEX_NORMAL   = 1 << 3, // 8 (0b1000)
-    GPU_VERTEX_ATTRIBS  = 1 << 4 
+    GPU_VERTEX_ATTRIBS = 4
 } GPUVertexAttribute;
 
 typedef enum GPUUniformType {
@@ -159,6 +167,31 @@ typedef struct GPUState {
     GPUBackend backend;
 } GPUState;
 
+typedef struct GPUAPI {
+    none (*clearColorBuffer)(Vec3 color);
+    none (*clearDepthBuffer)(Vec3 depth);
+
+    none (*createProgram)(GPUProgram* program);
+    none (*destroyProgram)(GPUProgram* program);
+
+    none (*setUniform)(GPUUniform uniform, GPUProgram* program);
+    none (*sendUniform)(cstr name, GPUProgram* program);
+
+    none (*createVertexBuffer)(u8 format, GPUBuffer* buffer);
+    none (*destroyVertexBuffer)(GPUBuffer* buffer);
+    
+    none (*createElementBuffer)(GPUBuffer* buffer);
+    none (*destroyElementBuffer)(GPUBuffer* buffer);
+    
+    none (*createTexture2D)(GPUTexture* texture);
+    none (*destroyTexture2D)(GPUTexture* texture);
+
+    none (*bindBuffer)(GPUBuffer* buffer);
+    none (*renderBuffer)(GPUBuffer* buffer);
+    none (*bindProgram)(GPUProgram* program);
+    none (*bindTexture)(GPUHandle texture, u32 slot);
+} GPUAPI;
+
 typedef struct Renderer {
     none (*init)(GPUBackend backend);
     none (*shutdown)(none);
@@ -172,12 +205,9 @@ typedef struct Renderer {
     GPUHandle (*createBuffer)(GPUBufferType type, u32 size, ptr data);
     GPUHandle (*createTexture)(GPUTextureType type, GPUTextureFormat fmt, u32 w, u32 h, ptr data);
     GPUHandle (*createPhase)(GPUPhaseType type, Vec3 clearColor, Vec3 clearDepth, GPUHandle framebuffer);
-    
-    none (*bindProgram)(GPUHandle program);
-    none (*bindPipeline)(GPUHandle pipeline);
-    none (*bindTexture)(GPUHandle texture, u32 slot);
-    none (*bindBuffer)(GPUHandle buffer, GPUBufferType type);
 } Renderer;
+
+extern GPUAPI* gpuAPI;
 extern Renderer* swarmRenderer;
 
 #endif  // __SWARM_RENDERER_H__

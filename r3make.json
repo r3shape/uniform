@@ -4,7 +4,7 @@
         "flags": ["-Wall", "-Werror", "-std=c99"],
         
         "sources": ["src/swarm/core/*.c"],
-        "includes": [".", "external/thirdparty/SSDK"],
+        "includes": [".", "external/thirdparty/SSDK", "external/thirdparty"],
         "libraries": {
             "gdi32": null, "opengl32": null,
             "SSDK": "external/thirdparty/SSDK/bin"

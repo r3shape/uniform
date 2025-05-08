@@ -1,15 +1,19 @@
 #include <include/swarm/swarm.h>
 
-GPUHandle ib;
+GPUHandle eb;
 GPUHandle vb;
 GPUHandle vs;
 GPUHandle pipe;
-u32 elements[] = {1, 2, 3, 4, 5, 6};
-f32 vertices[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+u32 elements[] = {0, 1, 2};
+f32 vertices[] = {
+    -0.5, -0.5, 0.0,//  color.x, color.y, color.z,   0.0, 0.0,
+     0.5, -0.5, 0.0,//  color.x, color.y, color.z,   1.0, 0.0,
+     0.0,  0.5, 0.0,//  color.x, color.y, color.z,   0.5, 1.0
+};
 
 void init() {
-    ib = swarmRenderer->createBuffer(GPU_BUFFER_ELEMENT, sizeof(u32)*6, elements);
-    vb = swarmRenderer->createBuffer(GPU_BUFFER_VERTEX, sizeof(f32)*9, vertices);
+    vb = swarmRenderer->createBuffer(GPU_BUFFER_VERTEX, sizeof(vertices), vertices);
+    eb = swarmRenderer->createBuffer(GPU_BUFFER_ELEMENT, sizeof(elements), elements);
     vs = swarmRenderer->createProgram(
         saneFile->read("external/assets/shaders/default/shader.vert", 0),
         saneFile->read("external/assets/shaders/default/shader.frag", 0));
@@ -23,14 +27,14 @@ void update(float dt) {
 
 void render() {
     GPUHandle frame = swarmRenderer->createFrame();
-    GPUHandle depthPhase = swarmRenderer->createPhase(GPU_PHASE_DEPTH, (Vec3){1, 0, 0}, (Vec3){1, 1, 1}, 0);
-    // GPUHandle opaquePhase = swarmRenderer->createPhase(GPU_PHASE_OPAQUE, (Vec3){0, 0, 0}, (Vec3){0, 0, 0}, 0);
+    // GPUHandle depthPhase = swarmRenderer->createPhase(GPU_PHASE_DEPTH, (Vec3){45.0, 60.0, 85.0}, (Vec3){1, 1, 1}, 0);
+    GPUHandle opaquePhase = swarmRenderer->createPhase(GPU_PHASE_OPAQUE, (Vec3){0, 0, 0}, (Vec3){0, 0, 0}, 0);
     // GPUHandle shadowPhase = swarmRenderer->createPhase(GPU_PHASE_SHADOW, (Vec3){0, 0, 0}, (Vec3){0, 0, 0}, 0);
 
     swarmRenderer->createCall((GPUNode){
-        .phase = depthPhase,
+        .phase = opaquePhase,
         .vertexBuffer = vb,
-        .elementBuffer = ib,
+        .elementBuffer = 0,
         .pipeline = pipe
     });
         
