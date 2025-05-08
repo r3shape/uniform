@@ -1,5 +1,7 @@
+old/
 bin/
 build/
 release/
 .vscode/
+__local__/
 external/assets

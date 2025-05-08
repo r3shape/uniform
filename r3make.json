@@ -1,0 +1,31 @@
+{
+    "main": {
+        "defines": ["SSDK_BUILD_SOURCE"],
+        "flags": ["-Wall", "-Werror", "-std=c99"],
+        
+        "sources": ["src/swarm/core/*.c"],
+        "includes": [".", "external/thirdparty/SSDK"],
+        "libraries": {
+            "gdi32": null, "opengl32": null,
+            "SSDK": "external/thirdparty/SSDK/bin"
+        },
+
+        "type": "dll",
+        "name": "swarm.core",
+        "dest": "build"
+    },
+    "testbed": {
+        "flags": ["-Wall", "-Werror", "-std=c99"],
+        
+        "sources": ["src/testbed/*.c"],
+        "includes": [".", "external/thirdparty/SSDK"],
+        "libraries": {
+            "swarm.core": "build",
+            "SSDK": "external/thirdparty/SSDK/bin"
+        },
+    
+        "type": "exe",
+        "name": "swarm.testbed",
+        "dest": "build"
+    }
+}
