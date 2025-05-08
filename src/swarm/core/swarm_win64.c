@@ -39,7 +39,7 @@ LRESULT CALLBACK _windowProc(HWND handle, u32 msg, WPARAM wParam, LPARAM lParam)
         case WM_QUIT:       // fall through WM_DESTROY
         case WM_CLOSE:      // fall through WM_DESTROY
         case WM_DESTROY:
-            swarmEvents->pushEvent(SWARM_EVENT_QUIT, (SwarmEvent){.u8[0]=1}),
+            swarmEvents->pushEvent(SWARM_EVENT_EXIT, (SwarmEvent){.u8[0]=1}),
             PostQuitMessage(0);
             return 0;
         case WM_SIZE:       // fall through to WMEXITSIZEMOVE

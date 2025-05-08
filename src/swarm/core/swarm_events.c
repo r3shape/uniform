@@ -6,7 +6,7 @@ static struct _EventInternal {
     SwarmCallback* callbackv[SWARM_EVENT_CODE_MAX];
 } _EventInternal = {0};
 
-u8 _registerEventImpl(u16 eventCode) {
+u8 _registerEventImpl(SwarmEventCode eventCode) {
     if (eventCode >= SWARM_EVENT_CODE_MAX || _EventInternal.eventv[eventCode]) 
         return SSDK_FALSE;
 
@@ -17,7 +17,7 @@ u8 _registerEventImpl(u16 eventCode) {
     return SSDK_TRUE;
 }
 
-u8 _unregisterEventImpl(u16 eventCode) {
+u8 _unregisterEventImpl(SwarmEventCode eventCode) {
     if (eventCode >= SWARM_EVENT_CODE_MAX || !_EventInternal.eventv[eventCode]) 
         return SSDK_FALSE;
 
@@ -32,7 +32,7 @@ u8 _unregisterEventImpl(u16 eventCode) {
     return SSDK_TRUE;
 }
 
-u8 _pushEventImpl(u16 eventCode, SwarmEvent data) {
+u8 _pushEventImpl(SwarmEventCode eventCode, SwarmEvent data) {
     if (eventCode >= SWARM_EVENT_CODE_MAX || !_EventInternal.eventv[eventCode]) 
         return SSDK_FALSE;
 
@@ -47,7 +47,7 @@ u8 _pushEventImpl(u16 eventCode, SwarmEvent data) {
     return result;
 }
 
-u8 _registerCallbackImpl(u16 eventCode, SwarmCallback callback) {
+u8 _registerCallbackImpl(SwarmEventCode eventCode, SwarmCallback callback) {
     if (eventCode >= SWARM_EVENT_CODE_MAX || !_EventInternal.eventv[eventCode]) 
         return SSDK_FALSE;
 
@@ -58,7 +58,7 @@ u8 _registerCallbackImpl(u16 eventCode, SwarmCallback callback) {
     return SSDK_TRUE;
 }
 
-u8 _unregisterCallbackImpl(u16 eventCode, SwarmCallback callback) {
+u8 _unregisterCallbackImpl(SwarmEventCode eventCode, SwarmCallback callback) {
     if (eventCode >= SWARM_EVENT_CODE_MAX || !_EventInternal.eventv[eventCode]) 
         return SSDK_FALSE;
 

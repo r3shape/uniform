@@ -6,7 +6,7 @@
 #define SWARM_CALLBACK_MAX  (1U << 5)
 #define SWARM_EVENT_MAX     ((1U << 12) - 1)
 typedef enum SwarmEventCode {
-    SWARM_EVENT_QUIT,
+    SWARM_EVENT_EXIT,
     SWARM_EVENT_KEY_PRESSED,
     SWARM_EVENT_KEY_RELEASED,
     SWARM_EVENT_BUTTON_PRESSED,
@@ -35,18 +35,18 @@ typedef union SwarmEvent {
     u8 u8[16];
     char c[16];
 } SwarmEvent;
-typedef u8 (*SwarmCallback)(u16 eventCode, SwarmEvent data);
+typedef u8 (*SwarmCallback)(SwarmEventCode eventCode, SwarmEvent data);
 
 typedef struct SwarmEvents {
     none (*init)(none);
     none (*shutdown)(none);
 
-    u8 (*registerEvent)(u16 eventCode);
-    u8 (*unregisterEvent)(u16 eventCode);
-    u8 (*pushEvent)(u16 eventCode, SwarmEvent data);
+    u8 (*registerEvent)(SwarmEventCode eventCode);
+    u8 (*unregisterEvent)(SwarmEventCode eventCode);
+    u8 (*pushEvent)(SwarmEventCode eventCode, SwarmEvent data);
     
-    u8 (*registerCallback)(u16 eventCode, SwarmCallback callback);
-    u8 (*unregisterCallback)(u16 eventCode, SwarmCallback callback);
+    u8 (*registerCallback)(SwarmEventCode eventCode, SwarmCallback callback);
+    u8 (*unregisterCallback)(SwarmEventCode eventCode, SwarmCallback callback);
 } SwarmEvents;
 extern SwarmEvents* swarmEvents;
 

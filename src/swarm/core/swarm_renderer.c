@@ -6,7 +6,7 @@
 GLAPI* gl = NULL;
 
 // GPU STATE
-GPUAPI* gpuAPI = NULL;
+GPUAPI* swarmGPU = NULL;
 GPUFrame defaultFrame = {0};
 GPUPhase defaultPhase = {0};
 GPUResources resources = (GPUResources){0};
@@ -17,12 +17,12 @@ GPUHandle _createProgram(str vs, str fs) {
     GPUProgram* prog = &resources.programv[handle];
     *prog = (GPUProgram){
         .vertex = vs, .fragment = fs, .handle = handle
-    }; gpuAPI->createProgram(prog);
+    }; swarmGPU->createProgram(prog);
     saneLog->logFmt(SANE_LOG_INFO, "[Renderer] Created GPUProgram (handle=%u)", handle);
     return handle;
 }
 
-GPUHandle _createBuffer(GPUBufferType type, u32 size, ptr data) {
+GPUHandle _createBuffer(GPUBufferType type, u8 format, u32 size, ptr data) {
     GPUHandle handle = resources.buffers++;
     GPUBuffer* buf = &resources.bufferv[handle];
 
@@ -35,7 +35,7 @@ GPUHandle _createBuffer(GPUBufferType type, u32 size, ptr data) {
                 .data.element.ebo = handle,   // e.g GLAPI ebo stored here
                 .data.element.elements = data,
                 .data.element.count = size/sizeof(u32)
-            }; gpuAPI->createElementBuffer(buf);
+            }; swarmGPU->createElementBuffer(buf);
 
             saneLog->logFmt(SANE_LOG_INFO, "[Renderer] GPUBuffer (elements=%u, size=%d)", buf->data.element.count, size);
         } break;
@@ -46,8 +46,9 @@ GPUHandle _createBuffer(GPUBufferType type, u32 size, ptr data) {
                 .handle = handle,
                 .data.vertex.vbo = handle,   // e.g GLAPI vao stored here
                 .data.vertex.vertices = data,
+                .data.vertex.format = format,
                 .data.vertex.count = size/sizeof(f32)
-            }; gpuAPI->createVertexBuffer(GPU_VERTEX_LOCATION, buf);
+            }; swarmGPU->createVertexBuffer(format, buf);
 
             saneLog->logFmt(SANE_LOG_INFO, "[Renderer] GPUBuffer (vertices=%u, size=%d)", buf->data.vertex.count, size);
         } break;
@@ -102,6 +103,13 @@ GPUHandle _createCall(GPUNode node) {
     GPUHandle handle = state.frame->calls++;
     GPUCall* call = &state.frame->callv[handle];
     *call = (GPUCall){ .node = node, .key = 0 };
+
+    GPUPipeline* pipeline = &resources.pipelinev[node.pipeline];
+    GPUProgram* program = &resources.programv[pipeline->program];
+    SSDK_FORI(0, node.uniforms, 1) {
+        swarmGPU->setUniform(&call->node.uniformv[i], program);
+    }
+
     saneLog->logFmt(SANE_LOG_INFO, "[Renderer] Created GPUCall (key=%u, vb=%u, eb=%u, pipeline=%u)",
         call->key, call->node.vertexBuffer, call->node.elementBuffer, call->node.pipeline);
     return handle;
@@ -119,10 +127,10 @@ none _render(none) {
         );
         
         saneMath->vector.log3("[Renderer] GPUPhase Clear Color", state.phase->clearColor);
-        gpuAPI->clearColorBuffer(state.phase->clearColor);
+        swarmGPU->clearColorBuffer(state.phase->clearColor);
         
         saneMath->vector.log3("[Renderer] GPUPhase Clear Depth", state.phase->clearDepth);
-        // gpuAPI->clearDepthBuffer(state.phase->clearDepth);
+        swarmGPU->clearDepthBuffer(state.phase->clearDepth);
 
         SSDK_FORJ(0, frame->calls, 1) {
             GPUCall* call = &frame->callv[j];
@@ -138,17 +146,21 @@ none _render(none) {
             GPUPipeline* pipeline = &resources.pipelinev[node->pipeline];
             saneLog->logFmt(SANE_LOG_INFO, "[Renderer] Pipeline: (handle=%u, program=%u)", pipeline->handle, pipeline->program);
 
+            GPUProgram* program = &resources.programv[pipeline->program];
+            swarmGPU->bindProgram(program);
+            SSDK_FORI(0, node->uniforms, 1) {
+                swarmGPU->sendUniform(node->uniformv[i].name, program);
+            }
+
             saneLog->logFmt(
-                SANE_LOG_INFO, "[Renderer] GPUCall (phase=%d, vb=%u, eb=%u, pipeline=%u)",
-                state.phase->type, node->vertexBuffer, node->elementBuffer, node->pipeline
+                SANE_LOG_INFO, "[Renderer] GPUCall (phase=%d, vb=%u, eb=%u, pipeline=%u, program=%u)",
+                state.phase->type, node->vertexBuffer, node->elementBuffer, node->pipeline, program->program
             );
 
-            GPUProgram* program = &resources.programv[pipeline->program];
-            gpuAPI->bindProgram(program);
-            gpuAPI->bindBuffer(vertexBuffer);
+            swarmGPU->bindBuffer(vertexBuffer);
             if (elementBuffer->data.element.elements != NULL) {
-                gpuAPI->renderBuffer(elementBuffer);
-            } else gpuAPI->renderBuffer(vertexBuffer);
+                swarmGPU->renderBuffer(elementBuffer);
+            } else swarmGPU->renderBuffer(vertexBuffer);
         }
     }
     saneLog->logFmt(SANE_LOG_INFO, "[Renderer] END GPUFrame (handle=%u, calls=%u, phases=%u)", frame->handle, frame->calls, frame->phases);
@@ -156,6 +168,17 @@ none _render(none) {
 
 none _commitFrame(GPUHandle handle) {
     saneLog->logFmt(SANE_LOG_INFO, "[Renderer] Commited GPUFrame (current=%u, next=%u)", handle, resources.frames);
+}
+
+
+GPUProgram* _getProgramImpl(GPUHandle handle) {
+    if (handle >= SWARM_GPU_RESOURCE_MAX) return NULL;
+    return &resources.programv[handle];
+}
+
+GPUBuffer* _getBufferImpl(GPUHandle handle) {
+    if (handle >= SWARM_GPU_RESOURCE_MAX) return NULL;
+    return &resources.bufferv[handle];
 }
 
 none _initRenderer(GPUBackend backend) {
@@ -179,6 +202,9 @@ none _initRenderer(GPUBackend backend) {
         saneLog->log(SANE_LOG_ERROR, "[Renderer] Initialization Failed | Error Creating Arena Allocator");
         return;
     }
+
+    swarmGPU->getBuffer = _getBufferImpl;
+    swarmGPU->getProgram = _getProgramImpl;
     
     saneLog->log(SANE_LOG_SUCCESS, "[Renderer] Initialized");
 }

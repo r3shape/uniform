@@ -3,6 +3,10 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/include/stb_image.h>
+
 #include <include/swarm/core/swarm_platform.h>
 #include <include/swarm/core/swarm_renderer.h>
 
@@ -109,6 +113,7 @@ typedef struct GLAPI {
     const u8 *(*getString)(const u32 name);
 } GLAPI;
 extern GLAPI* gl;
+extern GPUAPI* swarmGPU;
 
 
 // GPU API
@@ -121,7 +126,6 @@ none _clearDepthBufferImpl(Vec3 depth) {
     gl->clearColor(depth.x/255, depth.y/255, depth.z/255, 1.0);
     gl->clear(GL_DEPTH_BUFFER_BIT);
 }
-
 
 
 none _createProgramImpl(GPUProgram* program) {
@@ -180,25 +184,21 @@ none _destroyProgramImpl(GPUProgram* program) {
     gl->deleteProgram(program->program);
 }
 
-none _setUniformImpl(GPUUniform uniform, GPUProgram* program) {
+none _setUniformImpl(GPUUniform* uniform, GPUProgram* program) {
     if (!program || !program->program) {
         saneLog->log(SANE_LOG_ERROR, "[GLAPI] Failed to set uniform (invalid program)");
         return;  // error: null ptr!
     }
 
-    if (!uniform.name || !uniform.value || uniform.type < 0 || uniform.type >= GPU_UNIFORM_TYPES) {
+    if (!uniform->name || uniform->type < 0 || uniform->type >= GPU_UNIFORM_TYPES) {
         saneLog->log(SANE_LOG_ERROR, "[GLAPI] Failed to set uniform (invalid uniform)");
         return;  // error: uniform value error!
     }
-
-    if (!saneData->hashArray.put(uniform.name, &(GPUUniform){
-        .type = uniform.type,
-        .name = uniform.name,
-        .value = uniform.value,
-        .location = gl->getUniformLocation(program->program, uniform.name)
-    }, &program->uniforms)) {
-        saneLog->logFmt(SANE_LOG_ERROR, "[GLAPI] Failed to set uniform: %s", uniform.name);
-    } else saneLog->logFmt(SANE_LOG_SUCCESS, "[GLAPI] Set uniform: %s", uniform.name);
+    
+    uniform->location = gl->getUniformLocation(program->program, uniform->name);
+    if (!saneData->hashArray.put(uniform->name, uniform, &program->uniforms)) {
+        saneLog->logFmt(SANE_LOG_ERROR, "[GLAPI] Failed to set uniform: %s", uniform->name);
+    } else saneLog->logFmt(SANE_LOG_SUCCESS, "[GLAPI] Set uniform (name=%s, location=%u)", uniform->name, uniform->location);
 }
 
 none _sendUniformImpl(cstr name, GPUProgram* program) {
@@ -216,15 +216,15 @@ none _sendUniformImpl(cstr name, GPUProgram* program) {
     switch (uniform->type) {
         case GPU_UNIFORM_NONE: break;
         case GPU_UNIFORM_TYPES: break;
-        case GPU_UNIFORM_FLOAT: gl->uniform1f(uniform->location, *(f32*)uniform->value); break;
-        case GPU_UNIFORM_VEC2: gl->uniform2fv(uniform->location, 1, (f32*)uniform->value); break;
-        case GPU_UNIFORM_VEC3: gl->uniform3fv(uniform->location, 1, (f32*)uniform->value); break;
-        case GPU_UNIFORM_VEC4: gl->uniform4fv(uniform->location, 1, (f32*)uniform->value); break;
-        case GPU_UNIFORM_MAT4: gl->uniformMatrix4fv(uniform->location, 1, 0, (f32*)uniform->value); break;
+        case GPU_UNIFORM_FLOAT: gl->uniform1f(uniform->location, uniform->value.f);   break;
+        case GPU_UNIFORM_VEC2: gl->uniform2fv(uniform->location, 1, (f32*)&uniform->value.v2.x); break;
+        case GPU_UNIFORM_VEC3: gl->uniform3fv(uniform->location, 1, (f32*)&uniform->value.v3.x); break;
+        case GPU_UNIFORM_VEC4: gl->uniform4fv(uniform->location, 1, (f32*)&uniform->value.v4.x); break;
+        case GPU_UNIFORM_MAT4: gl->uniformMatrix4fv(uniform->location, 1, 0, (f32*)&uniform->value.m4.m[0]); break;
         default: break;
     }
 
-    saneLog->logFmt(SANE_LOG_SUCCESS, "[GLAPI] Sent uniform: %s", name);
+    saneLog->logFmt(SANE_LOG_SUCCESS, "[GLAPI] Sent uniform (name=%s, location=%u)", uniform->name, uniform->location);
     return;
 }
 
@@ -235,14 +235,12 @@ none _createVertexBufferImpl(u8 format, GPUBuffer* buffer) {
         return;
     }
 
-    u32 vbo = 0;
-    gl->genVertexArrays(1, &buffer->data.vertex.vbo);
-    gl->genBuffers(1, &vbo);
+    gl->genVertexArrays(1, &buffer->data.vertex.vao);
+    gl->genBuffers(1, &buffer->data.vertex.vbo);
 
-    gl->bindVertexArray(buffer->data.vertex.vbo);
-    gl->bindBuffer(GLAPI_ARRAY_BUFFER, vbo);
+    gl->bindVertexArray(buffer->data.vertex.vao);
+    gl->bindBuffer(GLAPI_ARRAY_BUFFER, buffer->data.vertex.vbo);
     
-    // buffer->data.vertex.count = buffer->data.vertex.count/stride;
     gl->bufferData(GLAPI_ARRAY_BUFFER, buffer->size, buffer->data.vertex.vertices, GLAPI_STATIC_DRAW);
 
     // configure vertex attributes
@@ -263,6 +261,8 @@ none _createVertexBufferImpl(u8 format, GPUBuffer* buffer) {
         }
     }
 
+    buffer->data.vertex.count = buffer->data.vertex.count/stride;
+
     for (int i = 0; i < GPU_VERTEX_ATTRIBS; i++) {
         if ((format & (1 << i)) != 0) {
             gl->vertexAttribPointer(
@@ -278,13 +278,14 @@ none _createVertexBufferImpl(u8 format, GPUBuffer* buffer) {
     }
 
     gl->bindBuffer(GLAPI_ARRAY_BUFFER, 0);
-    gl->deleteBuffers(1, &vbo);
     gl->bindVertexArray(0);
 }
 
 none _destroyVertexBufferImpl(GPUBuffer* buffer) {
     if (!buffer || !buffer->data.vertex.vertices) return;  // error: null ptr!
-    gl->deleteVertexArrays(1, &buffer->data.vertex.vbo);
+    gl->deleteVertexArrays(1, &buffer->data.vertex.vao);
+    gl->deleteBuffers(1, &buffer->data.vertex.vbo);
+    buffer->data.vertex.vao = 0;
     buffer->data.vertex.vbo = 0;
     buffer->data.vertex.count = 0;
     buffer->data.vertex.vertices = NULL;
@@ -307,9 +308,6 @@ none _destroyElementBufferImpl(GPUBuffer* buffer) {
     buffer->data.element.elements = NULL;
 }
 
-
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb/include/stb_image.h>
 
 none _createTexture2DImpl(GPUTexture* texture) {
     // GLAPI_Texture texture = { .id = 0, .width = 0, .height = 0, .channels = 0, .path = NULL, .raw = NULL };
@@ -356,6 +354,7 @@ none _bindBufferImpl(GPUBuffer* buffer) {
             gl->bindBuffer(GLAPI_ELEMENT_BUFFER, buffer->data.element.ebo);
         } break;
         case(GPU_BUFFER_VERTEX): {
+            gl->bindVertexArray(buffer->data.vertex.vao);
             gl->bindBuffer(GLAPI_ARRAY_BUFFER, buffer->data.vertex.vbo);
         } break;
         case(GPU_BUFFER_UNIFORM):   // fall-through
@@ -393,12 +392,14 @@ none _renderBufferImpl(GPUBuffer* buffer) {
         default: break;
     }
 }
+// GPU API
+
 
 byte _initGLAPI(none) {
     if (!gl) return SSDK_FALSE;   // error: null ptr!
     
-    gpuAPI = malloc(sizeof(GPUAPI));
-    if (!gpuAPI) {
+    swarmGPU = malloc(sizeof(GPUAPI));
+    if (!swarmGPU) {
         saneLog->log(SANE_LOG_ERROR, "[GLAPI] Failed to allocate GPU API");
         return SSDK_FALSE;
     } else saneLog->log(SANE_LOG_SUCCESS, "[GLAPI] Allocated GPU API");
@@ -506,27 +507,27 @@ byte _initGLAPI(none) {
     
     swarmPlatform->unloadLib(&lib);
 
-    gpuAPI->clearColorBuffer = _clearColorBufferImpl;
-    gpuAPI->clearDepthBuffer = _clearDepthBufferImpl;
+    swarmGPU->clearColorBuffer = _clearColorBufferImpl;
+    swarmGPU->clearDepthBuffer = _clearDepthBufferImpl;
 
-    gpuAPI->createProgram = _createProgramImpl;
-    gpuAPI->destroyProgram = _destroyProgramImpl;
+    swarmGPU->createProgram = _createProgramImpl;
+    swarmGPU->destroyProgram = _destroyProgramImpl;
     
-    gpuAPI->setUniform = _setUniformImpl;
-    gpuAPI->sendUniform = _sendUniformImpl;
+    swarmGPU->setUniform = _setUniformImpl;
+    swarmGPU->sendUniform = _sendUniformImpl;
     
-    gpuAPI->createVertexBuffer = _createVertexBufferImpl;
-    gpuAPI->destroyVertexBuffer = _destroyVertexBufferImpl;
+    swarmGPU->createVertexBuffer = _createVertexBufferImpl;
+    swarmGPU->destroyVertexBuffer = _destroyVertexBufferImpl;
     
-    gpuAPI->createElementBuffer = _createElementBufferImpl;
-    gpuAPI->destroyElementBuffer = _destroyElementBufferImpl;
+    swarmGPU->createElementBuffer = _createElementBufferImpl;
+    swarmGPU->destroyElementBuffer = _destroyElementBufferImpl;
     
-    gpuAPI->createTexture2D = NULL; // _createTexture2DImpl;
-    gpuAPI->destroyTexture2D = NULL; // _destroyTexture2DImpl;
+    swarmGPU->createTexture2D = NULL; // _createTexture2DImpl;
+    swarmGPU->destroyTexture2D = NULL; // _destroyTexture2DImpl;
     
-    gpuAPI->bindBuffer = _bindBufferImpl;
-    gpuAPI->bindProgram = _bindProgramImpl;
-    gpuAPI->renderBuffer = _renderBufferImpl;
+    swarmGPU->bindBuffer = _bindBufferImpl;
+    swarmGPU->bindProgram = _bindProgramImpl;
+    swarmGPU->renderBuffer = _renderBufferImpl;
 
     return SSDK_TRUE;
 }

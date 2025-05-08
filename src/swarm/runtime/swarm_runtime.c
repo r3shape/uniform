@@ -73,6 +73,23 @@ none _shutdownCore(none) {
     ssdkExitMemory();
 }
 
+
+byte _exitCallback(SwarmEventCode code, SwarmEvent data) {
+    if (code == SWARM_EVENT_EXIT) {
+        saneLog->log(SANE_LOG_WARN, "[Runtime] Exit Event");
+        _RuntimeInternal.running = SSDK_FALSE;
+        return SSDK_TRUE;
+    }; return SSDK_FALSE;
+}
+
+byte _resizeCallback(SwarmEventCode code, SwarmEvent data) {
+    if (code == SWARM_EVENT_RESIZE) {
+        saneLog->log(SANE_LOG_WARN, "[Runtime] Resize Event");
+        return SSDK_TRUE;
+    }; return SSDK_FALSE;
+}
+
+
 int main() {
     _initCore();
     
@@ -88,6 +105,9 @@ int main() {
         (u32)_RuntimeInternal.config.windowSize.y,
         _RuntimeInternal.config.backend
     );
+    
+    swarmEvents->registerCallback(SWARM_EVENT_EXIT, _exitCallback);
+    swarmEvents->registerCallback(SWARM_EVENT_RESIZE, _resizeCallback);
     
     _RuntimeExport.init();
     do {
