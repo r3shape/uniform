@@ -30,10 +30,10 @@ typedef struct SwarmLib {
 } SwarmLib;
 
 typedef struct SwarmPlatform {
-    none (*init)(u32 backend);
+    none (*init)(none);
     none (*shutdown)(none);
 
-    byte (*createWindow)(cstr title, u32 width, u32 height);
+    byte (*createWindow)(cstr title, u32 width, u32 height, u32 backend);
     none (*destroyWindow)(none);
     
     none (*swapBuffers)(none);

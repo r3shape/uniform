@@ -55,10 +55,37 @@ typedef struct GPUBuffer {
     } data;
 } GPUBuffer;
 
+typedef enum GPUVertexAttribute {
+    GPU_VERTEX_LOCATION = 1 << 0, // 1 (0b0001)
+    GPU_VERTEX_COLOR    = 1 << 1, // 2 (0b0010)
+    GPU_VERTEX_TEX      = 1 << 2, // 4 (0b0100)
+    GPU_VERTEX_NORMAL   = 1 << 3, // 8 (0b1000)
+    GPU_VERTEX_ATTRIBS  = 1 << 4 
+} GPUVertexAttribute;
+
+typedef enum GPUUniformType {
+    GPU_UNIFORM_NONE=0,
+    GPU_UNIFORM_FLOAT,
+    GPU_UNIFORM_VEC2,
+    GPU_UNIFORM_VEC3,
+    GPU_UNIFORM_VEC4,
+    GPU_UNIFORM_MAT4,
+    GPU_UNIFORM_TYPES
+} GPUUniformType;
+
+typedef struct GPUUniform {
+    ptr value;
+    cstr name;
+    u32 location;
+    GPUUniformType type;
+} GPUUniform;
+
 typedef struct GPUProgram {
-    cstr vertex;
-    cstr fragment;
+    str vertex;
+    str fragment;
     GPUHandle handle;
+    GPUHandle program;
+    HashArray uniforms;
 } GPUProgram;
 
 typedef struct GPUTexture {
@@ -100,8 +127,8 @@ typedef struct GPUPhase {
 typedef struct GPUNode {
     GPUHandle phase;
     GPUHandle pipeline;
-    GPUHandle elementBuffer;
     GPUHandle vertexBuffer;
+    GPUHandle elementBuffer;
 } GPUNode;
 
 typedef struct GPUCall {
@@ -141,7 +168,7 @@ typedef struct Renderer {
     GPUHandle (*createCall)(GPUNode node);
     none (*commitFrame)(GPUHandle handle);
     GPUHandle (*createPipeline)(GPUHandle program, u32 mask);
-    GPUHandle (*createProgram)(const char* vs, const char* fs);
+    GPUHandle (*createProgram)(str vs, str fs);
     GPUHandle (*createBuffer)(GPUBufferType type, u32 size, ptr data);
     GPUHandle (*createTexture)(GPUTextureType type, GPUTextureFormat fmt, u32 w, u32 h, ptr data);
     GPUHandle (*createPhase)(GPUPhaseType type, Vec3 clearColor, Vec3 clearDepth, GPUHandle framebuffer);

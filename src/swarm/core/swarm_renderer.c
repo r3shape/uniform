@@ -11,10 +11,11 @@ GPUPhase defaultPhase = {0};
 GPUResources resources = (GPUResources){0};
 GPUState state = (GPUState){ .frame = &defaultFrame, .phase = &defaultPhase };
 
-GPUHandle _createProgram(const char* vs, const char* fs) {
+GPUHandle _createProgram(str vs, str fs) {
     GPUHandle handle = resources.programs++;
     GPUProgram* prog = &resources.programv[handle];
     *prog = (GPUProgram){ .vertex = vs, .fragment = fs, .handle = handle };
+    gl->createProgram(prog);
     saneLog->logFmt(SANE_LOG_INFO, "[Renderer] Created GPUProgram (handle=%u)", handle);
     return handle;
 }
@@ -150,6 +151,7 @@ none _initRenderer(GPUBackend backend) {
     state.backend = backend;
     switch(backend) {
         case GPU_BACKEND_OPENGL: {
+            saneLog->log(SANE_LOG_INFO, "[Renderer] GPU Backend: OpenGL");
             gl = saneMemory->alloc(sizeof(GLAPI), 8);
             if (gl == NULL || !_initGLAPI()) {
                 saneLog->log(SANE_LOG_ERROR, "[GLAPI] Initialization Failed");

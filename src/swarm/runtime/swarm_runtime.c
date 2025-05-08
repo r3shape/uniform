@@ -49,15 +49,16 @@ byte _initRuntime(cstr path) {
     return SSDK_TRUE;
 }
 
-none _initCore(GPUBackend backend) {
+none _initCore(none) {
     ssdkInitMemory();
     ssdkInitMath();
+    ssdkInitFile();
     ssdkInitLog();
     ssdkInitDS();
 
     swarmEvents->init();
     swarmInputs->init();
-    swarmPlatform->init(backend);
+    swarmPlatform->init();
 }
 
 none _shutdownCore(none) {
@@ -67,26 +68,28 @@ none _shutdownCore(none) {
     
     ssdkExitDS();
     ssdkExitLog();
+    ssdkExitFile();
     ssdkExitMath();
     ssdkExitMemory();
 }
 
 int main() {
-    _initCore(_RuntimeInternal.config.backend);
+    _initCore();
     
     if (!_initRuntime("external/runtime")) {
         saneLog->log(SANE_LOG_ERROR, "[Runtime] Failed to load Game Library");
         _shutdownCore();
         return 1;
-    }
+    } else saneLog->log(SANE_LOG_SUCCESS, "[Runtime] Initialized");
 
-    _RuntimeExport.init();
     swarmPlatform->createWindow(
         _RuntimeInternal.config.title,
         (u32)_RuntimeInternal.config.windowSize.x,
-        (u32)_RuntimeInternal.config.windowSize.y
+        (u32)_RuntimeInternal.config.windowSize.y,
+        _RuntimeInternal.config.backend
     );
-
+    
+    _RuntimeExport.init();
     do {
         swarmPlatform->pollEvents();
         swarmPlatform->pollInputs();

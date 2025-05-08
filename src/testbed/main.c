@@ -10,7 +10,9 @@ f32 vertices[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
 void init() {
     ib = swarmRenderer->createBuffer(GPU_BUFFER_ELEMENT, sizeof(u32)*6, elements);
     vb = swarmRenderer->createBuffer(GPU_BUFFER_VERTEX, sizeof(f32)*9, vertices);
-    vs = swarmRenderer->createProgram("vs.glsl", "fs.glsl");
+    vs = swarmRenderer->createProgram(
+        saneFile->read("external/assets/shaders/default/shader.vert", 0),
+        saneFile->read("external/assets/shaders/default/shader.frag", 0));
     pipe = swarmRenderer->createPipeline(vs, 0x1);
 }
 
@@ -41,10 +43,10 @@ void shutdown() {
 
 void export(RuntimeAPI* api) {
     api->configure((RuntimeConfig){
-        .title = NULL,
-        .windowPos = {100, 100},
-        .windowSize = {800, 600},
-        .backend = GPU_BACKEND_OPENGL
+        "Swarm Testbed",
+        {100, 100},
+        {800, 600},
+        GPU_BACKEND_OPENGL
     });
     api->init = init;
     api->update = update;

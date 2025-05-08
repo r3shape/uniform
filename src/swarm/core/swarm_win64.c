@@ -138,7 +138,7 @@ LRESULT CALLBACK _windowProc(HWND handle, u32 msg, WPARAM wParam, LPARAM lParam)
     return DefWindowProcA(handle, msg, wParam, lParam);
 }
 
-byte _createWindowImpl(cstr title, u32 width, u32 height) {
+byte _createWindowImpl(cstr title, u32 width, u32 height, GPUBackend backend) {
     if (_WindowsInternal.handle != NULL) return SSDK_TRUE;  // error: window already created!
 
     _WindowsInternal.window = (SwarmWindow){0};
@@ -194,7 +194,8 @@ byte _createWindowImpl(cstr title, u32 width, u32 height) {
     swarmPlatform->setWindowFlag(WINDOW_SHOW_CURSOR);
 
     // Initialize the renderer
-    swarmRenderer->init(_WindowsInternal.backend);
+    swarmRenderer->init(backend);
+    _WindowsInternal.backend = backend;
 
     return SSDK_TRUE;
 }
@@ -331,8 +332,7 @@ void _toggleVsyncImpl(byte toggle) {
 }
 
 
-none _initPlatform(GPUBackend backend) {
-    _WindowsInternal.backend = backend;
+none _initPlatform(none) {
     saneLog->log(SANE_LOG_SUCCESS, "[Platform] Initialized");
 }
 
