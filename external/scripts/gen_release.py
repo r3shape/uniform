@@ -6,7 +6,7 @@ CALL_DIR = os.getcwd()
 RELEASE_VER = None
 
 README = """
-Swarm Engine
+# Swarm Engine
 
 You can find the latest release and additional information at:
 https://github.com/r3shape/swarm
@@ -14,17 +14,16 @@ https://github.com/r3shape/swarm
 This library is distributed under the terms of the MIT license,
 available in [LICENSE.txt](LICENSE.txt).
 
-# Using this package
+### Using this package
 This package contains the `swarm` dynamic library built for x64 Windows.
 
 To use this package, simply replace an existing 64-bit swarm.dll with the one included here.
 
-# Development packages
+### Development packages
 If you're looking for packages containing headers, and external dependencies, check for this package:
--  swarm-{RELEASE_VER}-dev-mingw-w64.zip (compiled using mingw-w64)
+-  swarm-VERSION-dev-mingw-w64.zip
 
-Happy Coding!
-
+Happy Coding!  
 Izaiyah Stokes (d34d0s.dev@gmail.com)
 """
 
