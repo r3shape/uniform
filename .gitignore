@@ -5,7 +5,6 @@ release/
 .vscode/
 __local__/
 __pycache__/
-external/assets
 
 *.a
 *.lib
