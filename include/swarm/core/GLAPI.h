@@ -17,6 +17,7 @@
 
 #define GLAPI_VERTEX_SHADER              0x8B31
 #define GLAPI_FRAGMENT_SHADER            0x8B30
+
 #define GLAPI_LINK_STATUS                0x8B82
 #define GLAPI_COMPILE_STATUS             0x8B81
 #define GLAPI_ACTIVE_ATTRIBUTES          0x8B89
@@ -32,14 +33,39 @@
 #define GLAPI_LINE                       0x1B01
 #define GLAPI_FRONT_AND_BACK             0x0408
 
+#define GLAPI_FRAMEBUFFER 0x8D40
+#define GLAPI_COLOR_ATTACHMENT0 0x8CE0
+#define GLAPI_COLOR_ATTACHMENT1 0x8CE1
+#define GLAPI_COLOR_ATTACHMENT2 0x8CE2
+#define GLAPI_COLOR_ATTACHMENT3 0x8CE3
+#define GLAPI_COLOR_ATTACHMENT4 0x8CE4
+#define GLAPI_COLOR_ATTACHMENT5 0x8CE5
+#define GLAPI_COLOR_ATTACHMENT6 0x8CE6
+#define GLAPI_COLOR_ATTACHMENT7 0x8CE7
+#define GLAPI_COLOR_ATTACHMENT8 0x8CE8
+#define GLAPI_COLOR_ATTACHMENT9 0x8CE9
+#define GLAPI_COLOR_ATTACHMENT10 0x8CEA
+#define GLAPI_COLOR_ATTACHMENT11 0x8CEB
+#define GLAPI_COLOR_ATTACHMENT12 0x8CEC
+#define GLAPI_COLOR_ATTACHMENT13 0x8CED
+#define GLAPI_COLOR_ATTACHMENT14 0x8CEE
+#define GLAPI_COLOR_ATTACHMENT15 0x8CEF
+#define GLAPI_DEPTH_ATTACHMENT 0x8D00
+#define GLAPI_STENCIL_ATTACHMENT 0x8D20
+#define GLAPI_DEPTH_STENCIL_ATTACHMENT 0x821A
+
+#define GLAPI_RENDERBUFFER 0x8D41
+#define GLAPI_DEPTH24_STENCIL8 0x88F0
+
+
 typedef struct GLAPI {
     // BUFFER FUNCTIONS
     void (*genBuffers)(i32 count, u32 *buffer);
     void (*bindBuffer)(u32 target, u32 buffer);
+    void (*deleteBuffers)(i32 count, u32* buffers);
     void (*bufferData)(u32 target, i32 size, const void *data, u32 usage);
     
     // VERTEX ATTRIBUTE FUNCTIONS
-    void (*deleteBuffers)(i32 count, const u32 *buffer);
     void (*mapBuffer)(u32 target, u32 access);
     void (*unmapBuffer)(u32 target);
     void (*bufferSubData)(u32 target, u32* offset, i32 size, const void *data);
@@ -60,10 +86,10 @@ typedef struct GLAPI {
     void (*deleteProgram)(u32 program);
     
     u32 (*createShader)(u32 type);
+    void (*deleteShader)(u32 shader);
     void (*compileShader)(u32 shader);
     void (*attachShader)(u32 program, u32 shader);
     void (*detachShader)(u32 program, u32 shader);
-    void (*deleteShader)(u32 shader);
     void (*shaderSource)(u32 shader, i32 count, const char **strings, const int *lengths);
     
     void (*getShaderiv)(u32 shader, u32 pname, u32 *params);
@@ -72,32 +98,44 @@ typedef struct GLAPI {
     void (*getProgramInfoLog)(u32 program, i32 maxLength, i32 *length, char *infoLog);
     u32 (*getUniformLocation)(u32 program, const char* name);
     
+    void (*uniform1i)(u32 location, i32 value);
+
     void (*uniform1f)(u32 location, f32 value);
     void (*uniform2fv)(u32 location, u32 count, const f32* value);
     void (*uniform3fv)(u32 location, u32 count, const f32* value);
     void (*uniform4fv)(u32 location, u32 count, const f32* value);
     void (*uniformMatrix4fv)(u32 location, u32 count, u32 transpose, const f32* value);
     
+    // TEXTURE BUFFERS
     void (*genTextures)(i32 count, u32 *textures);
     void (*bindTexture)(u32 target, u32 texture);
-    void (*texParameteri)(u32 target, u32 pname, u32 param);
-    void (*texImage2D)(u32 target, u32 level, u32 internalFormat, i32 width, i32 height, u32 border, u32 format, u32 type, const void *data);
     void (*activeTexture)(u32 texture);
-    void (*deleteTextures)(i32 count, const u32 *textures);
     void (*generateMipmap)(u32 target);
     void (*generateTextureMipmap)(u32 texture);
+    void (*deleteTextures)(i32 count, const u32 *textures);
+    void (*texParameteri)(u32 target, u32 pname, u32 param);
+    void (*texImage2D)(u32 target, u32 level, u32 internalFormat, i32 width, i32 height, u32 border, u32 format, u32 type, const void *data);
     
-    void (*genFramebuffers)(i32 count, u32 *framebuffers);
-    void (*bindFramebuffer)(u32 target, u32 framebuffer);
-    void (*framebufferTexture2d)(u32 target, u32 attachment, u32 textarget, u32 texture, u32 level);
-    void (*deleteFramebuffers)(i32 count, const u32 *framebuffers);
+    // RENDER BUFFERS
+    void (*genRenderBuffers)(i32 count, u32 *buffer);
+    void (*bindRenderBuffer)(u32 target, u32 buffer);
+    void (*deleteRenderBuffers)(i32 count, u32 *buffers);
+    void (*renderBufferStorage)(u32 target, u32 format, i32 width, i32 height);
+    
+    // FRAME BUFFERS
     u32 (*checkFramebufferStatus)(u32 target);
+    void (*bindFrameBuffer)(u32 target, u32 buffer);
+    void (*genFramebuffers)(i32 count, u32 *buffers);
+    void (*deleteFrameBuffers)(i32 count, u32* buffers);
+    void (*frameBufferRenderBuffer)(u32 target, u32 attachment, u32 rendertarget, u32 buffer);
+    void (*frameBufferTexture2D)(u32 target, u32 attachment, u32 textarget, u32 texture, u32 level);
     
+    // RENDER FUNCTIONS
     void (*clear)(i32 mask);
-    void (*drawArrays)(u32 mode, u32 first, i32 count);
+    void (*clearDepth)(f32 d);
     void (*clearColor)(f32 r, f32 g, f32 b, f32 a);
+    void (*drawArrays)(u32 mode, u32 first, i32 count);
     void (*drawElements)(u32 mode, i32 count, u32 type, const void *indices);
-    void (*drawElementsBaseVertex)(u32 mode, i32 count, u32 type, const void *indices, u32 baseVertex);
     
     // STATE MANAGEMENT FUNCTIONS        
     void (*enable)(u32 cap);
@@ -122,8 +160,8 @@ none _clearColorBufferImpl(Vec3 color) {
     gl->clear(GL_COLOR_BUFFER_BIT);
 }
 
-none _clearDepthBufferImpl(Vec3 depth) {
-    gl->clearColor(depth.x/255, depth.y/255, depth.z/255, 1.0);
+none _clearDepthBufferImpl(f32 depth) {
+    gl->clearDepth(depth);
     gl->clear(GL_DEPTH_BUFFER_BIT);
 }
 
@@ -216,6 +254,7 @@ none _sendUniformImpl(cstr name, GPUProgram* program) {
     switch (uniform->type) {
         case GPU_UNIFORM_NONE: break;
         case GPU_UNIFORM_TYPES: break;
+        case GPU_UNIFORM_INT: gl->uniform1i(uniform->location, uniform->value.i);   break;
         case GPU_UNIFORM_FLOAT: gl->uniform1f(uniform->location, uniform->value.f);   break;
         case GPU_UNIFORM_VEC2: gl->uniform2fv(uniform->location, 1, (f32*)&uniform->value.v2.x); break;
         case GPU_UNIFORM_VEC3: gl->uniform3fv(uniform->location, 1, (f32*)&uniform->value.v3.x); break;
@@ -229,9 +268,9 @@ none _sendUniformImpl(cstr name, GPUProgram* program) {
 }
 
 
-none _createVertexBufferImpl(u8 format, GPUBuffer* buffer) {
-    if (!buffer || !buffer->data.vertex.vertices || !format) return;
-    if ((format & ~((1 << GPU_VERTEX_ATTRIBS) - 1)) != 0 || !buffer->data.vertex.count || !buffer->data.vertex.vertices) {
+none _createVertexBufferImpl(GPUBuffer* buffer) {
+    if (!buffer || buffer->type != GPU_BUFFER_VERTEX || !buffer->data.vertex.vertices || !buffer->data.vertex.format) return;
+    if ((buffer->data.vertex.format & ~((1 << GPU_VERTEX_ATTRIBS) - 1)) != 0 || !buffer->data.vertex.count || !buffer->data.vertex.vertices) {
         return;
     }
 
@@ -254,7 +293,7 @@ none _createVertexBufferImpl(u8 format, GPUBuffer* buffer) {
     };
 
     for (int i = 0; i < GPU_VERTEX_ATTRIBS; i++) {
-        if ((format & (1 << i)) != 0) {
+        if ((buffer->data.vertex.format & (1 << i)) != 0) {
             // accumulate stride for enabled vertex attributes
             offsets[i] = stride;
             stride += attr_sizes[i];
@@ -264,7 +303,7 @@ none _createVertexBufferImpl(u8 format, GPUBuffer* buffer) {
     buffer->data.vertex.count = buffer->data.vertex.count/stride;
 
     for (int i = 0; i < GPU_VERTEX_ATTRIBS; i++) {
-        if ((format & (1 << i)) != 0) {
+        if ((buffer->data.vertex.format & (1 << i)) != 0) {
             gl->vertexAttribPointer(
                 i, 
                 attr_sizes[i], 
@@ -282,18 +321,19 @@ none _createVertexBufferImpl(u8 format, GPUBuffer* buffer) {
 }
 
 none _destroyVertexBufferImpl(GPUBuffer* buffer) {
-    if (!buffer || !buffer->data.vertex.vertices) return;  // error: null ptr!
+    if (!buffer || buffer->type != GPU_BUFFER_VERTEX || !buffer->data.vertex.vertices) return;  // error: null ptr!
     gl->deleteVertexArrays(1, &buffer->data.vertex.vao);
     gl->deleteBuffers(1, &buffer->data.vertex.vbo);
     buffer->data.vertex.vao = 0;
     buffer->data.vertex.vbo = 0;
     buffer->data.vertex.count = 0;
+    buffer->data.vertex.format = 0;
     buffer->data.vertex.vertices = NULL;
 }
 
 
 none _createElementBufferImpl(GPUBuffer* buffer) {
-    if (!buffer || !buffer->data.element.elements) return;  // error: null ptr!
+    if (!buffer || buffer->type != GPU_BUFFER_ELEMENT || !buffer->data.element.elements) return;  // error: null ptr!
     gl->genBuffers(1, &buffer->data.element.ebo);
     gl->bindBuffer(GLAPI_ELEMENT_BUFFER, buffer->data.element.ebo);
     gl->bufferData(GLAPI_ELEMENT_BUFFER, buffer->size, buffer->data.element.elements, GLAPI_STATIC_DRAW);
@@ -301,49 +341,125 @@ none _createElementBufferImpl(GPUBuffer* buffer) {
 }
 
 none _destroyElementBufferImpl(GPUBuffer* buffer) {
-    if (!buffer || !buffer->data.element.elements) return;  // error: null ptr!
-    gl->deleteVertexArrays(1, &buffer->data.element.ebo);
+    if (!buffer || buffer->type != GPU_BUFFER_ELEMENT || !buffer->data.element.elements) return;  // error: null ptr!
+    gl->deleteBuffers(1, &buffer->data.element.ebo);
     buffer->data.element.ebo = 0;
     buffer->data.element.count = 0;
     buffer->data.element.elements = NULL;
 }
 
 
-none _createTexture2DImpl(GPUTexture* texture) {
-    // GLAPI_Texture texture = { .id = 0, .width = 0, .height = 0, .channels = 0, .path = NULL, .raw = NULL };
-    // if (!path) return texture;
+none _createFrameBufferImpl(GPUBuffer* buffer) {
+    if (!buffer || buffer->type != GPU_BUFFER_FRAME) return;  // error: null ptr!
+    gl->genFramebuffers(1, &buffer->data.frame.fbo);
+    gl->bindFrameBuffer(GLAPI_FRAMEBUFFER, buffer->data.frame.fbo);
 
-    // texture.path = path;
-    // stbi_set_flip_vertically_on_load(SSDK_TRUE);
-    // texture.raw = stbi_load(path, &texture.width, &texture.height, &texture.channels, 0);
-    // if (!texture.raw) return texture;    // error: failed to allocate raw data buffer!
+    // create the color buffer
+    gl->genTextures(1, &buffer->data.frame.tbo);
+    gl->bindTexture(GL_TEXTURE_2D, buffer->data.frame.tbo);
+    gl->texImage2D(GL_TEXTURE_2D, 0,
+        GL_RGB,
+        swarmPlatform->window->size.x,
+        swarmPlatform->window->size.y,
+        0,
+        GL_RGB,
+        GL_UNSIGNED_BYTE,
+        NULL
+    );
+    gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // gl->genTextures(1, &texture.id);
-    // gl->bindTexture(GL_TEXTURE_2D, texture.id);
+    // attach the color buffer
+    gl->frameBufferTexture2D(GLAPI_FRAMEBUFFER, GLAPI_COLOR_ATTACHMENT0, GL_TEXTURE_2D, buffer->data.frame.tbo, 0);
+    gl->bindTexture(GL_TEXTURE_2D, 0);
 
-    // // set texture wrapping options
-    // gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // x axis
-    // gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // y axis
+    // create the render buffer
+    gl->genRenderBuffers(1, &buffer->data.frame.rbo);
+    gl->bindRenderBuffer(GLAPI_RENDERBUFFER, buffer->data.frame.rbo);
+    gl->renderBufferStorage(GLAPI_RENDERBUFFER, GLAPI_DEPTH24_STENCIL8, swarmPlatform->window->size.x, swarmPlatform->window->size.y);
+    
+    // attach the render buffer
+    gl->frameBufferRenderBuffer(GLAPI_FRAMEBUFFER, GLAPI_DEPTH_STENCIL_ATTACHMENT, GLAPI_RENDERBUFFER, buffer->data.frame.rbo);
+    gl->bindRenderBuffer(GLAPI_RENDERBUFFER, 0);
 
-    // // set texture filtering options (scaling up/down)
-    // gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    // gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // // generate the texture
-    // gl->texImage2D(GL_TEXTURE_2D, 0, format, texture.width, texture.height, 0, format, GL_UNSIGNED_BYTE, texture.raw);
-    // gl->generateMipmap(GL_TEXTURE_2D);
-
-    // return texture;
+    gl->bindFrameBuffer(GLAPI_FRAMEBUFFER, 0);
 }
 
-none _destroyTexture2DImpl(GPUTexture* texture) {
-    // texture->width = 0;
-    // texture->height = 0;
-    // texture->channels = 0;
-    // texture ->path = NULL;
-    // gl->deleteTextures(1, &texture->id);
-    // stbi_image_free(texture->raw);
-    // texture->id = 0;
+none _destroyFrameBufferImpl(GPUBuffer* buffer) {
+    if (!buffer || buffer->type != GPU_BUFFER_FRAME) return;  // error: null ptr!
+    gl->deleteTextures(1, &buffer->data.frame.tbo);
+    gl->deleteFrameBuffers(1, &buffer->data.frame.fbo);
+    gl->deleteRenderBuffers(1, &buffer->data.frame.rbo);
+    buffer->data.frame.fbo = SWARM_GPU_RESOURCE_MAX;
+    buffer->data.frame.rbo = SWARM_GPU_RESOURCE_MAX;
+    buffer->data.frame.tbo = SWARM_GPU_RESOURCE_MAX;
+}
+
+
+none _createTextureBufferImpl(GPUBuffer* buffer) {
+    if (!buffer || buffer->type != GPU_BUFFER_TEXTURE) return;  // error: null ptr!
+    if (!buffer->data.texture.data) return; // error: null ptr!
+    
+    GPUTexture* texture = (GPUTexture*)buffer->data.texture.data;
+    if (!texture->path) return; // error: null path!
+
+    buffer->data.texture.path = texture->path;
+    buffer->data.texture.type = texture->type;
+    buffer->data.texture.slot = texture->slot;
+
+    // image texture
+    stbi_set_flip_vertically_on_load(SSDK_TRUE);
+    buffer->data.texture.data = stbi_load(buffer->data.texture.path, &buffer->data.texture.width, &buffer->data.texture.height, &buffer->data.texture.channels, 0);
+    if (!buffer->data.texture.data) {
+        saneLog->logFmt(SANE_LOG_ERROR, "[GLAPI] Failed to load texture: %s", buffer->data.texture.path);
+        return;    // error: failed to allocate raw data buffer!
+    }
+    buffer->size = sizeof(buffer->data.texture.data);
+
+    gl->genTextures(1, &buffer->data.texture.tbo);
+    switch (buffer->data.texture.type) {
+        case GPU_TEXTURE_PLANE: {
+            gl->bindTexture(GL_TEXTURE_2D, buffer->data.texture.tbo);
+            
+            // generate the texture
+            gl->texImage2D(GL_TEXTURE_2D, 0,
+                buffer->data.texture.format,
+                buffer->data.texture.width,
+                buffer->data.texture.height,
+                0,
+                buffer->data.texture.format,
+                GL_UNSIGNED_BYTE,
+                buffer->data.texture.data
+            );
+            gl->generateMipmap(GL_TEXTURE_2D);
+            
+            // set texture wrapping options
+            gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // x axis
+            gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // y axis
+
+            // set texture filtering options (scaling up/down)
+            gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            gl->texParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            saneLog->logFmt(SANE_LOG_INFO, "[GLAPI] Created Plane Texture (format=%u, width=%i, height=%i)", 
+                buffer->data.texture.format, buffer->data.texture.width, buffer->data.texture.height
+            );
+        } break;
+        case GPU_TEXTURE_CUBE:  // fall-through
+        default: break;
+    }
+
+}
+
+none _destroyTextureBufferImpl(GPUBuffer* buffer) {
+    if (!buffer || buffer->type != GPU_BUFFER_TEXTURE) return;  // error: null ptr!
+    buffer->data.texture.width = 0;
+    buffer->data.texture.height = 0;
+    buffer->data.texture.channels = 0;
+    buffer->data.texture.path = NULL;
+    gl->deleteTextures(1, &buffer->data.texture.tbo);
+    stbi_image_free(buffer->data.texture.data);
+    buffer->data.texture.tbo = 0;
 }
 
 
@@ -352,15 +468,29 @@ none _bindBufferImpl(GPUBuffer* buffer) {
     switch(buffer->type) {
         case(GPU_BUFFER_ELEMENT): {
             gl->bindBuffer(GLAPI_ELEMENT_BUFFER, buffer->data.element.ebo);
+            saneLog->logFmt(SANE_LOG_SUCCESS, "[GLAPI] Bound (element buffer=%u)", buffer->data.element.ebo);
         } break;
         case(GPU_BUFFER_VERTEX): {
             gl->bindVertexArray(buffer->data.vertex.vao);
             gl->bindBuffer(GLAPI_ARRAY_BUFFER, buffer->data.vertex.vbo);
+            saneLog->logFmt(SANE_LOG_SUCCESS, "[GLAPI] Bound (vertex buffer=%u, vertex array=%u)", buffer->data.vertex.vbo, buffer->data.vertex.vao);
+        } break;
+        case(GPU_BUFFER_TEXTURE): {
+            gl->activeTexture(buffer->data.texture.slot);
+            switch (buffer->data.texture.type) {
+                case GPU_TEXTURE_PLANE: {
+                    gl->bindTexture(GL_TEXTURE_2D, buffer->data.texture.tbo);
+                    saneLog->logFmt(SANE_LOG_SUCCESS, "[GLAPI] Bound (texture buffer=%u, slot=%u)", buffer->data.texture.tbo, buffer->data.texture.slot);
+                } break;
+                case GPU_TEXTURE_CUBE:  // fall-through
+                default: break;
+            }
+        } break;
+        case(GPU_BUFFER_FRAME): {
+            gl->bindFrameBuffer(GLAPI_FRAMEBUFFER, buffer->data.frame.fbo);
+            saneLog->logFmt(SANE_LOG_SUCCESS, "[GLAPI] Bound (frame buffer=%u, render buffer=%u, texture buffer=%u)", buffer->data.frame.fbo, buffer->data.frame.rbo, buffer->data.frame.tbo);
         } break;
         case(GPU_BUFFER_UNIFORM):   // fall-through
-        case(GPU_BUFFER_TEXTURE):   // fall-through
-        case(GPU_BUFFER_RENDER):   // fall-through
-        case(GPU_BUFFER_FRAME):   // fall-through
         case(GPU_BUFFER_INVALID):   // fall-through
         default: break;
     }
@@ -372,8 +502,11 @@ none _bindProgramImpl(GPUProgram* program) {
     saneLog->logFmt(SANE_LOG_SUCCESS, "[GLAPI] Bound (program=%u)", program->program);
 }
 
-none _renderBufferImpl(GPUBuffer* buffer) {
+
+// readBuffer
+none _readBufferImpl(GPUBuffer* buffer) {
     if (!buffer) return;    // error: null ptr!
+    // increment GPUPhase reads
 
     switch(buffer->type) {
         case(GPU_BUFFER_ELEMENT): {
@@ -384,33 +517,45 @@ none _renderBufferImpl(GPUBuffer* buffer) {
             saneLog->logFmt(SANE_LOG_WARN, "[GLAPI] Rendering Vertex Buffer (count=%u)", buffer->data.vertex.count);
             gl->drawArrays(GPU_TRIANGLE_MODE, 0, buffer->data.vertex.count);
         } break;
-        case(GPU_BUFFER_UNIFORM):   // fall-through
-        case(GPU_BUFFER_TEXTURE):   // fall-through
-        case(GPU_BUFFER_RENDER):   // fall-through
         case(GPU_BUFFER_FRAME):   // fall-through
+        case(GPU_BUFFER_TEXTURE):   // fall-through
+        case(GPU_BUFFER_UNIFORM):   // fall-through
         case(GPU_BUFFER_INVALID):   // fall-through
         default: break;
     }
 }
 // GPU API
 
+none _exitGLAPI(none) {
+    saneMemory->dealloc(gl);
+    saneMemory->dealloc(swarmGPU);
+    swarmPlatform->destroyGLContext();
+    saneLog->log(SANE_LOG_SUCCESS, "[GLAPI] Shutdown");
+}
 
 byte _initGLAPI(none) {
+    gl = saneMemory->alloc(sizeof(GLAPI), 8);
     if (!gl) return SSDK_FALSE;   // error: null ptr!
+    else saneLog->log(SANE_LOG_SUCCESS, "[GLAPI] Allocated GL API");
     
-    swarmGPU = malloc(sizeof(GPUAPI));
+    swarmGPU = saneMemory->alloc(sizeof(GPUAPI), 8);
     if (!swarmGPU) {
+        saneMemory->dealloc(gl);
         saneLog->log(SANE_LOG_ERROR, "[GLAPI] Failed to allocate GPU API");
         return SSDK_FALSE;
     } else saneLog->log(SANE_LOG_SUCCESS, "[GLAPI] Allocated GPU API");
     
     if (!swarmPlatform->createGLContext()) {
+        saneMemory->dealloc(gl);
+        saneMemory->dealloc(swarmGPU);
         saneLog->log(SANE_LOG_ERROR, "[GLAPI] Failed to load context");
         return SSDK_FALSE;
     } else saneLog->log(SANE_LOG_SUCCESS, "[GLAPI] Loaded Context");
     
     SwarmLib lib = swarmPlatform->loadLib(NULL, "opengl32");
     if (!lib.handle) {
+        saneMemory->dealloc(gl);
+        saneMemory->dealloc(swarmGPU);
         saneLog->log(SANE_LOG_ERROR, "[GLAPI] Failed to load OpenGL");
         return SSDK_FALSE;  // error: failed to load opengl library!
     } else saneLog->logFmt(SANE_LOG_SUCCESS, "[GLAPI] Loaded OpenGL v%s", glGetString(GL_VERSION));
@@ -454,6 +599,8 @@ byte _initGLAPI(none) {
         {(void**)&gl->getProgramInfoLog, "glGetProgramInfoLog"},
         {(void**)&gl->getUniformLocation, "glGetUniformLocation"},
         
+        {(void**)&gl->uniform1i, "glUniform1i"},
+
         {(void**)&gl->uniform1f, "glUniform1f"},
         {(void**)&gl->uniform2fv, "glUniform2fv"},
         {(void**)&gl->uniform3fv, "glUniform3fv"},
@@ -470,19 +617,26 @@ byte _initGLAPI(none) {
         {(void**)&gl->generateMipmap, "glGenerateMipmap"},
         {(void**)&gl->generateTextureMipmap, "glGenerateTextureMipmap"},
 
+        // RENDERBUFFER FUNCTIONS
+        {(void**)&gl->genRenderBuffers, "glGenRenderbuffers"},
+        {(void**)&gl->bindRenderBuffer, "glBindRenderbuffer"},
+        {(void**)&gl->deleteRenderBuffers, "glDeleteRenderbuffers"},
+        {(void**)&gl->renderBufferStorage, "glRenderbufferStorage"},
+
         // FRAMEBUFFER FUNCTIONS
         {(void**)&gl->genFramebuffers, "glGenFramebuffers"},
-        {(void**)&gl->bindFramebuffer, "glBindFramebuffer"},
-        {(void**)&gl->framebufferTexture2d, "glFramebufferTexture2D"},
-        {(void**)&gl->deleteFramebuffers, "glDeleteFramebuffers"},
+        {(void**)&gl->bindFrameBuffer, "glBindFramebuffer"},
+        {(void**)&gl->deleteFrameBuffers, "glDeleteFramebuffers"},
+        {(void**)&gl->frameBufferTexture2D, "glFramebufferTexture2D"},
         {(void**)&gl->checkFramebufferStatus, "glCheckFramebufferStatus"},
+        {(void**)&gl->frameBufferRenderBuffer, "glFramebufferRenderbuffer"},
 
         // DRAWING FUNCTIONS
         {(void**)&gl->clear, "glClear"},
+        {(void**)&gl->clearDepth, "glClearDepth"},
         {(void**)&gl->clearColor, "glClearColor"},
         {(void**)&gl->drawArrays, "glDrawArrays"},
         {(void**)&gl->drawElements, "glDrawElements"},
-        {(void**)&gl->drawElementsBaseVertex, "glDrawElementsBaseVertex"},
 
         // STATE MANAGEMENT FUNCTIONS
         {(void**)&gl->enable, "glEnable"},
@@ -501,11 +655,13 @@ byte _initGLAPI(none) {
     for (size_t i = 0; i < sizeof(functions) / sizeof(functions[0]); ++i) {
         *functions[i].function = swarmPlatform->loadSymbol(functions[i].name, &lib);
         if (*functions[i].function == NULL) {
-            saneLog->logFmt(SANE_LOG_ERROR, "[GLAPI] Failed to load: %s", functions[i].name);
+            saneLog->logFmt(SANE_LOG_WARN, "[GLAPI] Failed to load: %s", functions[i].name);
         } else saneLog->logFmt(SANE_LOG_SUCCESS, "[GLAPI] Loaded: %s", functions[i].name);
     }
     
     swarmPlatform->unloadLib(&lib);
+
+    swarmGPU->exit = _exitGLAPI;
 
     swarmGPU->clearColorBuffer = _clearColorBufferImpl;
     swarmGPU->clearDepthBuffer = _clearDepthBufferImpl;
@@ -522,14 +678,19 @@ byte _initGLAPI(none) {
     swarmGPU->createElementBuffer = _createElementBufferImpl;
     swarmGPU->destroyElementBuffer = _destroyElementBufferImpl;
     
-    swarmGPU->createTexture2D = NULL; // _createTexture2DImpl;
-    swarmGPU->destroyTexture2D = NULL; // _destroyTexture2DImpl;
+    swarmGPU->createTextureBuffer = _createTextureBufferImpl;
+    swarmGPU->destroyTextureBuffer = _destroyTextureBufferImpl;
+    
+    swarmGPU->createFrameBuffer = _createFrameBufferImpl;
+    swarmGPU->destroyFrameBuffer = _destroyFrameBufferImpl;
     
     swarmGPU->bindBuffer = _bindBufferImpl;
     swarmGPU->bindProgram = _bindProgramImpl;
-    swarmGPU->renderBuffer = _renderBufferImpl;
+    swarmGPU->readBuffer = _readBufferImpl;
 
+    saneLog->log(SANE_LOG_SUCCESS, "[GLAPI] Initialized");
     return SSDK_TRUE;
 }
+
 
 #endif  // __SWARM_GLAPI_H__

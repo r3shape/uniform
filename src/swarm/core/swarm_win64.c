@@ -342,6 +342,8 @@ none _shutdownPlatform(none) {
 }
 
 SwarmPlatform* swarmPlatform = &(SwarmPlatform) {
+    .window = &_WindowsInternal.window,
+    
     .init = _initPlatform,
     .shutdown = _shutdownPlatform,
 

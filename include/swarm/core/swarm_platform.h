@@ -30,6 +30,8 @@ typedef struct SwarmLib {
 } SwarmLib;
 
 typedef struct SwarmPlatform {
+    SwarmWindow* window;
+
     none (*init)(none);
     none (*shutdown)(none);
 
