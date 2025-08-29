@@ -1,4 +1,3 @@
-bin/
-build/
-release/
-.vscode/
+build/*
+.cache/*
+external/bin/*
