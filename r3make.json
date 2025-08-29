@@ -1,46 +1,29 @@
 {
     "main": {
-        "defines": ["SSDK_BUILD_SOURCE"],
         "flags": ["-Wall", "-Werror", "-std=c99"],
-        
-        "sources": ["src/swarm/core/*.c"],
-        "includes": [".", "external/thirdparty/SSDK", "external/thirdparty"],
-        "libraries": {
-            "gdi32": null, "opengl32": null,
-            "SSDK": "external/thirdparty/SSDK/bin"
-        },
+        "defines": ["_UF_BUILD_DLL_"],
 
+        "includes": ["uniform/include", "external/include"],
+        "sources": ["uniform/src/ufcore/*.c", "uniform/src/ufcore/*/*.c"],
+
+        "name": "ufcore64",
         "type": "dll",
-        "name": "swarm.core",
         "dest": "build"
     },
-    "runtime": {
-        "defines": ["SSDK_BUILD_SOURCE"],
+    "unicorn": {
         "flags": ["-Wall", "-Werror", "-std=c99"],
-        
-        "sources": ["src/swarm/runtime/*.c"],
-        "includes": [".", "external/thirdparty/SSDK"],
+        "defines": ["_UF_BUILD_DLL_"],
+
+        "includes": ["uniform/include", "external/include"],
+        "sources": ["uniform/src/unicorn/*.c"],
+
         "libraries": {
-            "swarm.core": "build",
-            "SSDK": "external/thirdparty/SSDK/bin"
+            "ufcore64": "build",
+            "r3kit": "external/bin"
         },
 
+        "name": "unicorn64",
         "type": "exe",
-        "name": "swarm",
         "dest": "build"
-    },
-    "testbed": {
-        "flags": ["-Wall", "-Werror", "-std=c99"],
-        
-        "sources": ["src/testbed/*.c"],
-        "includes": [".", "external/thirdparty/SSDK"],
-        "libraries": {
-            "swarm.core": "build",
-            "SSDK": "external/thirdparty/SSDK/bin"
-        },
-    
-        "type": "dll",
-        "name": "game",
-        "dest": "external/runtime"
     }
 }
