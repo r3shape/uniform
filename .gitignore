@@ -1,3 +1,4 @@
 build/*
 .cache/*
 external/bin/*
+compile_commands.json
