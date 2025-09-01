@@ -24,7 +24,7 @@ typedef struct UFLibrary {
 } UFLibrary;
 
 typedef struct UFOSInterface {
-    UFVersion version;
+    UFVersion ver;
 
     UF_API_METHOD(none, newWindow, u32 x, u32 y, u32 w, u32 h, UFGpuApi api);
     UF_API_METHOD(none, delWindow, none);

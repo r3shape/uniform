@@ -33,14 +33,14 @@ typedef struct UFEvent {
     char c[16];
 } UFEvent;
 
-typedef none (*UFEventCallback)(UFEventMask, UFEvent);
+typedef none (*UFEventCallback)(UFEventCode, UFEvent);
 
 typedef struct UFEVINInterface {
-    UFVersion version;
+    UFVersion ver;
 
-    UF_API_METHOD(none, newEvent, UFEventMask mask);
-    UF_API_METHOD(none, delEvent, UFEventMask mask);
-    UF_API_METHOD(none, sendEvent, UFEventMask mask, UFEvent event);
+    UF_API_METHOD(none, newEvent, UFEventCode mask);
+    UF_API_METHOD(none, delEvent, UFEventCode mask);
+    UF_API_METHOD(none, sendEvent, UFEventCode mask, UFEvent event);
 
     UF_API_METHOD(none, newCallback, none);
     UF_API_METHOD(none, delCallback, none);

@@ -6,6 +6,8 @@
         "includes": ["uniform/include", "external/include"],
         "sources": ["uniform/src/ufcore/*.c", "uniform/src/ufcore/*/*.c"],
 
+        "libraries": {"r3kit": "external/bin"},
+
         "name": "ufcore64",
         "type": "dll",
         "dest": "build"
@@ -17,10 +19,7 @@
         "includes": ["uniform/include", "external/include"],
         "sources": ["uniform/src/unicorn/*.c"],
 
-        "libraries": {
-            "ufcore64": "build",
-            "r3kit": "external/bin"
-        },
+        "libraries": {"ufcore64": "build", "r3kit": "external/bin"},
 
         "name": "unicorn64",
         "type": "exe",

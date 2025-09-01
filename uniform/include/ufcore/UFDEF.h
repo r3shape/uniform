@@ -3,10 +3,33 @@
 
 #ifdef _UF_R3DEF_
 #include <r3kit/include/defines.h>
-#endif // _UF_R3DEF_
+
+#include <r3kit/include/io/log.h>
+
+#include <r3kit/include/math.h>
+
+#include <r3kit/include/mem/alloc.h>
+#include <r3kit/include/mem/arena.h>
+#endif
+
+typedef char* CString;
 
 typedef unsigned long long UFResource;
-typedef unsigned int UFVersion, UFGpuApi, UFGpuCtx, UFEventMask;
+typedef unsigned int UFVersion, UFEventCode;
+
+typedef enum UFGpuApi {
+    UF_GPU_INVALID_API,
+    UF_GPU_GL_API,  // OpenGL
+    UF_GPU_DX_API,  // DirectX
+    UF_GPU_VK_API,  // Vulkan
+    UF_GPU_MT_API   // Metal
+} UFGpuApi;
+
+typedef enum UFGpuCtx {
+    UF_GPU_INVALID_CTX,
+    UF_GPU_2D_CTX,
+    UF_GPU_3D_CTX
+} UFGpuCtx;
 
 #define UF_API_METHOD(r, n, ...) r (*n)(__VA_ARGS__)
 
