@@ -6,9 +6,13 @@
 #include <ufcore/UFDEF.h>
 
 #define UF_PSOA_HANDLE_MAX      0xFFFFFF
-#define UF_PSOA_CONTEXT_MAX     0x010
-#define UF_PSOA_PROCESS_MAX     0x040
+#define UF_PSOA_PROCESS_MAX     0x0FF
 #define UF_PSOA_STRUCTURE_MAX   0x040
+
+typedef enum UFPSOAHandleFlag {
+    UF_HANDLE_INACTIVE  = (1 << 0),
+    UF_HANDLE_ACTIVE    = (1 << 1)
+} UFPSOAHandleFlag;
 
 typedef struct UFPSOAStructureDesc {
     u16* stridev;       // width of each column per-row
@@ -32,10 +36,6 @@ typedef struct UFPSOAProcessDesc {
 
 typedef struct UFPSOAInterface {
     UFVersion ver;
-
-    // Context
-    UF_API_METHOD(UFResource, newContext, none);
-    UF_API_METHOD(none, delContext, UFResource ctx);
 
     // Handle
     UF_API_METHOD(UFResource, newHandle, none);

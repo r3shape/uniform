@@ -17,6 +17,8 @@ typedef unsigned short 		u16, u2b;
 typedef unsigned int 		u32, u4b;
 typedef unsigned long long 	u64, u8b, uptr;
 
+#define R3_HEADER(h, p) ((h*)((u8*)p->data - (sizeof(h))))
+
 #ifdef KB
     #undef KB
 #endif
@@ -46,7 +48,7 @@ typedef unsigned long long 	u64, u8b, uptr;
 #define I8_MAX  ((1 << 8) - 1)
 #define I16_MAX ((1 << 16) - 1)
 #define I32_MAX ((1ULL << 32) - 1)
-#define I64_MAX ((1ULL << 64) - 1)
+#define I64_MAX ((1ULL << 63) - 1)
 
 #define PI 3.14159265358979323846
 

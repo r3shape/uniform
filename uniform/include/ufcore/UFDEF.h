@@ -4,6 +4,8 @@
 #ifdef _UF_R3DEF_
 #include <r3kit/include/defines.h>
 
+#include <r3kit/include/ds/arr.h>
+
 #include <r3kit/include/io/log.h>
 
 #include <r3kit/include/math.h>

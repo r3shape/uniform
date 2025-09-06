@@ -5,22 +5,11 @@
 
 // handle memory layout: [32-bit ID | 15-bit GEN | 16-bit SALT | 1-bit ALIVE]
 
-typedef struct UFPSOAContext {
+static struct UFPSOAInternal {
     // Processes
     UFPSOAProcessLogic* processLogicv;
     u64* processMaskv;
     u8   processes;
-
-    // Structures
-    u16* structureStridev;
-    u64* structureMaskv;
-    
-    // array of row slabs (transform structure cols=3|row=0 stride=8 px0, px1, px2 |row=1 stride=4 vx0, vx1, vx2| || new slab)
-    ptr* structureRowv;
-    
-    u8*  structureRows; // number of rows
-    u64* structureMap;  // local -> global (handles)
-    u64  structures;
 
     // Handles
     u64* handleMaskv;
@@ -28,11 +17,15 @@ typedef struct UFPSOAContext {
     u64  free;
     u64  next;
 
-    // Queries
-    u64* queryMaskNone;
-    u64* queryMaskAny;
-    u64* queryMaskAll;
-    u16  queries;
+    // Structures
+    u64* structureHandleMap;    // global -> local (structures)
+    u16** structureStridev;     // array of structure stride arrays structureStridev[structure][field] = stride
+    u64* structureMaskv;        // array of structure masks
+    ptr* structureRowv;         // array of row slabs (transform structure cols=3|row=0 stride=8 px0, px1, px2 |row=1 stride=4 vx0, vx1, vx2| || new slab)
+    u8*  structureRows;         // number of rows
+    u8*  structureCols;         // number of cols
+    u64* structureMap;          // local -> global (structures)
+    u64  structures;
 
     // Iterables
     u16* iterStridev;   // array of stride values per-column, per row
@@ -52,249 +45,47 @@ typedef struct UFPSOAContext {
     u16** configRows;           // number of rows per masked structure
     u64** configMask;           // bitmask of structures
     u16 configurations;
-} UFPSOAContext;
- 
-static struct UFPSOAInternal {
-    UFPSOAContext* contextv;
-    u8 contexts;
-} UFPSOAInternal = { .contextv = NULL, .contexts = 0 };
+} UFPSOAInternal = {NULL};
 
-
-/* CONTEXT API */
-UFResource newContext(none) {
-    if (!UFPSOAInternal.contextv) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Internal state NULL\n");;
-        return 0;
-    }
-
-    UFPSOAContext* contextPtr = &UFPSOAInternal.contextv[UFPSOAInternal.contexts];
-
-    // Initialize context process fields
-    contextPtr->processes = 0;
-    contextPtr->processLogicv = r3_mem_alloc(sizeof(UFPSOAProcessLogic) * UF_PSOA_PROCESS_MAX, 8);
-    if (!contextPtr->processLogicv) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->processMaskv = r3_mem_alloc(sizeof(u64) * UF_PSOA_PROCESS_MAX, 8);
-    if (!contextPtr->processMaskv) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    // Initialize context structure fields
-    contextPtr->structures = 0;
-    contextPtr->structureStridev = r3_mem_alloc(sizeof(u16) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->structureStridev) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->structureMaskv = r3_mem_alloc(sizeof(u64) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->structureMaskv) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->structureRowv = r3_mem_alloc(sizeof(ptr) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->structureRowv) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->structureRows = r3_mem_alloc(sizeof(u8) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->structureRows) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->structureMap = r3_mem_alloc(sizeof(u64) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->structureMap) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    // Initialize context handle fields
-    contextPtr->next = 0;
-    contextPtr->free = 0;
-    contextPtr->handleMaskv = r3_mem_alloc(sizeof(u64) * UF_PSOA_HANDLE_MAX, 8);
-    if (!contextPtr->handleMaskv) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->freev = r3_mem_alloc(sizeof(u64) * UF_PSOA_HANDLE_MAX, 8);
-    if (!contextPtr->freev) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    // Initialize query fields
-    contextPtr->queries = 0;
-    contextPtr->queryMaskNone = r3_mem_alloc(sizeof(u64) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->queryMaskNone) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->queryMaskAny = r3_mem_alloc(sizeof(u64) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->queryMaskAny) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->queryMaskAll = r3_mem_alloc(sizeof(u64) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->queryMaskAll) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    // Initialize iterable fields
-    contextPtr->iterables = 0;
-    contextPtr->iterStridev = r3_mem_alloc(sizeof(u16) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->iterStridev) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->iterRowv = r3_mem_alloc(sizeof(ptr) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->iterRowv) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->iterCols = r3_mem_alloc(sizeof(u64) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->iterCols) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->iterRows = r3_mem_alloc(sizeof(u16) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->iterRows) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->iterRow = r3_mem_alloc(sizeof(u16) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->iterRow) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->iterCol = r3_mem_alloc(sizeof(u64) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->iterCol) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    // Initialize configuration fields
-    contextPtr->configurations = 0;
-    contextPtr->configStructureMap = r3_mem_alloc(sizeof(u64*) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->configStructureMap) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->configStructures = r3_mem_alloc(sizeof(u16*) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->configStructures) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->configHandleMap = r3_mem_alloc(sizeof(u64*) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->configHandleMap) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->configStridev = r3_mem_alloc(sizeof(u16*) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->configStridev) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->configRowv = r3_mem_alloc(sizeof(ptr*) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->configRowv) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->configRows = r3_mem_alloc(sizeof(u16*) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->configRows) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    contextPtr->configMask = r3_mem_alloc(sizeof(u64*) * UF_PSOA_STRUCTURE_MAX, 8);
-    if (!contextPtr->configMask) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
-        return 0;
-    }
-
-    // incrememnt then assign
-    UFResource resource = ++UFPSOAInternal.contexts;
-    return resource;
-}
-
-none delContext(UFResource context) {
-    if (!context) {
-        r3_log_stdout(WARN_LOG, "[UFPSOA] `UFPSOAContext` Avoided double free\n");
-        return;
-    }
-
-    UFPSOAContext* contextPtr = &UFPSOAInternal.contextv[context];
-    if (!contextPtr) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to delete `UFPSOAContext` -- Invalid Pointer\n");
-        return;
-    }
-
-    r3_mem_dealloc(contextPtr->processMaskv);
-    r3_mem_dealloc(contextPtr->processLogicv);
-
-    r3_mem_dealloc(contextPtr->structureStridev);
-    r3_mem_dealloc(contextPtr->structureMaskv);
-    r3_mem_dealloc(contextPtr->structureRows);
-    r3_mem_dealloc(contextPtr->structureRowv);
-    r3_mem_dealloc(contextPtr->structureMap);
-    
-    r3_mem_dealloc(contextPtr->handleMaskv);
-    r3_mem_dealloc(contextPtr->freev);
-
-    r3_mem_dealloc(contextPtr->queryMaskNone);
-    r3_mem_dealloc(contextPtr->queryMaskAny);
-    r3_mem_dealloc(contextPtr->queryMaskAll);
-
-    r3_mem_dealloc(contextPtr->iterStridev);
-    r3_mem_dealloc(contextPtr->iterRowv);
-    r3_mem_dealloc(contextPtr->iterCols);
-    r3_mem_dealloc(contextPtr->iterRows);
-    r3_mem_dealloc(contextPtr->iterRow);
-    r3_mem_dealloc(contextPtr->iterCol);
-    
-    r3_mem_dealloc(contextPtr->configStructureMap);
-    r3_mem_dealloc(contextPtr->configStructures);
-    r3_mem_dealloc(contextPtr->configHandleMap);
-    r3_mem_dealloc(contextPtr->configStridev);
-    r3_mem_dealloc(contextPtr->configRowv);
-    r3_mem_dealloc(contextPtr->configRows);
-    r3_mem_dealloc(contextPtr->configMask);
-
-    // swap-last and zero
-    UFPSOAInternal.contextv[context - 1] = UFPSOAInternal.contextv[UFPSOAInternal.contexts - 1];
-    UFPSOAInternal.contextv[UFPSOAInternal.contexts - 1] = (UFPSOAContext){NULL};
-    UFPSOAInternal.contexts--;
-}
+/* HANDLE API */
 
 
 /* HANDLE API */
-UFResource newHandle(none) { return 0; }
+UFResource newHandle(none) {
+    UFResource resource;
+    if (UFPSOAInternal.free != 0) {
+        resource = UFPSOAInternal.freev[UFPSOAInternal.free - 1];
+        UFPSOAInternal.free--;
+    } else { resource = ++UFPSOAInternal.next; } // increment then assign (preserve 0 as invalid handle)
+
+    UFPSOAInternal.handleMaskv[resource - 1] = 0;
+
+    return resource;
+}
 
 UFResource bindHandle(UFResource handle, UFResource structure) { return 0; }
 
 UFResource unbindHandle(UFResource handle, UFResource structure) { return 0; }
 
-none delHandle(UFResource handle) {}
+none delHandle(UFResource handle) {
+    if (!handle || handle > UFPSOAInternal.next) {
+        r3_log_stdoutf(ERROR_LOG, "[UFPSOA] Invalid handle passed to `delHandle` -- %llu\n", handle);
+        return;
+    }
+
+    if ((UFPSOAInternal.handleMaskv[handle - 1] & UF_HANDLE_INACTIVE) == UF_HANDLE_INACTIVE) {
+        r3_log_stdoutf(WARN_LOG, "[UFPSOA] Handle already marked inactive -- %llu\n", handle);
+        return;
+    } else {
+        // manage flags and push the handle back to the free pool
+        UFPSOAInternal.handleMaskv[handle - 1] |= UF_HANDLE_INACTIVE;
+        UFPSOAInternal.handleMaskv[handle - 1] &= ~UF_HANDLE_ACTIVE;
+        UFPSOAInternal.freev[UFPSOAInternal.free++] = handle;
+
+        r3_log_stdoutf(SUCCESS_LOG, "[UFPSOA] Handle marked inactive -- %llu\n", handle);
+        return;
+    }
+}
 
 
 /* QUERY API */
@@ -344,15 +135,148 @@ u8 ufInitPSOA(UFPSOAInterface* psoaInterface) {
         return 0;
     }
     
-    UFPSOAInternal.contexts = 0;
-    UFPSOAInternal.contextv = r3_mem_alloc(sizeof(UFPSOAContext) * UF_PSOA_CONTEXT_MAX, 8);
-    if (!UFPSOAInternal.contextv) {
-        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to initialize `UFPSOAInterface` -- Out of memory\n");
+    // Initialize context process fields
+    UFPSOAInternal.processes = 0;
+    UFPSOAInternal.processLogicv = r3_mem_alloc(sizeof(UFPSOAProcessLogic) * UF_PSOA_PROCESS_MAX, 8);
+    if (!UFPSOAInternal.processLogicv) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
         return 0;
     }
 
-    psoaInterface->newContext = newContext;
-    psoaInterface->delContext = delContext;
+    UFPSOAInternal.processMaskv = r3_mem_alloc(sizeof(u64) * UF_PSOA_PROCESS_MAX, 8);
+    if (!UFPSOAInternal.processMaskv) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    // Initialize context structure fields
+    UFPSOAInternal.structures = 0;
+    UFPSOAInternal.structureStridev = r3_mem_alloc(sizeof(u16) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.structureStridev) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.structureMaskv = r3_mem_alloc(sizeof(u64) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.structureMaskv) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.structureRowv = r3_mem_alloc(sizeof(ptr) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.structureRowv) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.structureRows = r3_mem_alloc(sizeof(u8) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.structureRows) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.structureMap = r3_mem_alloc(sizeof(u64) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.structureMap) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    // Initialize context handle fields
+    UFPSOAInternal.next = 0;
+    UFPSOAInternal.free = 0;
+    UFPSOAInternal.handleMaskv = r3_mem_alloc(sizeof(u64) * UF_PSOA_HANDLE_MAX, 8);
+    if (!UFPSOAInternal.handleMaskv) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.freev = r3_mem_alloc(sizeof(u64) * UF_PSOA_HANDLE_MAX, 8);
+    if (!UFPSOAInternal.freev) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    // Initialize iterable fields
+    UFPSOAInternal.iterables = 0;
+    UFPSOAInternal.iterStridev = r3_mem_alloc(sizeof(u16) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.iterStridev) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.iterRowv = r3_mem_alloc(sizeof(ptr) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.iterRowv) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.iterCols = r3_mem_alloc(sizeof(u64) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.iterCols) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.iterRows = r3_mem_alloc(sizeof(u16) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.iterRows) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.iterRow = r3_mem_alloc(sizeof(u16) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.iterRow) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.iterCol = r3_mem_alloc(sizeof(u64) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.iterCol) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    // Initialize configuration fields
+    UFPSOAInternal.configurations = 0;
+    UFPSOAInternal.configStructureMap = r3_mem_alloc(sizeof(u64*) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.configStructureMap) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.configStructures = r3_mem_alloc(sizeof(u16*) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.configStructures) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.configHandleMap = r3_mem_alloc(sizeof(u64*) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.configHandleMap) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.configStridev = r3_mem_alloc(sizeof(u16*) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.configStridev) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.configRowv = r3_mem_alloc(sizeof(ptr*) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.configRowv) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.configRows = r3_mem_alloc(sizeof(u16*) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.configRows) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
+
+    UFPSOAInternal.configMask = r3_mem_alloc(sizeof(u64*) * UF_PSOA_STRUCTURE_MAX, 8);
+    if (!UFPSOAInternal.configMask) {
+        r3_log_stdout(ERROR_LOG, "[UFPSOA] Failed to create `UFPSOAContext` -- Out Of Memory\n");
+        return 0;
+    }
 
     psoaInterface->newHandle = newHandle;
     psoaInterface->delHandle = delHandle;
@@ -393,12 +317,33 @@ u8 ufExitPSOA(UFPSOAInterface* psoaInterface) {
         return 0;
     }
 
-    UFPSOAInternal.contexts = 0;
-    r3_mem_dealloc(UFPSOAInternal.contextv);
-    
-    psoaInterface->newContext = NULL;
-    psoaInterface->delContext = NULL;
+    r3_mem_dealloc(UFPSOAInternal.processMaskv);
+    r3_mem_dealloc(UFPSOAInternal.processLogicv);
 
+    r3_mem_dealloc(UFPSOAInternal.structureStridev);
+    r3_mem_dealloc(UFPSOAInternal.structureMaskv);
+    r3_mem_dealloc(UFPSOAInternal.structureRows);
+    r3_mem_dealloc(UFPSOAInternal.structureRowv);
+    r3_mem_dealloc(UFPSOAInternal.structureMap);
+    
+    r3_mem_dealloc(UFPSOAInternal.handleMaskv);
+    r3_mem_dealloc(UFPSOAInternal.freev);
+
+    r3_mem_dealloc(UFPSOAInternal.iterStridev);
+    r3_mem_dealloc(UFPSOAInternal.iterRowv);
+    r3_mem_dealloc(UFPSOAInternal.iterCols);
+    r3_mem_dealloc(UFPSOAInternal.iterRows);
+    r3_mem_dealloc(UFPSOAInternal.iterRow);
+    r3_mem_dealloc(UFPSOAInternal.iterCol);
+    
+    r3_mem_dealloc(UFPSOAInternal.configStructureMap);
+    r3_mem_dealloc(UFPSOAInternal.configStructures);
+    r3_mem_dealloc(UFPSOAInternal.configHandleMap);
+    r3_mem_dealloc(UFPSOAInternal.configStridev);
+    r3_mem_dealloc(UFPSOAInternal.configRowv);
+    r3_mem_dealloc(UFPSOAInternal.configRows);
+    r3_mem_dealloc(UFPSOAInternal.configMask);
+    
     psoaInterface->newHandle = NULL;
     psoaInterface->delHandle = NULL;
     psoaInterface->bindHandle = NULL;
