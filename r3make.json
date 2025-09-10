@@ -27,5 +27,17 @@
         "name": "unicorn64",
         "type": "exe",
         "dest": "build"
+    },
+    "ufsandbox": {
+        "flags": ["-Wall", "-Werror", "-std=c99"],
+
+        "includes": ["uniform/include", "external/include"],
+        "sources": ["uniform/src/ufsandbox/*.c"],
+
+        "libraries": {"ufcore64": "build"},
+
+        "name": "ufsandbox",
+        "type": "dll",
+        "dest": "external/user/bin"
     }
 }

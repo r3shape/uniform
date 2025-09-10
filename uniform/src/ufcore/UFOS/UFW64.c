@@ -9,7 +9,6 @@
 #include <windows.h>
 #include <windowsx.h>   // for parameter input extraction
 
-// TODO: UFW64 internal state could flatten its UFWindow into a UFResource handle for multi-windowing
 static struct UFW64 {
     UFEVINInterface* evinPtr;   // passed from runtime on call to `ufInitOS`
     
@@ -198,6 +197,7 @@ none setWindowFlag(UFWindowFlag flag) {}
 none getWindowFlag(UFWindowFlag flag) {}
 none remWindowFlag(UFWindowFlag flag) {}
 
+
 none getEvents(none) {
     MSG msg;
     do {
@@ -208,13 +208,14 @@ none getEvents(none) {
 
 none getInputs(none) { UFW64.evinPtr->updateDevices(); }
 
+
 none swapBuffers(UFResource window) {
     if (!window || window >= 5) {
         r3_log_stdout(WARN_LOG, "[UFOS] Failed `swapBuffers` -- window not found\n");
         return;
     }
 
-    struct W64Window* winPtr = &UFW64.W64Window[UFW64.windows];
+    struct W64Window* winPtr = &UFW64.W64Window[window - 1];
     if (!winPtr->winDeviceContext) {
         r3_log_stdout(WARN_LOG, "[UFOS] Failed `swapBuffers` -- window device context NULL\n");
         return;
@@ -228,7 +229,7 @@ u8 newGpuCtx(UFResource window) {
         return 0;
     }
 
-    struct W64Window* winPtr = &UFW64.W64Window[UFW64.windows];
+    struct W64Window* winPtr = &UFW64.W64Window[window - 1];
     if (winPtr->winGpuContext != NULL) {
         r3_log_stdout(WARN_LOG, "[UFOS] Skippng call to `newGpuCtx` -- context exists\n");
         return 1;
@@ -286,7 +287,7 @@ u8 delGpuCtx(UFResource window) {
         return 0;
     }
 
-    struct W64Window* winPtr = &UFW64.W64Window[UFW64.windows];
+    struct W64Window* winPtr = &UFW64.W64Window[window - 1];
     if (!winPtr->winGpuContext) {
         r3_log_stdout(WARN_LOG, "[UFOS] Failed `delGpuCtx` -- window gpu context NULL\n");
         return 1;
@@ -317,7 +318,7 @@ u8 delWindow(UFResource window) {
         return 0;
     }
 
-    struct W64Window* winPtr = &UFW64.W64Window[UFW64.windows];
+    struct W64Window* winPtr = &UFW64.W64Window[window - 1];
     
     if (winPtr->winGpuContext != NULL) delGpuCtx(window);
     DestroyWindow(winPtr->winHandle);
@@ -385,6 +386,7 @@ u8 unloadLibrary(UFLibrary* library) {
     return 1;
 }
 
+
 u8 ufInitOS(UFEVINInterface* evinPtr, UFOSInterface* osInterface) {
     if (!osInterface) {
         r3_log_stdout(WARN_LOG, "[UFOS] Failed to init -- invalid interface pointer\n");
@@ -397,6 +399,10 @@ u8 ufInitOS(UFEVINInterface* evinPtr, UFOSInterface* osInterface) {
     }
     
     UFW64.evinPtr = evinPtr;  // set internal UFEVIN API ptr
+
+    // register default HIDs
+    UFW64.mouseDefault = UFW64.evinPtr->newDevice(UF_DEVICE_MOUSE); // registered as an RID on call to `newWindow`
+    UFW64.keyboardDefault = UFW64.evinPtr->newDevice(UF_DEVICE_KEYBOARD);
 
     osInterface->newWindow = newWindow;
     osInterface->delWindow = delWindow;
@@ -421,12 +427,15 @@ u8 ufInitOS(UFEVINInterface* evinPtr, UFOSInterface* osInterface) {
     return 1;
 }
 
-
 u8 ufExitOS(UFOSInterface* osInterface) {
     if (!osInterface) {
         r3_log_stdout(WARN_LOG, "[UFOS] Failed to init -- invalid interface pointer\n");
         return 0;
     }
+
+    UFW64.evinPtr->delDevice(UFW64.keyboardDefault);
+    UFW64.evinPtr->delDevice(UFW64.mouseDefault);
+    UFW64.evinPtr = NULL;
 
     osInterface->newWindow = NULL;
     osInterface->delWindow = NULL;

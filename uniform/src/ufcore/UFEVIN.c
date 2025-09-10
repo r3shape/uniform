@@ -24,6 +24,7 @@ static inline u64 _ufDeviceBufferSize(UFDeviceType type) {
     }
 }
 
+
 u8 newEvent(UFEventCode code) {
     if (code >= UF_EVENT_CODE_MAX || ((u8*)UFEVINInternal.event.data)[code]) {
         r3_log_stdoutf(WARN_LOG, "[UFEVIN] Failed `newEvent` -- event code already exists: %d\n", code);
@@ -59,10 +60,7 @@ u8 sendEvent(UFEventCode code, UFEvent event) {
         return 0;
     }
 
-    if (!((Array*)(UFEVINInternal.hook.data))[code].data) {
-        r3_log_stdoutf(WARN_LOG, "[UFEVIN] Failed `sendEvent` -- event code has no hooks: %d\n", code);
-        return 0;
-    }
+    if (!((Array*)(UFEVINInternal.hook.data))[code].data) { return 0; }
     
     u16 count = r3_arr_count(&((Array*)(UFEVINInternal.hook.data))[code]);
     FOR_I(0, count, 1) {
@@ -308,7 +306,7 @@ u8 resetDeviceState(UFDeviceBuffer buffer, UFResource device) {
 
     UFDevice deviceRead  = {0};
     if (!r3_arr_read(device - 1, &deviceRead, &UFEVINInternal.device)) {
-        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `delDevice` -- device array read failed: %d\n", device);
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `resetDeviceState` -- device array read failed: %d\n", device);
         return 0;
     }
 
@@ -318,7 +316,6 @@ u8 resetDeviceState(UFDeviceBuffer buffer, UFResource device) {
 
     return 1;
 }
-
 
 
 u8 resetDevices(none) {
@@ -353,15 +350,15 @@ u8 updateDevices(none) {
 
 u8 updateDeviceDelta(s16 dx, s16 dy, UFResource device) {
     u8 count = r3_arr_count(&UFEVINInternal.device);
-    if (!device || device > count || device > UF_DEVICE_MAX || !((ptr*)UFEVINInternal.device.data)[device - 1]) {
-        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `resetDeviceState` -- device not found: %d\n", device);
+    if (!device || device > count || device > UF_DEVICE_MAX || !((UFDevice*)UFEVINInternal.device.data)[device - 1].buffers[UF_DEVICE_BUFFER_NOW]) {
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `updateDeviceDelta` -- device not found: %d\n", device);
         return 0;
     } if (dx == 0 || dy == 0) return 0;
 
 
     UFDevice deviceRead  = {0};
     if (!r3_arr_read(device - 1, &deviceRead, &UFEVINInternal.device)) {
-        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `delDevice` -- device array read failed: %d\n", device);
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `updateDeviceDelta` -- device array read failed: %d\n", device);
         return 0;
     }
 
@@ -385,6 +382,8 @@ u8 ufInitEVIN(UFEVINInterface* evinInterface) {
             r3_log_stdout(ERROR_LOG, "[UFEVIN] Failed to init -- internal array alloc failed\n");
             return 0;
     }
+
+    FOR_I(0, UF_DEFAULT_EVENT_CODE_COUNT, 1) newEvent(i);
 
     evinInterface->newEvent = newEvent;
     evinInterface->delEvent = delEvent;
@@ -447,4 +446,3 @@ u8 ufExitEVIN(UFEVINInterface* evinInterface) {
     r3_log_stdout(SUCCESS_LOG, "[UFEVIN] Deinitialized\n");
     return 1;
 }
-

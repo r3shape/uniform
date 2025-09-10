@@ -19,6 +19,12 @@ struct Unicorn {
 } Unicorn = {0};
 
 
+none _ufDefaultExitHook(UFEventCode code, UFEvent event) {
+    Unicorn.init = 0;
+    r3_log_stdout(INFO_LOG, "[Unicorn] Exiting Uniform Runtime\n");
+}
+
+
 u8 ufInitRuntime(CString library) {
     if (!ufInitEVIN(&Unicorn.evin)) {
         r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to initialize `UFEVIN` API\n");
@@ -36,57 +42,65 @@ u8 ufInitRuntime(CString library) {
     }
     
     /* use UFOS to load the UFApplication dynamic library and resolve the export symbol */
-    // Unicorn.os.loadLibrary(UF_DEFAULT_USER_PATH, library, &Unicorn.appLibrary);
-    // if (!Unicorn.appLibrary.handle) {
-    //     r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to load `UFApplication` dynamic library\n");
-    //     return 0;
-    // }
+    Unicorn.os.loadLibrary(UF_DEFAULT_USER_PATH, library, &Unicorn.appLibrary);
+    if (!Unicorn.appLibrary.handle) {
+        r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to load `UFApplication` dynamic library\n");
+        return 0;
+    }
 
-    // ptr export;
-    // Unicorn.os.loadSymbol("ufExport", &export, &Unicorn.appLibrary);
-    // if (!export) {
-    //     r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to load `ufExport` symbol from `UFApplication` dynamic library\n");
-    //     return 0;
-    // }
-
-    /* validate that the `UFApplication` methods are non-null values */
-    // if (!Unicorn.application->init_hook   ||
-    //     !Unicorn.application->exit_hook   ||
-    //     !Unicorn.application->update_hook ||
-    //     !Unicorn.application->render_hook) {
-    //     r3_log_stdout(WARN_LOG, "[Unicorn] Incomplete `UFApplication` dynamic library loaded -- Application missing function pointers\n");
-    //     return 0;
-    // }
+    ptr export;
+    Unicorn.os.loadSymbol("ufExport", &export, &Unicorn.appLibrary);
+    if (!export) {
+        r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to load `ufExport` symbol from `UFApplication` dynamic library\n");
+        return 0;
+    }
 
     /* retrieve `UFApplication` pointer from export symbol and configure Unicorn/UFCORE */
-    // Unicorn.application = ((ufExport)export)();
-    // Unicorn.os.newWindow(
-    //     (u32)VEC_X(Unicorn.application->windowPos),
-    //     (u32)VEC_Y(Unicorn.application->windowPos),
-    //     (u32)VEC_X(Unicorn.application->windowSize),
-    //     (u32)VEC_Y(Unicorn.application->windowSize),
-    //     Unicorn.application->api
-    // );
+    /* validate that the `UFApplication` methods are non-null values */
+    Unicorn.application = ((UFExport)export)();
+    if (!Unicorn.application->init_hook   ||
+        !Unicorn.application->exit_hook   ||
+        !Unicorn.application->update_hook ||
+        !Unicorn.application->render_hook) {
+        r3_log_stdout(WARN_LOG, "[Unicorn] Incomplete `UFApplication` dynamic library loaded -- Application missing function pointers\n");
+        return 0;
+    }
 
     /* assign application pointers to pre-initialized UFGPU,UFMRG,UFEVIN,UFPSOA interfaces */
-    // Unicorn.application->gpuPtr = &Unicorn.gpu;
-    // Unicorn.application->mrgPtr = &Unicorn.mrg;
-    // Unicorn.application->evinPtr = &Unicorn.evin;
-    // Unicorn.application->psoaPtr = &Unicorn.psoa;
+    Unicorn.application->gpuPtr = &Unicorn.gpu;
+    Unicorn.application->mrgPtr = &Unicorn.mrg;
+    Unicorn.application->evinPtr = &Unicorn.evin;
+    Unicorn.application->psoaPtr = &Unicorn.psoa;
 
+    /* create and assign a window resource handle to loaded `UFApplication` */
+    Unicorn.application->window = Unicorn.os.newWindow(
+        (u32)VEC_X(Unicorn.application->windowPos),
+        (u32)VEC_Y(Unicorn.application->windowPos),
+        (u32)VEC_X(Unicorn.application->windowSize),
+        (u32)VEC_Y(Unicorn.application->windowSize),
+        Unicorn.application->api
+    );
+    
     /* initialize the MRG and GPU APIs after a window has been created ( OGL context needs a window first :| ) */
-    // if (!ufInitMRG(Unicorn.application->api, &Unicorn.gpu, &Unicorn.mrg)) {
-    //     r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to deinitialize `UFMRG` API\n");
-    //     return 0;
-    // }
+    if (!ufInitMRG(Unicorn.application->api, &Unicorn.gpu, &Unicorn.mrg)) {
+        r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to deinitialize `UFMRG` API\n");
+        return 0;
+    }
+
+    // register default event hooks
+    Unicorn.evin.newHook(UF_EVENT_EXIT, _ufDefaultExitHook);
 
     Unicorn.init = 1;
-
     r3_log_stdout(SUCCESS_LOG, "[Unicorn] Initialized\n");
+
     return 1;
 }
 
 none ufExitRuntime(none) {
+    if (!Unicorn.os.unloadLibrary(&Unicorn.appLibrary)) {
+        r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to unload `UFApplication` dynamic library\n");
+    }
+
     if (!ufExitOS(&Unicorn.os)) {
         r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to deinitialize `UFOS` API\n");
     }
@@ -110,64 +124,21 @@ none ufExitRuntime(none) {
     return;
 }
 
-none hook(UFEventCode code, UFEvent event) {
-    r3_log_stdoutf(SUCCESS_LOG, "EVENT HOOK -- %d\n", code);
-    FOR_I(0, 6, 1)
-        r3_log_stdoutf(SUCCESS_LOG, "EVENT DATA -- %c\n", event.c[i]);
-}
-
-none hook2(UFEventCode code, UFEvent event) {
-    r3_log_stdoutf(SUCCESS_LOG, "EVENT HOOK 2 -- %d\n", code);
-    FOR_I(0, 14, 1)
-        r3_log_stdoutf(SUCCESS_LOG, "EVENT DATA 2 -- %c\n", event.c[i]);
-}
 
 s32 main(s32 argc, CString* argv) {
     if (!ufInitRuntime(argv[1])) { ufExitRuntime(); }
 
-    // UFEVIN mini unit-test ~ @zafflins
-    UFEventCode event = 1;
-    UFEventCode event2 = 2;
-    Unicorn.evin.newEvent(event);
-    Unicorn.evin.newEvent(event2);
-    Unicorn.evin.newHook(event, hook);
-    Unicorn.evin.newHook(event2, hook2);
-
-    UFResource kb = Unicorn.evin.newDevice(UF_DEVICE_KEYBOARD);
-    r3_log_stdoutf(INFO_LOG, "DEVICE RID: %d\n", kb);
-
-    Unicorn.evin.setDeviceState(UF_DEVICE_STATE_ACTIVE, UF_DEVICE_BUFFER_NOW, kb);
-    r3_log_stdoutf(INFO_LOG, "DEVICE STATE (now buffer) -- key=A: %d\n", Unicorn.evin.getKeyboardState(UF_KEYBOARD_A, UF_DEVICE_BUFFER_NOW, kb));
-    r3_log_stdoutf(INFO_LOG, "DEVICE STATE (last buffer) -- key=A: %d\n", Unicorn.evin.getKeyboardState(UF_KEYBOARD_A, UF_DEVICE_BUFFER_LAST, kb));
-    
-    Unicorn.evin.updateDevices();
-    r3_log_stdoutf(INFO_LOG, "DEVICE STATE (now buffer after update) -- key=A: %d\n", Unicorn.evin.getKeyboardState(UF_KEYBOARD_A, UF_DEVICE_BUFFER_NOW, kb));
-    r3_log_stdoutf(INFO_LOG, "DEVICE STATE (last buffer after update) -- key=A: %d\n", Unicorn.evin.getKeyboardState(UF_KEYBOARD_A, UF_DEVICE_BUFFER_LAST, kb));
-    
-    Unicorn.evin.resetDevices();
-    r3_log_stdoutf(INFO_LOG, "DEVICE STATE (now buffer after reset) -- key=A: %d\n", Unicorn.evin.getKeyboardState(UF_KEYBOARD_A, UF_DEVICE_BUFFER_NOW, kb));
-    r3_log_stdoutf(INFO_LOG, "DEVICE STATE (last buffer after reset) -- key=A: %d\n", Unicorn.evin.getKeyboardState(UF_KEYBOARD_A, UF_DEVICE_BUFFER_LAST, kb));
-
-    Unicorn.evin.delDevice(kb);
-
-    Unicorn.evin.sendEvent(event, (UFEvent){
-        .c = {'H', 'E', 'L', 'L', 'O', '!'}
-    });
-    Unicorn.evin.sendEvent(event2, (UFEvent){
-        .c = {'H', 'E', 'L', 'L', 'O', ',', ' ', 'A', 'G', 'A', 'I', 'N', '!'}
-    });
-
-    // Unicorn.application->init_hook();
-    // do {
-    //     Unicorn.os.getEvents();
-    //     Unicorn.os.getInputs();
+    Unicorn.application->init_hook();
+    do {
+        Unicorn.os.getEvents();
+        Unicorn.os.getInputs();
         
-    //     Unicorn.application->update_hook();
-    //     Unicorn.application->render_hook();
+        Unicorn.application->update_hook();
+        Unicorn.application->render_hook();
         
-    //     Unicorn.os.swapBuffers();
-    // } while (Unicorn.init);
-    // Unicorn.application->exit_hook();
+        Unicorn.os.swapBuffers(Unicorn.application->window);
+    } while (Unicorn.init);
+    Unicorn.application->exit_hook();
 
     ufExitRuntime();
     return 0;

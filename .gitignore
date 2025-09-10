@@ -2,4 +2,5 @@ build/*
 .cache/*
 .vscode/*
 external/bin/*
+external/user/*
 compile_commands.json

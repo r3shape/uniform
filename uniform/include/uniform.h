@@ -13,9 +13,9 @@ typedef struct UFApplication {
     UFGpuApi api;
     UFGpuCtx ctx;
     
-    Vec2 windowPos;
-    Vec2 windowSize;
+    Vec2 windowPos; Vec2 windowSize;
     CString windowTitle;
+    UFResource window;
 
     UFGPUInterface* gpuPtr;
     UFMRGInterface* mrgPtr;
@@ -28,6 +28,6 @@ typedef struct UFApplication {
     UF_API_METHOD(none, render_hook, none);
 } UFApplication;
 
-typedef UFApplication* (*ufExport)(none);
+typedef UFApplication* (*UFExport)(none);
 
 #endif // _UF_H_
