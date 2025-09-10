@@ -7,7 +7,7 @@
 #include <ufcore/UFEVIN.h>
 #include <ufcore/UFPSOA.h>
 
-UF_API u8 ufInitOS(UFOSInterface* osInterface);
+UF_API u8 ufInitOS(UFEVINInterface* evinPtr, UFOSInterface* osInterface);
 UF_API u8 ufExitOS(UFOSInterface* osInterface);
 
 UF_API u8 ufInitMRG(UFGpuApi api, UFGPUInterface* gpuPtr, UFMRGInterface* mrgInterface);

@@ -155,23 +155,25 @@ UFResource newDevice(UFDeviceType type) {
     return r3_arr_count(&UFEVINInternal.device);
 }
 
-none delDevice(UFResource device) {
+u8 delDevice(UFResource device) {
     u8 count = r3_arr_count(&UFEVINInternal.device);
     if (!device || device > count || device > UF_DEVICE_MAX || !((ptr*)UFEVINInternal.device.data)[device - 1]) {
         r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `delDevice` -- device not found: %d\n", device);
-        return;
+        return 0;
     }
 
     // pull from device array
     UFDevice devicePull  = {0};
     if (!r3_arr_pull(device - 1, &devicePull, &UFEVINInternal.device)) {
         r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `delDevice` -- device array pull failed: %d\n", device);
-        return;
+        return 0;
     }
     
     // dealloc device buffers
     r3_mem_dealloc(devicePull.buffers[0]);
     r3_mem_dealloc(devicePull.buffers[1]);
+
+    return 1;
 }
 
 
@@ -190,7 +192,7 @@ u8 setDeviceState(UFDeviceState state, UFDeviceBuffer buffer, UFResource device)
 
     UFDevice deviceRead  = {0};
     if (!r3_arr_read(device - 1, &deviceRead, &UFEVINInternal.device)) {
-        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `delDevice` -- device array read failed: %d\n", device);
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `setDeviceState` -- device array read failed: %d\n", device);
         return 0;
     }
     
@@ -216,7 +218,7 @@ UFDeviceState getKeyboardState(UFKeyboardKey key, UFDeviceBuffer buffer, UFResou
 
     UFDevice deviceRead  = {0};
     if (!r3_arr_read(device - 1, &deviceRead, &UFEVINInternal.device)) {
-        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `delDevice` -- device array read failed: %d\n", device);
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `getKeyboardState` -- device array read failed: %d\n", device);
         return 0;
     }
 
@@ -226,24 +228,73 @@ UFDeviceState getKeyboardState(UFKeyboardKey key, UFDeviceBuffer buffer, UFResou
 UFDeviceState getMouseState(UFMouseButton button, UFDeviceBuffer buffer, UFResource device) {
     u8 count = r3_arr_count(&UFEVINInternal.device);
     if (!device || device > count || device > UF_DEVICE_MAX || !((ptr*)UFEVINInternal.device.data)[device - 1]) {
-        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `getKeyboardState` -- device not found: %d\n", device);
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `getMouseState` -- device not found: %d\n", device);
         return 0;
     } if (buffer >= UF_DEVICE_BUFFER_COUNT) {
-        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `getKeyboardState` -- device buffer not found: %d\n", buffer);
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `getMouseState` -- device buffer not found: %d\n", buffer);
         return 0;
     } if (button >= UF_MAX_MOUSE_BUTTONS) {
-        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `getKeyboardState` -- mouse button not found: %d\n", button);
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `getMouseState` -- mouse button not found: %d\n", button);
         return 0;
     }
 
     UFDevice deviceRead  = {0};
     if (!r3_arr_read(device - 1, &deviceRead, &UFEVINInternal.device)) {
-        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `delDevice` -- device array read failed: %d\n", device);
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `getMouseState` -- device array read failed: %d\n", device);
         return 0;
     }
 
     return ((u8*)deviceRead.buffers[buffer] + (sizeof(u16) * 2))[button];
 }
+
+u8 setKeyboardState(UFDeviceState state, UFKeyboardKey key, UFDeviceBuffer buffer, UFResource device) {
+    u8 count = r3_arr_count(&UFEVINInternal.device);
+    if (!device || device > count || device > UF_DEVICE_MAX || !((ptr*)UFEVINInternal.device.data)[device - 1]) {
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `setKeyboardState` -- device not found: %d\n", device);
+        return 0;
+    } if (buffer >= UF_DEVICE_BUFFER_COUNT) {
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `setKeyboardState` -- device buffer not found: %d\n", buffer);
+        return 0;
+    } if (key >= UF_MAX_KEYBOARD_KEYS) {
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `setKeyboardState` -- keyboard key not found: %d\n", key);
+        return 0;
+    }
+
+    UFDevice deviceRead  = {0};
+    if (!r3_arr_read(device - 1, &deviceRead, &UFEVINInternal.device)) {
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `setKeyboardState` -- device array read failed: %d\n", device);
+        return 0;
+    }
+
+    ((u8*)deviceRead.buffers[buffer])[key] = state;
+
+    return 1;
+}
+
+u8 setMouseState(UFDeviceState state, UFMouseButton button, UFDeviceBuffer buffer, UFResource device) {
+    u8 count = r3_arr_count(&UFEVINInternal.device);
+    if (!device || device > count || device > UF_DEVICE_MAX || !((ptr*)UFEVINInternal.device.data)[device - 1]) {
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `setMouseState` -- device not found: %d\n", device);
+        return 0;
+    } if (buffer >= UF_DEVICE_BUFFER_COUNT) {
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `setMouseState` -- device buffer not found: %d\n", buffer);
+        return 0;
+    } if (button >= UF_MAX_MOUSE_BUTTONS) {
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `setMouseState` -- keyboard key not found: %d\n", button);
+        return 0;
+    }
+
+    UFDevice deviceRead  = {0};
+    if (!r3_arr_read(device - 1, &deviceRead, &UFEVINInternal.device)) {
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `setMouseState` -- device array read failed: %d\n", device);
+        return 0;
+    }
+
+    ((u8*)deviceRead.buffers[buffer] + (sizeof(s16) * 2))[button] = state;
+
+    return 1;
+}
+
 
 u8 resetDeviceState(UFDeviceBuffer buffer, UFResource device) {
     u8 count = r3_arr_count(&UFEVINInternal.device);
@@ -300,6 +351,33 @@ u8 updateDevices(none) {
     return 1;
 }
 
+u8 updateDeviceDelta(s16 dx, s16 dy, UFResource device) {
+    u8 count = r3_arr_count(&UFEVINInternal.device);
+    if (!device || device > count || device > UF_DEVICE_MAX || !((ptr*)UFEVINInternal.device.data)[device - 1]) {
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `resetDeviceState` -- device not found: %d\n", device);
+        return 0;
+    } if (dx == 0 || dy == 0) return 0;
+
+
+    UFDevice deviceRead  = {0};
+    if (!r3_arr_read(device - 1, &deviceRead, &UFEVINInternal.device)) {
+        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `delDevice` -- device array read failed: %d\n", device);
+        return 0;
+    }
+
+    // accumulate deltas (windows friendly since `WM_INPUT` returns deltas per frame)
+    ((s16*)deviceRead.buffers[UF_DEVICE_BUFFER_NOW])[0] += dx;
+    ((s16*)deviceRead.buffers[UF_DEVICE_BUFFER_NOW])[1] += dy;
+
+    sendEvent(UF_EVENT_MOUSE_MOVE, (UFEvent){
+            .s16[0] = ((s16*)deviceRead.buffers[UF_DEVICE_BUFFER_NOW])[0],
+            .s16[1] = ((s16*)deviceRead.buffers[UF_DEVICE_BUFFER_NOW])[1]
+    });
+
+    return 1;
+}
+
+
 u8 ufInitEVIN(UFEVINInterface* evinInterface) {
     if (!r3_arr_alloc(UF_EVENT_CODE_MAX, sizeof(u8), &UFEVINInternal.event)     ||
         !r3_arr_alloc(UF_DEVICE_MAX, sizeof(UFDevice), &UFEVINInternal.device)  ||
@@ -320,11 +398,16 @@ u8 ufInitEVIN(UFEVINInterface* evinInterface) {
     
     evinInterface->resetDevices = resetDevices;
     evinInterface->updateDevices = updateDevices;
-    
+    evinInterface->updateDeviceDelta = updateDeviceDelta;
+
     evinInterface->setDeviceState = setDeviceState;
+    evinInterface->resetDeviceState = resetDeviceState;
+    
+    evinInterface->setMouseState = setMouseState;
+    evinInterface->setKeyboardState = setKeyboardState;
+    
     evinInterface->getMouseState = getMouseState;
     evinInterface->getKeyboardState = getKeyboardState;
-    evinInterface->resetDeviceState = resetDeviceState;
 
     r3_log_stdout(SUCCESS_LOG, "[UFEVIN] Initialized\n");
     return 1;
@@ -350,11 +433,16 @@ u8 ufExitEVIN(UFEVINInterface* evinInterface) {
     
     evinInterface->resetDevices = NULL;
     evinInterface->updateDevices = NULL;
+    evinInterface->updateDeviceDelta = NULL;
     
     evinInterface->setDeviceState = NULL;
+    evinInterface->resetDeviceState = NULL;
+
     evinInterface->getMouseState = NULL;
     evinInterface->getKeyboardState = NULL;
-    evinInterface->resetDeviceState = NULL;
+
+    evinInterface->setMouseState = NULL;
+    evinInterface->setKeyboardState = NULL;
 
     r3_log_stdout(SUCCESS_LOG, "[UFEVIN] Deinitialized\n");
     return 1;

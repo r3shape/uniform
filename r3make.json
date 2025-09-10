@@ -6,7 +6,10 @@
         "includes": ["uniform/include", "external/include"],
         "sources": ["uniform/src/ufcore/*.c", "uniform/src/ufcore/*/*.c"],
 
-        "libraries": {"r3kit": "external/bin"},
+        "libraries": {
+            "gdi32": null, "opengl32": null,
+            "r3kit": "external/bin"
+        },
 
         "name": "ufcore64",
         "type": "dll",

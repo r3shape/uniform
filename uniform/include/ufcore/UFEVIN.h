@@ -162,9 +162,21 @@ typedef enum UFDeviceState {
     UF_DEVICE_STATE_COUNT
 } UFDeviceState;
 
+typedef enum UFDefaultEventCode {
+    UF_EVENT_EXIT,
+    UF_EVENT_RESIZE,
+    UF_EVENT_MOUSE_MOVE,
+    UF_EVENT_MOUSE_WHEEL,
+    UF_EVENT_KEY_PRESSED,
+    UF_EVENT_KEY_RELEASED,
+    UF_EVENT_BUTTON_PRESSED,
+    UF_EVENT_BUTTON_RELEASED,
+    UF_DEFAULT_EVENT_CODE_COUNT
+} UFDefaultEventCode;
+
 typedef struct UFEvent {
     // 128 byte max
-    s64 s64[2];
+    s64 i64[2];
     u64 u64[2];
     f64 f64[2];
 
@@ -193,15 +205,20 @@ typedef struct UFEVINInterface {
     UF_API_METHOD(u8, delHook, UFEventCode mask, UFEventHook hook);
     
     UF_API_METHOD(UFResource, newDevice, UFDeviceType type);
-    UF_API_METHOD(none, delDevice, UFResource device);
+    UF_API_METHOD(u8, delDevice, UFResource device);
 
     UF_API_METHOD(u8, resetDevices, none);
     UF_API_METHOD(u8, updateDevices, none);
 
     UF_API_METHOD(u8, setDeviceState, UFDeviceState state, UFDeviceBuffer buffer, UFResource device);
+    UF_API_METHOD(u8, resetDeviceState, UFDeviceBuffer buffer, UFResource device);
+    UF_API_METHOD(u8, updateDeviceDelta, s16 dx, s16 dy, UFResource device);
+
     UF_API_METHOD(UFDeviceState, getKeyboardState, UFKeyboardKey key, UFDeviceBuffer buffer, UFResource device);
     UF_API_METHOD(UFDeviceState, getMouseState, UFMouseButton button, UFDeviceBuffer buffer, UFResource device);
-    UF_API_METHOD(u8, resetDeviceState, UFDeviceBuffer buffer, UFResource device);
+    
+    UF_API_METHOD(u8, setKeyboardState, UFDeviceState state, UFKeyboardKey key, UFDeviceBuffer buffer, UFResource device);
+    UF_API_METHOD(u8, setMouseState, UFDeviceState state, UFMouseButton button, UFDeviceBuffer buffer, UFResource device);
 } UFEVINInterface;
 
 #endif // _UFEVIN_H_

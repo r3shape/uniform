@@ -20,13 +20,13 @@ struct Unicorn {
 
 
 u8 ufInitRuntime(CString library) {
-    if (!ufInitOS(&Unicorn.os)) {
-        r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to initialize `UFOS` API\n");
+    if (!ufInitEVIN(&Unicorn.evin)) {
+        r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to initialize `UFEVIN` API\n");
         return 0;
     }
 
-    if (!ufInitEVIN(&Unicorn.evin)) {
-        r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to initialize `UFEVIN` API\n");
+    if (!ufInitOS(&Unicorn.evin, &Unicorn.os)) {
+        r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to initialize `UFOS` API\n");
         return 0;
     }
 
