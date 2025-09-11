@@ -2,7 +2,7 @@
 #define _UFMRG_H_
 
 #define _UF_R3DEF_
-#include <ufcore/UFGPU/UFGPU.h>
+#include <ufcore/UFGPU.h>
 
 typedef struct UFMRGInterface {
     UFVersion ver;

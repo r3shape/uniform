@@ -146,7 +146,7 @@ UFResource newDevice(UFDeviceType type) {
     
     if (!((UFDevice*)UFEVINInternal.device.data)[count].buffers[0] ||
         !((UFDevice*)UFEVINInternal.device.data)[count].buffers[1]) {
-        r3_log_stdoutf(ERROR_LOG, "[UFEVIN] Failed `newDevice` -- device buffer alloc failed: %p\t%p\n", ((UFDevice*)UFEVINInternal.device.data)[count].buffers[0], ((UFDevice*)UFEVINInternal.device.data)[count].buffers[1]);
+        r3_log_stdout(ERROR_LOG, "[UFEVIN] Failed `newDevice` -- device buffer alloc failed\n");
         return 0;
     }
 

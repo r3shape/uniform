@@ -82,7 +82,7 @@ u8 ufInitRuntime(CString library) {
     );
     
     /* initialize the MRG and GPU APIs after a window has been created ( OGL context needs a window first :| ) */
-    if (!ufInitMRG(Unicorn.application->api, &Unicorn.gpu, &Unicorn.mrg)) {
+    if (!ufInitMRG(Unicorn.application->window, Unicorn.application->api, &Unicorn.gpu, &Unicorn.os, &Unicorn.mrg)) {
         r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to deinitialize `UFMRG` API\n");
         return 0;
     }

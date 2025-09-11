@@ -7,6 +7,7 @@
 #include <r3kit/include/ds/arr.h>
 
 #include <r3kit/include/io/log.h>
+#include <r3kit/include/io/buf.h>
 
 #include <r3kit/include/math.h>
 

@@ -10,10 +10,10 @@
 UF_API u8 ufInitOS(UFEVINInterface* evinPtr, UFOSInterface* osInterface);
 UF_API u8 ufExitOS(UFOSInterface* osInterface);
 
-UF_API u8 ufInitMRG(UFGpuApi api, UFGPUInterface* gpuPtr, UFMRGInterface* mrgInterface);
+UF_API u8 ufInitMRG(UFResource window, UFGpuApi api, UFGPUInterface* gpuPtr, UFOSInterface* osPtr, UFMRGInterface* mrgInterface);
 UF_API u8 ufExitMRG(UFMRGInterface* mrgInterface);
 
-UF_API u8 ufInitGPU(UFGPUInterface* gpuInterface);
+UF_API u8 ufInitGPU(UFResource window, UFOSInterface* osPtr, UFGPUInterface* gpuInterface);
 UF_API u8 ufExitGPU(UFGPUInterface* gpuInterface);
 
 UF_API u8 ufInitEVIN(UFEVINInterface* evinInterface);

@@ -197,12 +197,12 @@ typedef none (*UFEventHook)(UFEventCode, UFEvent);
 typedef struct UFEVINInterface {
     UFVersion ver;
     
-    UF_API_METHOD(u8, newEvent, UFEventCode mask);
-    UF_API_METHOD(u8, delEvent, UFEventCode mask);
-    UF_API_METHOD(u8, sendEvent, UFEventCode mask, UFEvent event);
+    UF_API_METHOD(u8, newEvent, UFEventCode code);
+    UF_API_METHOD(u8, delEvent, UFEventCode code);
+    UF_API_METHOD(u8, sendEvent, UFEventCode code, UFEvent event);
 
-    UF_API_METHOD(u8, newHook, UFEventCode mask, UFEventHook hook);
-    UF_API_METHOD(u8, delHook, UFEventCode mask, UFEventHook hook);
+    UF_API_METHOD(u8, newHook, UFEventCode code, UFEventHook hook);
+    UF_API_METHOD(u8, delHook, UFEventCode code, UFEventHook hook);
     
     UF_API_METHOD(UFResource, newDevice, UFDeviceType type);
     UF_API_METHOD(u8, delDevice, UFResource device);

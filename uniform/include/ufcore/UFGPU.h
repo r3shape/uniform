@@ -175,8 +175,8 @@ typedef struct UFGPUInterface {
     
     // Programs
     UF_API_METHOD(UFResource, newProgram, UFGPUProgramDesc program);
-    UF_API_METHOD(none, bindProgram, UFResource program);
-    UF_API_METHOD(none, delProgram, UFResource program);
+    UF_API_METHOD(u8, bindProgram, UFResource program);
+    UF_API_METHOD(u8, delProgram, UFResource program);
     
     // Uniforms
     // backend may support setting uniforms by index/slot
