@@ -83,7 +83,7 @@ typedef unsigned long long 	u64, u8b, uptr;
         #define NULL ((void *)0)
 #endif
 
-#ifdef R3_BUILD_SOURCE
+#ifdef R3_BUILD_DLL
     #ifdef _MSC_VER
         #define R3_API __declspec(dllexport)
     #elif #defined (__GNUC__) || defined (__clang__)

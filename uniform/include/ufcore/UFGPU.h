@@ -98,15 +98,10 @@ typedef struct UFGPUBufferDesc {
 } UFGPUBufferDesc;
 
 typedef struct UFGPUUniformDesc {
-    union data {
-        f32 f32;
-        Vec2 vec2;
-        Vec3 vec3;
-        Vec4 vec4;
-        Mat4 mat4;
-    } data;
-    CString name;
     UFGPUUniformType type;
+    char* name; // backend may support setting uniforms by string alias
+    ptr data;
+    u8 slot;  // backend may support setting uniforms by index/slot
 } UFGPUUniformDesc;
 
 typedef struct UFGPUVertexProgramDesc {
@@ -179,13 +174,8 @@ typedef struct UFGPUInterface {
     UF_API_METHOD(u8, delProgram, UFResource program);
     
     // Uniforms
-    // backend may support setting uniforms by index/slot
-    UF_API_METHOD(none, setUniformInt, UFResource program, s32 slot, void* data);
-    UF_API_METHOD(none, sendUniformInt, UFResource program, s32 slot);
-
-    // backend may support setting uniforms by string alias
-    UF_API_METHOD(none, setUniformStr, UFResource program, char* alias, void* data);
-    UF_API_METHOD(none, sendUniformStr, UFResource program, char* alias);
+    UF_API_METHOD(UFResource, setUniform, UFResource program, UFGPUUniformDesc uniform);
+    UF_API_METHOD(u8, sendUniform, UFResource program, UFResource uniform);
     
     // Buffers
     UF_API_METHOD(none, clearDepthBuffer, f32 depth);

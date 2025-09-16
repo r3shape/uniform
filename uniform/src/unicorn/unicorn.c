@@ -11,7 +11,6 @@ struct Unicorn {
     UFGPUInterface gpu;
     UFMRGInterface mrg;
     UFEVINInterface evin;
-    UFPSOAInterface psoa;
 
     UFLibrary gpuLibrary;
     UFLibrary appLibrary;
@@ -36,11 +35,6 @@ u8 ufInitRuntime(CString library) {
         return 0;
     }
 
-    if (!ufInitPSOA(&Unicorn.psoa)) {
-        r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to initialize `UFPSOA` API\n");
-        return 0;
-    }
-    
     /* use UFOS to load the UFApplication dynamic library and resolve the export symbol */
     Unicorn.os.loadLibrary(UF_DEFAULT_USER_PATH, library, &Unicorn.appLibrary);
     if (!Unicorn.appLibrary.handle) {
@@ -70,7 +64,6 @@ u8 ufInitRuntime(CString library) {
     Unicorn.application->gpuPtr = &Unicorn.gpu;
     Unicorn.application->mrgPtr = &Unicorn.mrg;
     Unicorn.application->evinPtr = &Unicorn.evin;
-    Unicorn.application->psoaPtr = &Unicorn.psoa;
 
     /* create and assign a window resource handle to loaded `UFApplication` */
     Unicorn.application->window = Unicorn.os.newWindow(
@@ -81,8 +74,30 @@ u8 ufInitRuntime(CString library) {
         Unicorn.application->api
     );
     
-    /* initialize the MRG and GPU APIs after a window has been created ( OGL context needs a window first :| ) */
-    if (!ufInitMRG(Unicorn.application->window, Unicorn.application->api, &Unicorn.gpu, &Unicorn.os, &Unicorn.mrg)) {
+    /* initialize the GPU APIs after a window has been created ( OGL context needs a window first :| ) */
+    switch (Unicorn.application->api) {
+        case UF_GPU_DX_API: {
+            r3_log_stdoutf(WARN_LOG, "[UFMRG] Failed to select `UFGPU` API -- unsupported GPU API selected: %d\n", Unicorn.application->api);
+            r3_log_stdoutf(WARN_LOG, "[UFMRG] Initializing supported GPU API: %d\n", UF_GPU_GL_API);
+        }
+        case UF_GPU_VK_API: {
+            r3_log_stdoutf(WARN_LOG, "[UFMRG] Failed to select `UFGPU` API -- unsupported GPU API selected: %d\n", Unicorn.application->api);
+            r3_log_stdoutf(WARN_LOG, "[UFMRG] Initializing supported GPU API: %d\n", UF_GPU_GL_API);
+        }
+        case UF_GPU_GL_API: {
+            if (!ufInitGPU(Unicorn.application->window, &Unicorn.os, &Unicorn.gpu)) {
+                r3_log_stdout(ERROR_LOG, "[UFMRG] Failed to initialize `UFGPU` API -- OpenGL init failed\n");
+                return 0;
+            }
+        } break;
+        case UF_GPU_INVALID_API:    // fall through default
+        default: {
+            r3_log_stdoutf(ERROR_LOG, "[UFMRG] Failed to initialize `UFGPU` API -- invalid GPU API selected: %d\n", Unicorn.application->api);
+            return 0;
+        }
+    }
+
+    if (!ufInitMRG(&Unicorn.gpu, &Unicorn.mrg)) {
         r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to deinitialize `UFMRG` API\n");
         return 0;
     }
@@ -109,13 +124,12 @@ none ufExitRuntime(none) {
         r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to deinitialize `UFEVIN` API\n");
     }
 
-    if (!ufExitPSOA(&Unicorn.psoa)) {
-        r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to deinitialize `UFPSOA` API\n");
-    }
-
-    // calls ufExitGPU
     if (!ufExitMRG(&Unicorn.mrg)) {
         r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to deinitialize `UFMRG` API\n");
+    }
+
+    if (!ufExitGPU(&Unicorn.gpu)) {
+        r3_log_stdout(ERROR_LOG, "[Unicorn] Failed to deinitialize `UFGPU` API\n");
     }
     
     Unicorn.init = 0;

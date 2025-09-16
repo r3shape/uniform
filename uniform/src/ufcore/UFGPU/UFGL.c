@@ -1,8 +1,13 @@
+#include "r3kit/include/ds/arr.h"
+#include "r3kit/include/io/log.h"
 #include <ufcore/UFGPU.h>
 #include <ufcore/UFOS.h>
 
+// platform specific GL include dirs here (should be the same but hey)
+#ifdef _UF_PLATFORM_WINDOWS_
 #include <gl/GL.h>
 #include <gl/GLU.h>
+#endif // _UF_PLATFORM_WINDOWS_
 
 // GL equivalent defines
 #define UFGL_STATIC_DRAW                0x88E4
@@ -65,8 +70,26 @@
 #define UFGL_DEPTH_STENCIL_ATTACHMENT 0x821A
 
 static struct UFGL {
-    Array buffers;
-    Array programs;
+    // buffer dense array
+    Array buffer;
+    u32 bufferNext;
+    Array bufferMap;
+    Array bufferFree;
+    
+    // program dense array
+    Array program;
+    u32 programNext;
+    Array programMap;
+    Array programFree;
+
+    u32 uniformNext;
+    Array uniformMap;
+    Array uniformFree;
+    // uniform dense arrays
+    Array uniform;
+    Array uniformType;
+    Array uniformName;
+    Array uniformSlot;
 
     // BUFFER FUNCTIONS
     UF_API_METHOD(none, genBuffers, s32 n, u32* buffers);
@@ -155,11 +178,29 @@ static struct UFGL {
     UF_API_METHOD(CString, getString, u32 name);
 } UFGL = {NULL};
 
+// sparse-dense free-list array helpers -- could totally add this as a sparse array API to r3kit...    ~@zaffline 9/15/25
+static inline none _sparseDelete(u32 global, Array* sparse, Array* dense) {
+    u32 local = 0;
+    r3_arr_read(global, &local, sparse);
+    r3_arr_write(global, &(u32){0}, sparse);
 
-// TODO: program map array for safe deletes (every index > deleted -= 1)
+    r3_arr_pop(&global, dense);
+    r3_arr_write(local, &global, dense);
+    r3_arr_write(global, &local, sparse);
+} static inline none _sparseUpdate(u32 global, ptr in, Array* sparse, Array* dense) {
+    u32 count = r3_arr_count(dense);
+    r3_arr_write(global, &count, sparse);
+    r3_arr_push(in, dense);
+} static inline none _sparseLookup(u32 global, ptr out, Array* sparse, Array* dense) {
+    u32 local = 0;
+    r3_arr_read(global, &local, sparse);
+    r3_arr_read(local, out, dense);
+}
+
+
 // Programs
 UFResource newProgram(UFGPUProgramDesc program) {
-    u32 count = r3_arr_count(&UFGL.programs);
+    u32 glProgram = 0;
     switch (program.type) {
         case (UF_GPU_VERTEX_PROGRAM): {
             if (!program.vertex.vertexPath || !program.vertex.fragmentPath) {
@@ -197,8 +238,7 @@ UFResource newProgram(UFGPUProgramDesc program) {
                 r3_log_stdout(ERROR_LOG, "[UFGPU] Failed `newProgram` -- failed to compile vertex shader\n");
                 UFGL.deleteShader(vertex_shader);
                 return 0;
-            } else { r3_log_stdout(INFO_LOG, "[UFGPU] `newProgram` -- compiled vertex shader\n"); }
-
+            }
             // compile and validate fragment shader
             UFGL.shaderSource(fragment_shader, 1, &(CString){fragmentBuffer.data}, NULL);
             UFGL.compileShader(fragment_shader);
@@ -208,10 +248,9 @@ UFResource newProgram(UFGPUProgramDesc program) {
                 UFGL.deleteShader(vertex_shader);
                 UFGL.deleteShader(fragment_shader);
                 return 0;
-            } else { r3_log_stdout(INFO_LOG, "[UFGPU] `newProgram` -- compiled fragment shader\n"); }
-
+            }
             // link and validate shader
-            u32 glProgram = UFGL.createProgram();
+            glProgram = UFGL.createProgram();
             UFGL.attachShader(glProgram, vertex_shader);
             UFGL.attachShader(glProgram, fragment_shader);
             UFGL.linkProgram(glProgram);
@@ -220,15 +259,6 @@ UFResource newProgram(UFGPUProgramDesc program) {
                 r3_log_stdout(ERROR_LOG, "[UFGPU] Failed `newProgram` -- failed to link program\n");
                 UFGL.deleteShader(vertex_shader);
                 UFGL.deleteShader(fragment_shader);
-                return 0;
-            }
-
-            // write program into internal array
-            if (!r3_arr_write(count, &glProgram, &UFGL.programs)) {
-                r3_log_stdout(ERROR_LOG, "[UFGPU] Failed `newProgram` -- program array write failed\n");
-                UFGL.deleteShader(fragment_shader);
-                UFGL.deleteShader(vertex_shader);
-                UFGL.deleteProgram(glProgram);
                 return 0;
             }
 
@@ -247,55 +277,146 @@ UFResource newProgram(UFGPUProgramDesc program) {
         }
     }
 
-    return r3_arr_count(&UFGL.programs);
+    // pop/gen handle and update program sparse array
+    UFResource handle = 0;
+    if (r3_arr_count(&UFGL.programFree)) {
+        r3_arr_pop(&handle, &UFGL.programFree);
+    } else { handle = ++UFGL.programNext; }
+
+    _sparseUpdate(handle, &glProgram, &UFGL.programMap, &UFGL.program);
+    return handle;
 }
 
 u8 bindProgram(UFResource program) {
-    u8 count = r3_arr_count(&UFGL.programs);
-    if (!program || program > count || program > UF_GPU_RESOURCE_MAX) {
+    if (!program || program > UFGL.programNext || program > UF_GPU_RESOURCE_MAX) {
         r3_log_stdoutf(ERROR_LOG, "[UFGPU] Failed `delProgram` -- program not found: %d\n", program);
         return 0;
     }
 
+    // lookup program from sparse array
     u32 glProgram = 0;
-    if (!r3_arr_read(program - 1, &glProgram, &UFGL.programs)) {
-        r3_log_stdoutf(ERROR_LOG, "[UFGPU] Failed `delProgram` -- program array read failed: %d\n", program);
-        return 0;
-    }
+    _sparseLookup(program, &glProgram, &UFGL.programMap, &UFGL.program);
 
     UFGL.useProgram(glProgram);
     return 1;
 }
 
 u8 delProgram(UFResource program) {
-    u8 count = r3_arr_count(&UFGL.programs);
-    if (!program || program > count || program > UF_GPU_RESOURCE_MAX) {
+    if (!program || program > UFGL.programNext || program > UF_GPU_RESOURCE_MAX) {
         r3_log_stdoutf(ERROR_LOG, "[UFGPU] Failed `delProgram` -- program not found: %d\n", program);
         return 0;
     }
 
+    // lookup GL handle and update program sparse array
     u32 glProgram = 0;
-    if (!r3_arr_pull(program - 1, &glProgram, &UFGL.programs)) {
-        r3_log_stdoutf(ERROR_LOG, "[UFGPU] Failed `delProgram` -- program array pull failed: %d\n", program);
-        return 0;
-    }
-    
+    _sparseLookup(program, &glProgram, &UFGL.programMap, &UFGL.program);
+    _sparseDelete(program, &UFGL.programMap, &UFGL.program);
+    r3_arr_push(&program, &UFGL.programFree);   // return handle to free-list
+
     UFGL.deleteProgram(glProgram);
     return 1;
 }
 
 
 // Uniforms
-// backend may support setting uniforms by index/slot
-none setUniformInt(UFResource program, s32 slot, void* data) { return; }
-none sendUniformInt(UFResource program, s32 slot) { return; }
+// fnv1a
+static inline u32 _hashv1(u8* v) {
+	if (v) { u32 o = 2166136261u;
+        do { o ^= (u8)*v++; o *= 16777619; }
+        while (v); return o;
+    } else return I32_MAX;
+}
 
-// backend may support setting uniforms by string alias
-none setUniformStr(UFResource program, char* alias, void* data) { return; }
-none sendUniformStr(UFResource program, char* alias) { return; }
+
+UFResource setUniform(UFResource program, UFGPUUniformDesc uniform) {
+   if (!program || program > UFGL.programNext || program > UF_GPU_RESOURCE_MAX) {
+        r3_log_stdoutf(ERROR_LOG, "[UFGPU] Failed `setUniformStr` -- program not found: %d\n", program);
+        return 0;
+    } if (!uniform.name ||
+          !uniform.data ||
+          uniform.type == UF_GPU_UNIFORM_TYPES ||
+          uniform.type == UF_GPU_UNIFORM_INVALID) {
+        r3_log_stdout(ERROR_LOG, "[UFGPU] Failed `setUniformStr` -- invalid uniform desc");
+        return 0;
+    }
+
+   u32 glProgram;
+   _sparseLookup(program, &glProgram, &UFGL.programMap, &UFGL.program);
+
+   s32 slot = UFGL.getUniformLocation(glProgram, uniform.name);
+   if (slot < 0) {
+        r3_log_stdout(ERROR_LOG, "[UFGPU] Failed `setUniformStr` -- UFGL `getUniformLocation` failed (slot,glProgram)\n");
+        return 0;
+   }
+
+    // pop/gen handle and update program sparse array
+    UFResource handle = 0;
+    if (r3_arr_count(&UFGL.uniformFree)) {
+        r3_arr_pop(&handle, &UFGL.uniformFree);
+    } else { handle = ++UFGL.uniformNext; }
+    
+    // update internal uniform dense arrays
+    u32 count = r3_arr_count(&UFGL.uniform);
+    r3_arr_push(&slot, &UFGL.uniformSlot);
+    r3_arr_push(&uniform.type, &UFGL.uniformType);
+    r3_arr_push(&uniform.name, &UFGL.uniformName);
+    r3_arr_write(handle, &count, &UFGL.uniformMap);
+    r3_arr_assign(count, uniform.data, &UFGL.uniform);
+
+    return handle;
+}
+
+u8 sendUniform(UFResource program, UFResource uniform) {
+    u8  type = 0;
+    s32 slot = -1;  // 0 is a valid GL uniform location
+    _sparseLookup(uniform, &type, &UFGL.uniformMap, &UFGL.uniformType);
+    _sparseLookup(uniform, &slot, &UFGL.uniformMap, &UFGL.uniformSlot);
+    if (!type || slot < 0) {
+        r3_log_stdout(ERROR_LOG, "[UFGPU] Failed `sendUniformStr` -- internal uniform sparse array lookup failed\n");
+        return 0;
+    }
+
+    switch (type) {
+        case (UF_GPU_UNIFORM_INT):  {
+                s32* i32 = 0;
+                _sparseLookup(uniform, &i32, &UFGL.uniformMap, &UFGL.uniform);
+                UFGL.uniform1i(slot, *i32);
+            } return 1;
+        case (UF_GPU_UNIFORM_VEC2): {
+                Vec2* vec2 = {0};
+                _sparseLookup(uniform, &vec2, &UFGL.uniformMap, &UFGL.uniform);
+                UFGL.uniform2fv(slot, 1, ((f32*)&vec2->data[0]));
+            } return 1;
+        case (UF_GPU_UNIFORM_VEC3): {
+                Vec3* vec3 = {0};
+                _sparseLookup(uniform, &vec3, &UFGL.uniformMap, &UFGL.uniform);
+                UFGL.uniform3fv(slot, 1, ((f32*)&vec3->data[0]));
+            } return 1;
+        case (UF_GPU_UNIFORM_VEC4): {
+                Vec4* vec4 = {0};
+                _sparseLookup(uniform, &vec4, &UFGL.uniformMap, &UFGL.uniform);
+                UFGL.uniform4fv(slot, 1, ((f32*)&vec4->data[0]));
+            } return 1;
+        case (UF_GPU_UNIFORM_MAT4): {
+                Mat4* mat4 = {0};
+                _sparseLookup(uniform, &mat4, &UFGL.uniformMap, &UFGL.uniform);
+                UFGL.uniform3fv(slot, 1, ((f32*)&mat4->data[0]));
+            } return 1;
+        case (UF_GPU_UNIFORM_FLOAT): {
+                f32* f32 = 0;
+                _sparseLookup(uniform, &f32, &UFGL.uniformMap, &UFGL.uniform);
+                UFGL.uniform1f(slot, *f32);
+            } return 1;
+        case (UF_GPU_UNIFORM_TYPES): // fall through default
+        case (UF_GPU_UNIFORM_INVALID): // fall through default
+        default: {
+            r3_log_stdout(ERROR_LOG, "[UFGPU] Failed `sendUniform` -- invlid uniform type\n");
+            return 0;
+        }
+    }
+}
 
 
-// TODO: buffer map array for safe deletes (every index > deleted -= 1)
 // Buffers
 none clearDepthBuffer(f32 depth) {
     UFGL.clearDepth(depth);
@@ -325,12 +446,6 @@ u8 ufInitGPU(UFResource window, UFOSInterface* osPtr, UFGPUInterface* gpuInterfa
         return 0;
     }
     
-    if (!r3_arr_alloc(UF_GPU_RESOURCE_MAX, sizeof(u32), &UFGL.buffers) ||
-        !r3_arr_alloc(UF_GPU_RESOURCE_MAX, sizeof(u32), &UFGL.programs)) {
-            r3_log_stdout(ERROR_LOG, "[UFGPU] Failed init -- internal array alloc failed\n");
-            return 0;
-        }
-
     struct gl_func {
         ptr* function;
         CString name;
@@ -427,7 +542,7 @@ u8 ufInitGPU(UFResource window, UFOSInterface* osPtr, UFGPUInterface* gpuInterfa
         osPtr->delGpuCtx(window);
         r3_log_stdout(ERROR_LOG, "[UFGPU] Failed init -- `loadLibrary` failed\n");
         return 0;
-    } else r3_log_stdoutf(SUCCESS_LOG, "[UFGPU] OpenGL v%s %s %s\n", glGetString(GL_VERSION), glGetString(GL_VENDOR), glGetString(GL_RENDERER));
+    }
 
     FOR_I(0, sizeof(functions) / sizeof(functions[0]), 1) {
         if (!osPtr->loadSymbol(functions[i].name, functions[i].function, &libGL) || *functions[i].function == NULL) {
@@ -435,18 +550,34 @@ u8 ufInitGPU(UFResource window, UFOSInterface* osPtr, UFGPUInterface* gpuInterfa
         }
     }
     
+    if (!r3_arr_alloc(1, sizeof(u32), &UFGL.buffer)          ||
+        !r3_arr_alloc(1, sizeof(u32), &UFGL.bufferFree)      ||
+        !r3_arr_alloc(UF_GPU_RESOURCE_MAX, sizeof(u32), &UFGL.bufferMap)  ||
+        
+        !r3_arr_alloc(1, sizeof(u32), &UFGL.program)         ||
+        !r3_arr_alloc(1, sizeof(u32), &UFGL.programFree)     ||
+        !r3_arr_alloc(UF_GPU_RESOURCE_MAX, sizeof(u32), &UFGL.programMap) ||
+
+        !r3_arr_alloc(1, sizeof(ptr), &UFGL.uniform)         ||
+        !r3_arr_alloc(1, sizeof(u32), &UFGL.uniformFree)     ||
+        !r3_arr_alloc(1, sizeof(u8), &UFGL.uniformType)      ||
+        !r3_arr_alloc(1, sizeof(char*), &UFGL.uniformName)   ||
+        !r3_arr_alloc(1, sizeof(s32), &UFGL.uniformSlot)     ||
+        !r3_arr_alloc(UF_GPU_RESOURCE_MAX, sizeof(u32), &UFGL.uniformMap)) {
+            r3_log_stdout(ERROR_LOG, "[UFGPU] Failed init -- internal array alloc failed\n");
+            return 0;
+        }
+
     osPtr->unloadLibrary(&libGL);
+    r3_log_stdoutf(SUCCESS_LOG, "[UFGPU] OpenGL v%s %s %s\n", UFGL.getString(GL_VERSION), UFGL.getString(GL_VENDOR), UFGL.getString(GL_RENDERER));
 
     // populate UFGPUInterface
     gpuInterface->newProgram = newProgram;
     gpuInterface->bindProgram = bindProgram;
     gpuInterface->delProgram = delProgram;
-
-    gpuInterface->setUniformInt = setUniformInt;
-    gpuInterface->sendUniformInt = sendUniformInt;
     
-    gpuInterface->setUniformStr = setUniformStr;
-    gpuInterface->sendUniformStr = sendUniformStr;
+    gpuInterface->setUniform = setUniform;
+    gpuInterface->sendUniform = sendUniform;
     
     gpuInterface->clearDepthBuffer = clearDepthBuffer;
     gpuInterface->clearColorBuffer = clearColorBuffer;
@@ -463,8 +594,20 @@ u8 ufInitGPU(UFResource window, UFOSInterface* osPtr, UFGPUInterface* gpuInterfa
 }
 
 u8 ufExitGPU(UFGPUInterface* gpuInterface) {
-    if (!r3_arr_dealloc(&UFGL.buffers) ||
-        !r3_arr_dealloc(&UFGL.programs)) {
+    if (!r3_arr_dealloc(&UFGL.buffer)     ||
+        !r3_arr_dealloc(&UFGL.bufferMap)  ||
+        !r3_arr_dealloc(&UFGL.bufferFree) ||
+        
+        !r3_arr_dealloc(&UFGL.program)    ||
+        !r3_arr_dealloc(&UFGL.programMap) ||
+        !r3_arr_dealloc(&UFGL.programFree)||
+
+        !r3_arr_dealloc(&UFGL.uniform)    ||
+        !r3_arr_dealloc(&UFGL.uniformMap) ||
+        !r3_arr_dealloc(&UFGL.uniformType)||
+        !r3_arr_dealloc(&UFGL.uniformName)||
+        !r3_arr_dealloc(&UFGL.uniformSlot)||
+        !r3_arr_dealloc(&UFGL.uniformFree)) {
             r3_log_stdout(ERROR_LOG, "[UFGPU] Error during exit -- internal array dealloc failed\n");
         }
 
@@ -472,11 +615,8 @@ u8 ufExitGPU(UFGPUInterface* gpuInterface) {
     gpuInterface->bindProgram = NULL;
     gpuInterface->delProgram = NULL;
 
-    gpuInterface->setUniformInt = NULL;
-    gpuInterface->sendUniformInt = NULL;
-    
-    gpuInterface->setUniformStr = NULL;
-    gpuInterface->sendUniformStr = NULL;
+    gpuInterface->setUniform = NULL;
+    gpuInterface->sendUniform = NULL;
     
     gpuInterface->clearDepthBuffer = NULL;
     gpuInterface->clearColorBuffer = NULL;

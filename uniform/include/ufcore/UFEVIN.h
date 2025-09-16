@@ -190,6 +190,10 @@ typedef struct UFEvent {
     s8 s8[16];
     u8 u8[16];
     char c[16];
+
+    UFResource device;
+    UFKeyboardKey key;
+    UFMouseButton button;
 } UFEvent;
 
 typedef none (*UFEventHook)(UFEventCode, UFEvent);

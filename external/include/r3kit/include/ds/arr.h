@@ -3,14 +3,6 @@
 
 #include <r3kit/include/defines.h>
 
-typedef enum Array_Header_Field {
-	ARRAY_MAX_FIELD,
-	ARRAY_SIZE_FIELD,
-	ARRAY_COUNT_FIELD,
-	ARRAY_STRIDE_FIELD,
-	ARRAY_HEADER_FIELDS
-} Array_Header_Field;
-
 typedef struct ArrayHeader {
 	u64 stride;
 	u64 count;

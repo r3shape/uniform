@@ -3,7 +3,6 @@
 
 #include <ufcore/UFMRG.h>
 #include <ufcore/UFEVIN.h>
-#include <ufcore/UFPSOA.h>
 
 // returned as a pointer from user code via the `ufExport` symbol
 // Unicorn will then have access to the entire application,
@@ -20,7 +19,6 @@ typedef struct UFApplication {
     UFGPUInterface* gpuPtr;
     UFMRGInterface* mrgPtr;
     UFEVINInterface* evinPtr;
-    UFPSOAInterface* psoaPtr;
 
     UF_API_METHOD(none, init_hook, none);
     UF_API_METHOD(none, exit_hook, none);

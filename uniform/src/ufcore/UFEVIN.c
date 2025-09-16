@@ -367,8 +367,9 @@ u8 updateDeviceDelta(s16 dx, s16 dy, UFResource device) {
     ((s16*)deviceRead.buffers[UF_DEVICE_BUFFER_NOW])[1] += dy;
 
     sendEvent(UF_EVENT_MOUSE_MOVE, (UFEvent){
-            .s16[0] = ((s16*)deviceRead.buffers[UF_DEVICE_BUFFER_NOW])[0],
-            .s16[1] = ((s16*)deviceRead.buffers[UF_DEVICE_BUFFER_NOW])[1]
+        .device=device,
+        .s16[0]=((s16*)deviceRead.buffers[UF_DEVICE_BUFFER_NOW])[0],
+        .s16[1]=((s16*)deviceRead.buffers[UF_DEVICE_BUFFER_NOW])[1]
     });
 
     return 1;

@@ -66,7 +66,7 @@ LRESULT CALLBACK _ufWindowProc(HWND handle, u32 msg, WPARAM wp, LPARAM lp) {
         case WM_SYSKEYDOWN: {
                 UFKeyboardKey key = (u16)wp;
                 u8 event = (msg == WM_KEYUP || msg == WM_SYSKEYUP) ? UF_EVENT_KEY_RELEASED : UF_EVENT_KEY_PRESSED;
-                UFW64.evinPtr->sendEvent(event, (UFEvent){ .u16[0]=key });
+                UFW64.evinPtr->sendEvent(event, (UFEvent){ .key=key, .device=UFW64.keyboardDefault });
                 return 0;
             }
 
@@ -96,33 +96,33 @@ LRESULT CALLBACK _ufWindowProc(HWND handle, u32 msg, WPARAM wp, LPARAM lp) {
                 // handle mouse buttons
                 if (mouse->usButtonFlags & RI_MOUSE_LEFT_BUTTON_DOWN) {
                     UFW64.evinPtr->setMouseState(UF_DEVICE_STATE_ACTIVE, UF_MOUSE_LEFT, UF_DEVICE_BUFFER_NOW, UFW64.mouseDefault);
-                    UFW64.evinPtr->sendEvent(UF_EVENT_BUTTON_PRESSED, (UFEvent){ .u16[0] = UF_MOUSE_LEFT});
+                    UFW64.evinPtr->sendEvent(UF_EVENT_BUTTON_PRESSED, (UFEvent){ .button=UF_MOUSE_LEFT, .device=UFW64.mouseDefault});
                 }
                 if (mouse->usButtonFlags & RI_MOUSE_LEFT_BUTTON_UP) {
                     UFW64.evinPtr->setMouseState(UF_DEVICE_STATE_INACTIVE, UF_MOUSE_LEFT, UF_DEVICE_BUFFER_NOW, UFW64.mouseDefault);
-                    UFW64.evinPtr->sendEvent(UF_EVENT_BUTTON_RELEASED, (UFEvent){ .u16[0] = UF_MOUSE_LEFT});
+                    UFW64.evinPtr->sendEvent(UF_EVENT_BUTTON_RELEASED, (UFEvent){ .button=UF_MOUSE_LEFT, .device=UFW64.mouseDefault});
                 }
                 if (mouse->usButtonFlags & RI_MOUSE_RIGHT_BUTTON_DOWN) {
                     UFW64.evinPtr->setMouseState(UF_DEVICE_STATE_ACTIVE, UF_MOUSE_RIGHT, UF_DEVICE_BUFFER_NOW, UFW64.mouseDefault);
-                    UFW64.evinPtr->sendEvent(UF_EVENT_BUTTON_PRESSED, (UFEvent){ .u16[0] = UF_MOUSE_RIGHT});
+                    UFW64.evinPtr->sendEvent(UF_EVENT_BUTTON_PRESSED, (UFEvent){ .button=UF_MOUSE_RIGHT, .device=UFW64.mouseDefault});
                 }
                 if (mouse->usButtonFlags & RI_MOUSE_RIGHT_BUTTON_UP) {
                     UFW64.evinPtr->setMouseState(UF_DEVICE_STATE_INACTIVE, UF_MOUSE_RIGHT, UF_DEVICE_BUFFER_NOW, UFW64.mouseDefault);
-                    UFW64.evinPtr->sendEvent(UF_EVENT_BUTTON_RELEASED, (UFEvent){ .u16[0] = UF_MOUSE_RIGHT});
+                    UFW64.evinPtr->sendEvent(UF_EVENT_BUTTON_RELEASED, (UFEvent){ .button=UF_MOUSE_RIGHT, .device=UFW64.mouseDefault});
                 }
                 if (mouse->usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_DOWN) {
                     UFW64.evinPtr->setMouseState(UF_DEVICE_STATE_ACTIVE, UF_MOUSE_MIDDLE, UF_DEVICE_BUFFER_NOW, UFW64.mouseDefault);
-                    UFW64.evinPtr->sendEvent(UF_EVENT_BUTTON_PRESSED, (UFEvent){ .u16[0] = UF_MOUSE_MIDDLE});
+                    UFW64.evinPtr->sendEvent(UF_EVENT_BUTTON_PRESSED, (UFEvent){ .button=UF_MOUSE_MIDDLE, .device=UFW64.mouseDefault});
                 }
                 if (mouse->usButtonFlags & RI_MOUSE_MIDDLE_BUTTON_UP) {
                     UFW64.evinPtr->setMouseState(UF_DEVICE_STATE_INACTIVE, UF_MOUSE_MIDDLE, UF_DEVICE_BUFFER_NOW, UFW64.mouseDefault);
-                    UFW64.evinPtr->sendEvent(UF_EVENT_BUTTON_RELEASED, (UFEvent){ .u16[0] = UF_MOUSE_MIDDLE});
+                    UFW64.evinPtr->sendEvent(UF_EVENT_BUTTON_RELEASED, (UFEvent){ .button=UF_MOUSE_MIDDLE, .device=UFW64.mouseDefault});
                 }
 
                 // handle mouse wheel
                 if (mouse->usButtonFlags & RI_MOUSE_WHEEL) {
                     s32 z = (s32)((SHORT)mouse->usButtonData) / WHEEL_DELTA;
-                    UFW64.evinPtr->sendEvent(UF_EVENT_MOUSE_WHEEL, (UFEvent){ .s8[0] = z});
+                    UFW64.evinPtr->sendEvent(UF_EVENT_MOUSE_WHEEL, (UFEvent){ .s8[0] = z, .device=UFW64.mouseDefault});
                 }
             } return 0;
         } break;
